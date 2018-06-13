@@ -1,0 +1,19 @@
+https://docs.google.com/presentation/d/10wHKTU09DDpw5_kCdL3XM7Kt6WkuMvCAcDWkDk10yxg/edit              :   Intro to Cloud-Native App Dev
+
+
+
+. Red Hat will be at the forefront of integrating Istio into the container platfrom (OpenShift) as well as with API Management (3scale)
+
+. 3scale has always had the same architectural approach as Istio - to separate the control plane from the data plane - which will lead to better integration.
+
+. Competitors without the separation of gateway and management server or who are focused primarily on the gateway will likely not coexist well
+
+. Istio is primarily focused on advanced traffic management
+
+. 3scale is primarily focused the end-to-end experience of how to open, control, and manage APIs (including Microservices) - authorization, access policies, developer management, developer portal and docs
+
+. The main overlapping area right now is analytics - 3scale is focused more on the app managers and API architectures, while Istio is focused more on developers and dev ops
+
+. In future there will be more overlapping areas, and we will see a similar bifurcation of views. Different companies will have different preferences.
+
+. Bottom line we aim to be the best company at integrating traditional API Management with Service Mesh environments though a whole-hearted embrace of Istio.

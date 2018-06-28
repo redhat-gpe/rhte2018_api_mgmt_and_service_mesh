@@ -1,6 +1,11 @@
-https://docs.google.com/presentation/d/10wHKTU09DDpw5_kCdL3XM7Kt6WkuMvCAcDWkDk10yxg/edit              :   Intro to Cloud-Native App Dev
+= Reference
+
+. https://docs.google.com/presentation/d/10wHKTU09DDpw5_kCdL3XM7Kt6WkuMvCAcDWkDk10yxg/edit              :   Intro to Cloud-Native App Dev
+
+. https://github.com/opentracing-contrib/nginx-opentracing                                              :   nginx-opentracing
 
 
+== Guidance from Mark Cheshire
 
 . Red Hat will be at the forefront of integrating Istio into the container platfrom (OpenShift) as well as with API Management (3scale)
 

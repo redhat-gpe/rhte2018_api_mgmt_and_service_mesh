@@ -1,0 +1,21 @@
+:noaudio:
+:scrollbar:
+:data-uri:
+:toc2:
+:linkattrs:
+
+= API Mgmt and Service Mesh Lab
+
+.Goals
+* Compare _API Mgmt as a Business_ provided by 3scale with _service mesh_ management provided by Istio
+* End-to-end distributed tracing of a MSA application using _implementations_ of the _OpenTracing_ specification
+
+.Prerequisite
+* Completion of the _APIs as a Business_ lab
+* Completion of the _MSA and Service Mesh_ lab
+
+== Overview
+
+
+
+

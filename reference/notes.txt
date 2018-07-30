@@ -1,5 +1,16 @@
 = Reference
 
+. https://docs.google.com/presentation/d/1PaE3RqyKoadllKHlPg0-kHcUrTuCeIdAe81CMk12iWw/                  :   3scale Next.Gen and Istio
+. https://docs.google.com/document/d/1ymRd8rxvECr3TUqlNVAExDrIkp-XAxo25yt2jvhd18I/edit                  :   OpenTracing for APIcast (productized in next release of 3scale)
+. https://gist.github.com/jmprusi/eb7a62df02756db94072cab4d8ca645e                                      :   How to deploy APIcast inside the service mesh
++
+APIcast gets full mTLS that can be viwed in the itio observability tools
++
+Will also respect destination rules defined by istio
+. https://github.com/3scale/istio-integration/tree/master/3scaleAdapter                                 :   PoC Around gRPC Istio Mixer adapter for 3scale
++
+This is project lacks some documentation, I will work on that soon, but basically allows to use 3scale as a decision engine inside Istio, without using APIcast.
+
 . https://docs.google.com/presentation/d/10wHKTU09DDpw5_kCdL3XM7Kt6WkuMvCAcDWkDk10yxg/edit              :   Intro to Cloud-Native App Dev
 
 . https://github.com/opentracing-contrib/nginx-opentracing                                              :   nginx-opentracing

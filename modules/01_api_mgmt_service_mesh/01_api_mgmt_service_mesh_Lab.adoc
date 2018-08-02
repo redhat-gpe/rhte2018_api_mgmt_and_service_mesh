@@ -7,14 +7,191 @@
 = API Mgmt and Service Mesh Lab
 
 .Goals
-* Compare _API Mgmt as a Business_ provided by 3scale with _service mesh_ management provided by Istio
-* End-to-end distributed tracing of a MSA application using _implementations_ of the _OpenTracing_ specification
+* Inject Istio Envoy proxy configs into an Apicast gateway
+* Configure an Istio Egress Route for an Apicast gateway
+* End-to-end distributed tracing of a MSA application using Jaeger implementation of the _OpenTracing_ specification
 
 .Prerequisite
-* Completion of the _APIs as a Business_ lab
-* Completion of the _MSA and Service Mesh_ lab
+* Skills
+** Completion of the _APIs as a Business_ lab
+** Completion of the _MSA and Service Mesh_ lab
+* Tools
+** `curl` utility
+** `oc` version 3.9 utility
 
 == Overview
+
+== Setup
+
+=== Environment Variables
+
+-----
+$ export REGION=<provided to you by your instructor>
+$ export OCP_USER_ID=<provided to you by your instructor>
+$ export APICAST_ACCESS_TOKEN=<provided to you by your instructor>
+
+$ export TENANT_NAME=$OCP_USER_ID-3scale
+$ export OCP_WILDCARD_DOMAIN=apps.$REGION.openshift.opentlc.com
+$ export THREESCALE_PORTAL_ENDPOINT=https://${APICAST_ACCESS_TOKEN}@$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
+-----
+
+=== OpenShift 
+
+. Log into OpenShift
++
+-----
+$ oc login https://master.$OCP_WILDCARD_DOMAIN
+-----
+
+. View OpenShift project
++
+-----
+$ oc get project
+-----
+
+=== CoolStore Services
+
+. Review running pods
+
+. Invoke _Open API Specification_ documentation
+
+=== 3scale AMP
+
+TO-DO :  Review pre-provisioned multi-tenant lab environment
+
+
+== Apicast: Solo
+
+. Retrieve Apicast template
++
+-----
+$ curl -o /tmp/3scale-apicast-2.2.yml
+-----
+
+. Review Apicast template
++
+-----
+$ cat /tmp/3scale-apicast-2.2.yml | more
+-----
+
+.. Notice the use of a _Deployment_ resource in the template.
+.. The _Deployment_ construct is the more recent Kubernetes equivalent of what has always been in OpenShift:  _DeploymentConfiguration_.
++
+For the purpose of this lab, we'll use the Kubernetes _Deployment_ construct throughout.
+
+. Create Apicast related resources in OpenShift:
++
+-----
+$ oc new-app \
+     -f ~/lab/3scale_onpremise_implementation_labs/resources/3scale-apicast-2.2.yml \
+     --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
+     --param TENANT_NAME=$TENANT_NAME \
+     --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN > /tmp/3scale_apicast_istio_details.txt
+-----
+
+. Resume the intially paused deploy object:
++
+-----
+$ oc rollout resume deploy apicast-prod-solo
+-----
+
+== Apicast: Proxied by Envoy proxy
+
+=== Overview
+
+TO-DO:  Architecture diagram
+
+
+=== Procedure
+
+. View configmap in `istio-system` project
++
+-----
+-----
+
+
+. Weave Istio configs into a new apicast deployment
++
+-----
+
+
+# The password can be either the :
+#   1) [provider key](https://support.3scale.net/docs/terminology#apikey) or 
+#   2) [access token](https://support.3scale.net/docs/terminology#tokens) 
+# Note: these should not be confused with [service tokens](https://support.3scale.net/docs/terminology#tokens)
+# Example: `https://ACCESS-TOKEN@ACCOUNT-admin.3scale.net` (where the host name is the same as the domain for the URL when you are logged into the admin portal from a browser.
+# When `THREESCALE_PORTAL_ENDPOINT` environment variable is provided, the gateway will download the configuration from the 3scale on initializing. 
+# The configuration includes all the settings provided on the Integration page of the API(s).
+
+# https://3e7d7556ff02f564ded302c6b1648e33@user1-3scale-admin.apps.dev39.openshift.opentlc.com
+
+$ istioctl kube-inject \
+           -f ~/lab/3scale_onpremise_implementation_labs/resources/apicast-deploy-istio.yml \
+           >> ~/lab/3scale_onpremise_implementation_labs/resources/3scale-apicast-2.2-istio.yml
+
+$ oc new-app \
+     -f ~/lab/3scale_onpremise_implementation_labs/resources/3scale-apicast-2.2-istio.yml \
+     --param APICAST_ACCESS_TOKEN=$APICAST_ACCESS_TOKEN \
+     --param TENANT_NAME=$OCP_USER_ID-3scale \
+     --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
+     --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN > /tmp/3scale_apicast_istio_details.txt
+-----
+
+
+. Resume pauased _apicast_
++
+-----
+-----
+
+
+. Investigate _apicast_ provisioning problem
++
+-----
+
+...
+
+2018/08/02 08:32:23 [warn] 23#23: *2 [lua] remote_v2.lua:163: call(): failed to get list of services: invalid status: 0 url: https://ratwater-admin.3scale.net/admin/api/services.json, context: ngx.timer
+2018/08/02 08:32:23 [info] 23#23: *2 [lua] remote_v1.lua:98: call(): configuration request sent: https://ratwater-admin.3scale.net/admin/api/nginx/spec.json, context: ngx.timer
+2018/08/02 08:32:23 [error] 23#23: *2 peer closed connection in SSL handshake, context: ngx.timer
+2018/08/02 08:32:23 [warn] 23#23: *2 [lua] remote_v1.lua:108: call(): configuration download error: handshake failed, context: ngx.timer
+ERROR: /opt/app-root/src/src/apicast/configuration_loader.lua:57: missing configuration
+stack traceback:
+	/opt/app-root/src/src/apicast/configuration_loader.lua:57: in function 'boot'
+	/opt/app-root/src/libexec/boot.lua:6: in function 'file_gen'
+	init_worker_by_lua:49: in function <init_worker_by_lua:47>
+	[C]: in function 'xpcall'
+	init_worker_by_lua:56: in function <init_worker_by_lua:54>
+
+-----
+
+. Configure a custom Istio _Egress Route_ for Apicast gateway
++
+-----
+-----
+
+. Re-dploy Istio enabled Apicast gateway
+
+. Modify _service_ to route to new Istio enabled _apicast_
++
+-----
+-----
+
+. Test
+
+== Jaeger UI
+
+TO-DO : View OpenTracing spans in Jaeger UI
+
+
+== Conclusion
+
+As you know, Openresty is Nginx + luaJIT, and right now, we only get OpenTracing information for the "Nginx" part of it, there aren't any OpenTracing libraries for lua.
+We are working on being able to use the OpenTracing C++ libraries from LUA, so we can create spans directly from it, and gain even more visibility into APIcast internals. 
+For example, this could help debug if that custom policy you just installed is making things slower.
+
+
+ifdef::showscript[]
+endif::showscript[]
 
 
 

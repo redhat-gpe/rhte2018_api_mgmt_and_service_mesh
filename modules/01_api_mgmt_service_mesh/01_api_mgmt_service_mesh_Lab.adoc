@@ -182,6 +182,10 @@ stack traceback:
 
 TO-DO : View OpenTracing spans in Jaeger UI
 
+== 3scale mixer adapter
+
+TO-DO :  Juaquim will elaborate on this on Aug 9 during the 3scale F2F .
+
 
 == Conclusion
 

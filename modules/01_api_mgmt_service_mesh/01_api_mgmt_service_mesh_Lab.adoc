@@ -28,11 +28,12 @@
 -----
 $ export REGION=<provided to you by your instructor>
 $ export OCP_USER_ID=<provided to you by your instructor>
+$ export OCP_USER_PASSWD=<provided to you by your instructor>
 $ export APICAST_ACCESS_TOKEN=<provided to you by your instructor>
 
-$ export TENANT_NAME=$OCP_USER_ID-3scale
 $ export OCP_WILDCARD_DOMAIN=apps.$REGION.openshift.opentlc.com
-$ export THREESCALE_PORTAL_ENDPOINT=https://${APICAST_ACCESS_TOKEN}@$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
+$ export TENANT_NAME=$OCP_USER_ID-3scale
+$ export THREESCALE_PORTAL_ENDPOINT=https://${APICAST_ACCESS_TOKEN}@$TENANT_NAME-admin.apps.$REGION.openshift.opentlc.com
 -----
 
 === OpenShift 
@@ -40,32 +41,46 @@ $ export THREESCALE_PORTAL_ENDPOINT=https://${APICAST_ACCESS_TOKEN}@$TENANT_NAME
 . Log into OpenShift
 +
 -----
-$ oc login https://master.$OCP_WILDCARD_DOMAIN
+$ oc login https://master.$OCP_WILDCARD_DOMAIN -u $OCP_USER_ID -p $OCP_USER_PASSWD
 -----
 
-. View OpenShift project
+. Switch to your  OpenShift project
 +
 -----
-$ oc get project
+$ oc project $OCP_USER_ID-istio-3scale
 -----
 
 === CoolStore Services
 
 . Review running pods
++
+-----
+oc get pods
+
+...
+
+NAME                          READY     STATUS      RESTARTS   AGE
+catalog-mongodb-1-clsz4       1/1       Running     0          11m
+catalog-service-1-dqb28       1/1       Running     0          11m
+
+...
+-----
 
 . Invoke _Open API Specification_ documentation
 
 === 3scale AMP
 
-TO-DO :  Review pre-provisioned multi-tenant lab environment
-
+TO-DO :  Provide overview of pre-provisioned multi-tenant lab environment
 
 == Apicast: Solo
+
+=== Deploy Apicast
 
 . Retrieve Apicast template
 +
 -----
-$ curl -o /tmp/3scale-apicast-2.2.yml
+$ curl -o /tmp/3scale-apicast-2.2.yml \
+          https://raw.githubusercontent.com/gpe-mw-training/3scale_onpremise_implementation_labs/master/resources/rhte/3scale-apicast-2.2.yml
 -----
 
 . Review Apicast template
@@ -77,13 +92,15 @@ $ cat /tmp/3scale-apicast-2.2.yml | more
 .. Notice the use of a _Deployment_ resource in the template.
 .. The _Deployment_ construct is the more recent Kubernetes equivalent of what has always been in OpenShift:  _DeploymentConfiguration_.
 +
-For the purpose of this lab, we'll use the Kubernetes _Deployment_ construct throughout.
+For the purpose of this lab, we'll use the Kubernetes _Deployment_ resource type (instead of DeploymentConfig) throughout.
+
+. Check your knowledge
 
 . Create Apicast related resources in OpenShift:
 +
 -----
 $ oc new-app \
-     -f ~/lab/3scale_onpremise_implementation_labs/resources/3scale-apicast-2.2.yml \
+     -f /tmp/3scale-apicast-2.2.yml \
      --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
      --param TENANT_NAME=$TENANT_NAME \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN > /tmp/3scale_apicast_istio_details.txt
@@ -95,22 +112,41 @@ $ oc new-app \
 $ oc rollout resume deploy apicast-prod-solo
 -----
 
+=== Configure and Test API Mgmt (Optional)
+
+If you are new to API management using 3scale, it is recommended that you take this opportunity to refresh before continuing with the objectives of this lab.
+
+You can do so by following the instructions found in the <<configuretestapi>> section of the appendix of this lab.
+
+Upon completion, return back to this point in the lab and proceed with next section.
+
+If you are already experienced using Red Hat 3scale, then feel free to just proceed to the next section.
+
 == Apicast: Proxied by Envoy proxy
 
 === Overview
 
 TO-DO:  Architecture diagram
 
-
 === Procedure
+
+. View special privileges:
++
+-----
+
+TO-DO: view privileged scc on default sa
+
+-----
+
 
 . View configmap in `istio-system` project
 +
 -----
+$ oc describe configmap istio -n istio-system | more
 -----
 
 
-. Weave Istio configs into a new apicast deployment
+. Inject Istio configs into a new apicast deployment
 +
 -----
 
@@ -192,6 +228,18 @@ TO-DO :  Juaquim will elaborate on this on Aug 9 during the 3scale F2F .
 As you know, Openresty is Nginx + luaJIT, and right now, we only get OpenTracing information for the "Nginx" part of it, there aren't any OpenTracing libraries for lua.
 We are working on being able to use the OpenTracing C++ libraries from LUA, so we can create spans directly from it, and gain even more visibility into APIcast internals. 
 For example, this could help debug if that custom policy you just installed is making things slower.
+
+== Appendix
+
+
+[[configuretestapi]]
+=== Configure and Test API Mgmt
+
+. Create Service
+.. Click the `API` tab in the top toolbar.
+.. Click `Create Service`
++
+image::images/create_service.png[]
 
 
 ifdef::showscript[]

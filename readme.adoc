@@ -1,0 +1,19 @@
+= rhte_lab_04_api_mgmt_and_service_mesh
+
+== Project Plan
+
+[width="100%",cols="5,1,3"options="header"]
+|==========================
+| Task                                          |   Status    |     Notes
+| ansible - istio-system                        |   done      |
+| ansible - student OCP project & privs         |   done      |
+| ansible - catalog service                     |   done      |
+| ansible - 3scale provision                    |   todo      |
+| ansible - 3scale multi-tenant setup           |   75%       |
+| lab - apicast solo                            |   50%       |
+| lab - istio egress route                      |   todo      |
+| lab - istio / 3scale mixer                    |   todo      |
+| lab - prometheus UI                           |   todo      |
+| lab - QA                                      |   todo      |
+| slides                                        |   todo      |
+|==========================

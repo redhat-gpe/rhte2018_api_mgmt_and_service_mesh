@@ -26,14 +26,13 @@
 === Environment Variables
 
 -----
-$ export REGION=<provided to you by your instructor>
-$ export OCP_USER_ID=<provided to you by your instructor>
-$ export OCP_USER_PASSWD=<provided to you by your instructor>
-$ export APICAST_ACCESS_TOKEN=<provided to you by your instructor>
+$ export REGION=<provided by your instructor>
+$ export OCP_USER_ID=<provided by your instructor>
+$ export API_ACCESS_TOKEN=<provided by your instructor>
 
+$ export THREESCALE_PORTAL_ENDPOINT=https://${API_ACCESS_TOKEN}@$TENANT_NAME-admin.apps.$REGION.openshift.opentlc.com
 $ export OCP_WILDCARD_DOMAIN=apps.$REGION.openshift.opentlc.com
 $ export TENANT_NAME=$OCP_USER_ID-3scale
-$ export THREESCALE_PORTAL_ENDPOINT=https://${APICAST_ACCESS_TOKEN}@$TENANT_NAME-admin.apps.$REGION.openshift.opentlc.com
 -----
 
 === OpenShift 
@@ -41,16 +40,61 @@ $ export THREESCALE_PORTAL_ENDPOINT=https://${APICAST_ACCESS_TOKEN}@$TENANT_NAME
 . Log into OpenShift
 +
 -----
-$ oc login https://master.$OCP_WILDCARD_DOMAIN -u $OCP_USER_ID -p $OCP_USER_PASSWD
+$ oc login https://master.$REGION.openshift.opentlc.com -u $OCP_USER_ID -p <OCP user password provided by instructor>
 -----
 
 . Switch to your  OpenShift project
 +
 -----
-$ oc project $OCP_USER_ID-istio-3scale
+$ oc project rhte-mw-api-mesh-$OCP_USER_ID
 -----
 
-=== CoolStore Services
+
+=== CoolStore Catalog Service
+
+=== About Deployment and DeploymentConfig 
+
+The _Deployment_ construct is the more recent Kubernetes equivalent of what has always been in OpenShift:  _DeploymentConfig_.
+
+The _istioctl_ utility (introduced later in this lab) of Istio requires the use of the Kubernetes _Deployment_ resource.
++
+Subsequently, for the purpose of this lab, we'll use the Kubernetes _Deployment_ type (instead of DeploymentConfig) for all microservices.
+
+
+The CoolStore catalog service included in your lab environment connects to a MongoDB database.
+This MongoDB database is managed by Kubernetes using an OpenShift DeploymentConfig instead of a Kubernetes Deployment.
+The reason for this is the the OpenShift DeploymentConfig provides more features than a Deployment to include the use of _lifecycle_ hooks.
+This is important because the MongoDB in your lab is pre-seeded with data using a _post deployment_ life-cycle hook.
+This _post deployment_ lifecycle hook is simply ignored when attempting to use a Kubernetes Deployment.
+
+
+If you interested in learning more about the differences between Kubernetes _Deployments_ and OCP _DeploymentConfigurations_, please see
+link:https://docs.openshift.com/container-platform/3.10/dev_guide/deployments/kubernetes_deployments.html#kubernetes-deployments-vs-deployment-configurations[this documentation].
+
+
+=== Resources
+
+. Review DeploymentConfig
++
+-----
+$ oc get dc
+
+...
+
+NAME              REVISION   DESIRED   CURRENT   TRIGGERED BY
+catalog-mongodb   1          1         1         config,image(mongodb:3.4)
+-----
+
+. Review Deployment
++
+-----
+$ oc get deploy
+
+...
+
+NAME              DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+catalog-service   1         1         1            1           4m
+-----
 
 . Review running pods
 +
@@ -66,13 +110,50 @@ catalog-service-1-dqb28       1/1       Running     0          11m
 ...
 -----
 
-. Invoke _Open API Specification_ documentation
+. Retrieve the URL of the Coolstore catalog microservice:
++
+[source,text]
+----
+export CATALOG_URL=http://$(oc get route catalog-service -n $CATALOG_PRJ -o template --template='{{.spec.host}}')
+----
+
+. Via the catalog service, retrieve the pre-seeded data in the Mongo database:
++
+-----
+$ curl -X GET "$CATALOG_URL/products"
+-----
+
+== Invoke _Open API Specification_ docs
+
+The link:https://swagger.io/docs/specification/about/[OpenAPI Specification^] (formerly "Swagger Specification") is an API description format for REST APIs. link:https://swagger.io/[Swagger^] is a set of open-source tools built around the OpenAPI specification that can help you design, build, document, and consume REST APIs.
+
+Swagger documentation is available for the REST endpoints of the catalog microservice.
+
+. Display the URL for your project:
++
+[source,text]
+----
+echo $CATALOG_URL
+----
+
+. Copy and paste the URL into a web browser.
+* Expect to see the Swagger docs for the REST endpoints:
++
+image::images/swagger-ui-coolstore-catalog.png[]
+
+. Click *GET /products Get a list of products* to expand the item.
+. Click the *Try it out* button, then click *Execute*.
+. View the REST call response:
++
+image::images/swagger-ui-response.png[]
+
+. Use the Swagger UI to test the other REST endpoints for the catalog microservice.
 
 === 3scale AMP
 
 TO-DO :  Provide overview of pre-provisioned multi-tenant lab environment
 
-== Apicast: Solo
+== Apicast: Plain
 
 === Deploy Apicast
 
@@ -89,11 +170,6 @@ $ curl -o /tmp/3scale-apicast-2.2.yml \
 $ cat /tmp/3scale-apicast-2.2.yml | more
 -----
 
-.. Notice the use of a _Deployment_ resource in the template.
-.. The _Deployment_ construct is the more recent Kubernetes equivalent of what has always been in OpenShift:  _DeploymentConfiguration_.
-+
-For the purpose of this lab, we'll use the Kubernetes _Deployment_ resource type (instead of DeploymentConfig) throughout.
-
 . Check your knowledge
 
 . Create Apicast related resources in OpenShift:
@@ -109,7 +185,7 @@ $ oc new-app \
 . Resume the intially paused deploy object:
 +
 -----
-$ oc rollout resume deploy apicast-prod-solo
+$ oc rollout resume deploy apicast-prod-plain
 -----
 
 === Configure and Test API Mgmt (Optional)
@@ -122,7 +198,7 @@ Upon completion, return back to this point in the lab and proceed with next sect
 
 If you are already experienced using Red Hat 3scale, then feel free to just proceed to the next section.
 
-== Apicast: Proxied by Envoy proxy
+== Apicast: Istio enabled
 
 === Overview
 
@@ -167,9 +243,8 @@ $ istioctl kube-inject \
 
 $ oc new-app \
      -f ~/lab/3scale_onpremise_implementation_labs/resources/3scale-apicast-2.2-istio.yml \
-     --param APICAST_ACCESS_TOKEN=$APICAST_ACCESS_TOKEN \
-     --param TENANT_NAME=$OCP_USER_ID-3scale \
      --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
+     --param TENANT_NAME=$OCP_USER_ID-3scale \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN > /tmp/3scale_apicast_istio_details.txt
 -----
 
@@ -218,6 +293,8 @@ stack traceback:
 
 TO-DO : View OpenTracing spans in Jaeger UI
 
+== Catalog Service: Istio enabled
+
 == 3scale mixer adapter
 
 TO-DO :  Juaquim will elaborate on this on Aug 9 during the 3scale F2F .
@@ -243,6 +320,9 @@ image::images/create_service.png[]
 
 
 ifdef::showscript[]
+
+export API_ACCESS_TOKEN=9a67667ef15213f421430aaa9fe3fa1ceab44f165324fdae30941d98110ea1ae
+
 endif::showscript[]
 
 

@@ -19,6 +19,8 @@
 ** `curl` utility
 ** `oc` version 3.9 utility
 
+:numbered:
+
 == Overview
 
 == Setup

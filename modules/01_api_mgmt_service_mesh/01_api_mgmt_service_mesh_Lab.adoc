@@ -23,21 +23,33 @@
 
 == Overview
 
-== Setup
+An _Istio_ based service mesh introduces features that somewhat resumble features found in an API management solution.
+
+The purpose of this lab is to explore what a Container Native application managed by both a _service mesh_ and an API management solution could look like.
+
+== Lab Asset Overview
 
 === Environment Variables
 
+Before getting started, you'll want to open a terminal window and set the following environment variables:
+
 -----
+######  Instructor will provide to you the values to these first variables #######
+
 $ export REGION=<provided by your instructor>
 $ export OCP_USER_ID=<provided by your instructor>
 $ export API_ACCESS_TOKEN=<provided by your instructor>
+
+
+
+#######  Using the above variables, the following can now be copied and pasted in the same terminal window   ########
 
 $ export THREESCALE_PORTAL_ENDPOINT=https://${API_ACCESS_TOKEN}@$TENANT_NAME-admin.apps.$REGION.openshift.opentlc.com
 $ export OCP_WILDCARD_DOMAIN=apps.$REGION.openshift.opentlc.com
 $ export TENANT_NAME=$OCP_USER_ID-3scale
 -----
 
-=== OpenShift 
+=== OpenShift access
 
 . Log into OpenShift
 +
@@ -51,10 +63,18 @@ $ oc login https://master.$REGION.openshift.opentlc.com -u $OCP_USER_ID -p <OCP 
 $ oc project rhte-mw-api-mesh-$OCP_USER_ID
 -----
 
+. Log into OpenShift Web Console
+.. Many OpenShift related tasks found in this lab can be completed in the Web Console.
+.. To access, point to your browser to the output of the following:
++
+-----
+$ echo -en "\n\nhttps://master.$REGION.openshift.opentlc.com"
+-----
 
-=== CoolStore Catalog Service
+.. Authenticate using the OpenShift userId and passwd provided to you by your instructor
 
-=== About Deployment and DeploymentConfig 
+
+=== Deployment vs DeploymentConfig 
 
 The _Deployment_ construct is the more recent Kubernetes equivalent of what has always been in OpenShift:  _DeploymentConfig_.
 
@@ -74,7 +94,11 @@ If you interested in learning more about the differences between Kubernetes _Dep
 link:https://docs.openshift.com/container-platform/3.10/dev_guide/deployments/kubernetes_deployments.html#kubernetes-deployments-vs-deployment-configurations[this documentation].
 
 
-=== Resources
+=== CoolStore Catalog Service
+
+
+
+==== OpenShift objects
 
 . Review DeploymentConfig
 +
@@ -125,7 +149,7 @@ export CATALOG_URL=http://$(oc get route catalog-service -n $CATALOG_PRJ -o temp
 $ curl -X GET "$CATALOG_URL/products"
 -----
 
-== Invoke _Open API Specification_ docs
+==== Invoke _Open API Specification_ docs
 
 The link:https://swagger.io/docs/specification/about/[OpenAPI Specification^] (formerly "Swagger Specification") is an API description format for REST APIs. link:https://swagger.io/[Swagger^] is a set of open-source tools built around the OpenAPI specification that can help you design, build, document, and consume REST APIs.
 

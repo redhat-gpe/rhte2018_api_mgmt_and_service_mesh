@@ -8,8 +8,8 @@
 | 2 |ansible - istio-system                        |   100%     |
 | 3 |ansible - student OCP project & privs         |   100%     |
 | 4 |ansible - catalog service                     |   100%     | mix of rc and rs
-| 5 |ansible - 3scale provision                    |   0%       |
-| 6 |ansible - 3scale multi-tenant setup           |   75%      |
+| 5 |ansible - 3scale provision                    |   90%      |
+| 6 |ansible - 3scale multi-tenant setup           |   100%     |
 | 7 |lab - catalog service - plain                 |   100%     |
 | 8 |lab - apicast plain                           |   50%      |
 | 9 |lab - appendix - API Mgmt review              |   0%       |

@@ -7,7 +7,7 @@
 | 1 |Task                                          |   Status   |     Notes
 | 2 |ansible - istio-system                        |   100%     | ocp-workload-rhte-mw-api-mesh
 | 3 |ansible - student OCP project & privs         |   100%     | ocp-workload-rhte-mw-api-mesh
-| 4 |ansible - catalog service                     |   100%     | mix of rc and rs
+| 4 |ansible - catalog service                     |   100%     | ocp-workload-rhte-mw-api-mesh
 | 5 |ansible - 3scale provision                    |   90%      | ocp-workload-3scale-multitenant
 | 6 |ansible - 3scale multi-tenant setup           |   100%     | ocp-workload-3scale-multitenant
 | 7 |lab - catalog service - plain                 |   100%     |

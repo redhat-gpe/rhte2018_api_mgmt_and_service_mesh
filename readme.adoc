@@ -5,11 +5,11 @@
 [width="100%",cols="1,5,1,3"options="header"]
 |==========================
 | 1 |Task                                          |   Status   |     Notes
-| 2 |ansible - istio-system                        |   100%     |
-| 3 |ansible - student OCP project & privs         |   100%     |
-| 4 |ansible - catalog service                     |   100%     | mix of rc and rs
-| 5 |ansible - 3scale provision                    |   0%       |
-| 6 |ansible - 3scale multi-tenant setup           |   75%      |
+| 2 |ansible - istio-system                        |   100%     | ocp-workload-rhte-mw-api-mesh
+| 3 |ansible - student OCP project & privs         |   100%     | ocp-workload-rhte-mw-api-mesh
+| 4 |ansible - catalog service                     |   100%     | ocp-workload-rhte-mw-api-mesh
+| 5 |ansible - 3scale provision                    |   90%      | ocp-workload-3scale-multitenant
+| 6 |ansible - 3scale multi-tenant setup           |   100%     | ocp-workload-3scale-multitenant
 | 7 |lab - catalog service - plain                 |   100%     |
 | 8 |lab - apicast plain                           |   50%      |
 | 9 |lab - appendix - API Mgmt review              |   0%       |

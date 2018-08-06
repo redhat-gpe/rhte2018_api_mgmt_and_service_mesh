@@ -56,6 +56,7 @@ $ export API_ADMIN_ACCESS_TOKEN=<provided by your instructor>
 $ export OCP_WILDCARD_DOMAIN=apps.$REGION.openshift.opentlc.com
 $ export TENANT_NAME=$OCP_USER_ID-3scale
 $ export THREESCALE_PORTAL_ENDPOINT=https://${API_ADMIN_ACCESS_TOKEN}@$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
+$ export LAB_PROJECT=rhte-mw-api-mesh-$OCP_USER_ID
 -----
 
 ifdef::showscript[]
@@ -115,7 +116,7 @@ kubernetes v1.9.1+a0ce1bc657
 . Switch to your  OpenShift project
 +
 -----
-$ oc project rhte-mw-api-mesh-$OCP_USER_ID
+$ oc project $LAB_PROJECT
 -----
 
 . Log into OpenShift Web Console
@@ -189,21 +190,21 @@ catalog-service-1-dqb28       1/1       Running     0          11m
 ...
 -----
 
-. Retrieve the URL of the Coolstore catalog microservice:
+. Retrieve the URL of the unsecured _catalog_ route:
 +
 [source,text]
 ----
-$ export CATALOG_URL=http://$(oc get route catalog-service -o template --template='{{.spec.host}}')
+$ export CATALOG_ROUTE=http://$(oc get route catalog-unsecured -o template --template='{{.spec.host}}' -n $LAB_PROJECT)
 ----
 
-. Via the catalog service, retrieve the pre-seeded data in the Mongo database:
+. Via the catalog route, retrieve the pre-seeded data in the Mongo database:
 +
 -----
-$ curl -X GET "$CATALOG_URL/products"
+$ curl -X GET "$CATALOG_ROUTE/products"
 -----
 
 ==== Invoke _Open API Specification_ docs
-
+et
 The link:https://swagger.io/docs/specification/about/[OpenAPI Specification^] (formerly "Swagger Specification") is an API description format for REST APIs. link:https://swagger.io/[Swagger^] is a set of open-source tools built around the OpenAPI specification that can help you design, build, document, and consume REST APIs.
 
 Swagger documentation is available for the REST endpoints of the catalog microservice.
@@ -212,7 +213,7 @@ Swagger documentation is available for the REST endpoints of the catalog microse
 +
 [source,text]
 ----
-$ echo $CATALOG_URL
+$ echo $CATALOG_ROUTE
 ----
 
 . Copy and paste the URL into a web browser.
@@ -233,7 +234,9 @@ image::images/swagger-ui-response.png[]
 
 In this lab, you will provision your own 3scale _apicast_ gateway to manage your CoolStore _catalog_ service.
 
-This apicast gateway is unmodified with the exception that management of it occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_. 
+This apicast gateway is similar to an unmodified supported APIcast gateway with the exception that management of your APIcast gw occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_. 
+
+Your APIcast gateway will pull configurations from the pre-provisioned multi-tenant 3scale AMP.
 
 In a later section of this lab, this same _apicast_ gateway will be Istio enabled.
 
@@ -260,7 +263,8 @@ $ cat /tmp/3scale-apicast-2.2.yml | more
 $ oc new-app \
      -f /tmp/3scale-apicast-2.2.yml \
      --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
-     --param TENANT_NAME=$TENANT_NAME \
+     --param APP_NAME=catalog-prod \
+     --param ROUTE_NAME=catalog-prod-apicast \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN > /tmp/3scale_apicast_istio_details.txt
 -----
 
@@ -459,15 +463,14 @@ image::images/new_catalog_user_key.png[]
 . Create an environment variable set to this user key:
 +
 -----
-$ echo "export CATALOG_USER_KEY=<the catalog app user key>" >> ~/.bashrc
-$ source ~/.bashrc
+$ export CATALOG_USER_KEY=<the catalog app user key>
 -----
 
 ==== Stage Service Integration
 
-In this section, you define an API service to manage your _catalog_ RESTful business service.
+In this section, you define an _API proxy_ to manage your _catalog_ RESTful business service.
 
-. In the Admin Portal, navigate to the *APIs* tab.
+. In the 3scale AMP Admin Portal, navigate to the *APIs* tab.
 . From your `catalog_service` service, select *Application Plans*.
 . For the  `catalog_app_plan` and click the *Publish* link:
 +
@@ -481,24 +484,23 @@ image::images/add_base_url.png[]
 
 . Populate the *Configuration: configure & test immediately in the staging environment* form as follows:
 .. *Private Base URL*:
-... Enter the internal DNS resolvable URL to your mock Catalog business service.
+... Enter the internal DNS resolvable URL to your Catalog business service.
 ... The internal URL will be the output of the following:
 +
 -----
-$ echo -en "\n\nhttp://wfswarm-date-service.$OCP_PROJECT_PREFIX-bservices.svc.cluster.local:8080\n\n"
+$ echo -en "\n\nhttp://catalog-service.$LAB_PROJECT.svc.cluster.local:8080\n\n"
 -----
-... Do not include the `/time/now` web context in this URL.
 
 .. *Staging Public Base URL*: Populate this field with the output from the following command:
 +
 -----
-$ echo -en "\n`oc get route swarm-apicast-stage -n $OCP_PROJECT_PREFIX-3scale-amp --template "https://{{.spec.host}}"`:443\n\n"
+$ echo -en "\n`oc get route swarm-apicast-stage -n $LAB_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
 -----
 
 .. *Production Public Base URL*: Populate this field with the output from the following command:
 +
 -----
-$ echo -en "\n`oc get route swarm-apicast-prod -n $OCP_PROJECT_PREFIX-3scale-amp --template "https://{{.spec.host}}"`:443\n\n"
+$ echo -en "\n`oc get route swarm-apicast-prod -n $LAB_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
 -----
 
 .. *API test GET request*: Enter `/time/now`.

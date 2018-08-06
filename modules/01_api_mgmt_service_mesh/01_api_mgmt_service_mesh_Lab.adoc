@@ -43,7 +43,7 @@ If student lab environment and 3scale tenants were provisioned using the ocp-wor
 endif::showscript[]
 
 -----
-######  Instructor will provide to you the values to these environment variables #######
+######  Instructor will provide the values to these environment variables #######
 
 $ export REGION=<provided by your instructor>
 $ export OCP_USER_ID=<provided by your instructor>
@@ -51,7 +51,7 @@ $ export API_ADMIN_ACCESS_TOKEN=<provided by your instructor>
 
 
 
-#######  Using the above variables, the following can now be copied and pasted in the same terminal window   ########
+#######  Using above variables, the following can be copied and pasted in same terminal window   ########
 
 $ export OCP_WILDCARD_DOMAIN=apps.$REGION.openshift.opentlc.com
 $ export TENANT_NAME=$OCP_USER_ID-3scale
@@ -396,18 +396,18 @@ For example, this could help debug if that custom policy you just installed is m
 
 In this section, you define a service that manages access to the Coolstore Catalog service that has already been provisioned for you.
 
-The skills gained in this section are learned from pre-req courses but is additionally provided here as a refresher for your conveniance.
+The activities in this section are also found in the pre-req courses but is additionally provided here as a refresher for your conveniance.
 
 ==== Define Catalog Service
 
-. From the Admin Portal's home page, navigate to the *API* tab.
+. From the 3scale AMP Admin Portal home page, navigate to the *API* tab.
 . On the far right, click image:images/create_service_icon.png[].
 . Enter `catalog_service` for the *Name* and *System Name*.
 . Select *NGINX APIcast self-managed* *Gateway* type and not a plugin:
 +
 image::images/apicast_gw.png[]
 
-. Select *API Key (user_key)* for the *Authentication* type:
+. Scroll down the page and for the *Authentication* type, select *API Key (user_key)*:
 +
 image::images/select_api_key.png[]
 
@@ -423,23 +423,19 @@ Application plans define access policies for your API.
 image::images/create_app_plan.png[]
 
 . Enter `catalog_app_plan` for the *Name* and *System name*:
-+
-image::images/pop_app_plan.png[]
 
 . Click *Create Application Plan*.
 
 ==== Create Application
 
-In this section, you associate an application to each of your previously defined users.
-This generates a _user key_ to the application.
+In this section, you associate an application to an API consumer account.
+This generates a _user key_ to the application based on the details previously defined in the application plan.
 The user key is used as a query parameter to the HTTP request to invoke your business services via your on-premise APIcast gateway.
 
 . Navigate to the *Developers* tab.
-. Select your `catalog_account` account.
+. Select the `Developer` account.
 . Create Application
 .. Click the *0 Applications* link at the top:
-+
-image::images/create_catalog_dev_app.png[]
 +
 NOTE: A default application may have already been created (in which case the link will indicate 1 Application, not 0).
 If so, this default application is typically associated with the out-of-the-box `API` service (which is not what you want).
@@ -448,8 +444,9 @@ If it exists, feel free to click on default application to identify which servic
 .. Click image:images/create_app_icon.png[].
 .. Fill in the *New Application* form as follows:
 ... *Application plan*: `catalog_app_plan`
-... *Service Plan*: *Default*
+... *Service Plan*: `Default`
 ... *Name*: `catalog_app`
+... *Description*: `catalog_app`
 +
 image::images/create_catalog_app.png[]
 
@@ -462,7 +459,7 @@ image::images/new_catalog_user_key.png[]
 . Create an environment variable set to this user key:
 +
 -----
-$ echo "export ONPREM_CATALOG_USER_KEY=<the catalog app user key>" >> ~/.bashrc
+$ echo "export CATALOG_USER_KEY=<the catalog app user key>" >> ~/.bashrc
 $ source ~/.bashrc
 -----
 
@@ -564,16 +561,16 @@ Because, the APICAST_CONFIGURATION_LOADER environment variable is now set to tru
 
 In this section, you invoke your Catalog business service via your on-premise APIcast gateway.
 
-. Make sure that your `$ONPREM_CATALOG_USER_KEY` environment variable is still set:
+. Make sure that your `$CATALOG_USER_KEY` environment variable is still set:
 +
 -----
-$ echo $ONPREM_CATALOG_USER_KEY
+$ echo $CATALOG_USER_KEY
 -----
 
 . From the terminal, execute the following:
 +
 -----
-$ curl -v -k `echo -en "\nhttps://"$(oc get route/swarm-apicast-prod -o template --template {{.spec.host}})"/time/now?user_key=$ONPREM_SWARM_USER_KEY\n"`
+$ curl -v -k `echo -en "\nhttps://"$(oc get route/swarm-apicast-prod -o template --template {{.spec.host}})"/time/now?user_key=$CATALOG_USER_KEY\n"`
 -----
 +
 .Sample Output

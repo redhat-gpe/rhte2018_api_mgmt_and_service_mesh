@@ -256,6 +256,8 @@ $ cat /tmp/3scale-apicast-2.2.yml | more
 -----
 
 . Check your knowledge
++
+TO-DO
 
 . Create Apicast staging related resources in OpenShift:
 +
@@ -264,8 +266,9 @@ $ oc new-app \
      -f /tmp/3scale-apicast-2.2.yml \
      --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
      --param APP_NAME=catalog-stage-apicast \
-     --param ROUTE_NAME=catalog-stage-apicast \
+     --param ROUTE_NAME=catalog-stage-apicast-$OCP_USER_ID \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
+     --param THREESCALE_DEPLOYMENT_ENV=staging \
      -n $LAB_PROJECT > /tmp/catalog-stage-apicast_details.txt
 -----
 
@@ -276,8 +279,9 @@ $ oc new-app \
      -f /tmp/3scale-apicast-2.2.yml \
      --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
      --param APP_NAME=catalog-prod-apicast \
-     --param ROUTE_NAME=catalog-prod-apicast \
+     --param ROUTE_NAME=catalog-prod-apicast-$OCP_USER_ID \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
+     --param THREESCALE_DEPLOYMENT_ENV=production \
      -n $LAB_PROJECT > /tmp/catalog-prod-apicast_details.txt
 -----
 
@@ -507,16 +511,16 @@ $ echo -en "\n\nhttp://catalog-service.$LAB_PROJECT.svc.cluster.local:8080\n\n"
 .. *Staging Public Base URL*: Populate this field with the output from the following command:
 +
 -----
-$ echo -en "\n`oc get route swarm-apicast-stage -n $LAB_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
+$ echo -en "\n`oc get route catalog-stage-apicast-$OCP_USER_ID -n $LAB_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
 -----
 
 .. *Production Public Base URL*: Populate this field with the output from the following command:
 +
 -----
-$ echo -en "\n`oc get route swarm-apicast-prod -n $LAB_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
+$ echo -en "\n`oc get route catalog-prod-apicast-$OCP_USER_ID -n $LAB_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
 -----
 
-.. *API test GET request*: Enter `/time/now`.
+.. *API test GET request*: Enter `/products`.
 
 ** Expect to see a test cURL command populated with the API key assigned to you for the `catalog_app_plan`:
 +
@@ -543,9 +547,9 @@ Next, the configuration details of your service need to be propagated to your on
 ==== Run On-Premise APIcast
 
 ===== Refresh APIcast at boot
-Every time a configuration change is made to a api management service or application plan, the APIcast gateways need to be refreshed with the latest changes.
+Every time a configuration change is made to a api proxy or application plan, the production APIcast gateways need to be refreshed with the latest changes.
 
-The APIcast gateways are configured to refresh the latest service-related configuration information from the API management platform every 5 minutes.
+The APIcast gateways are configured to refresh the latest configuration information from the API management platform every 5 minutes.
 When this internal NGINX timer is triggered, you see log statements in your APIcast gateway similar to the following:
 
 .Sample Output
@@ -557,19 +561,25 @@ When this internal NGINX timer is triggered, you see log statements in your APIc
 [info] 36#36: *3574 [lua] configuration_loader.lua:160: auto updating configuration finished successfuly, context: ngx.timer
 -----
 
-Instead of potentially waiting for 5 minutes, you can force your apicast pods to refresh themselves.
+For the purpose of this lab, instead of potentially waiting for 5 minutes, you can simply bounce your apicast pods .
 
-. In your apicast-production dc, change the value of the _APICAST_CONFIGURATION_LOADER_ environment variable from `lazy` to: `boot`.
-. Modifying the dc will reload it and subsequently start a new pod.
+. Delete existing apicast related pods+
 +
-Because, the APICAST_CONFIGURATION_LOADER environment variable is now set to true, the apicast pod should pickup the latest api management configurations at start-up.
-. Tail the log of the new `apicast-production` pod.
+-----
+$ for i in `oc get pod | grep "apicast" | awk '{print $1}'`; do oc delete pod $i; done
+-----
++
+Kubernetes will detect the absence of these pods and start new ones.
++
+Because the value of the _APICAST_CONFIGURATION_LOADER_ environment variable in the pod is set to `boot`, the service proxy configuration from the 3scale AMP will automatically be pulled upon restart.
+
+. Tail the log of the new apicast production pod.
 
 * A debug-level log statement similar to the following appears:
 +
 .Sample Output
 -----
-[lua] configuration_store.lua:103: configure(): added service 2555417742084 configuration with hosts: swarm-3scale-apicast.apps.13.58.42.137.xip.io ttl: nil
+[lua] configuration_store.lua:103: configure(): added service 2555417742084 configuration with hosts: catalog-prod-apicast-user1.apps.7777.thinkpadratwater.com, catalog-stage-apicast-user1.apps.7777.thinkpadratwater.com ttl: 300
 -----
 
 ===== Test Catalog Business Service
@@ -585,14 +595,19 @@ $ echo $CATALOG_USER_KEY
 . From the terminal, execute the following:
 +
 -----
-$ curl -v -k `echo -en "\nhttps://"$(oc get route/swarm-apicast-prod -o template --template {{.spec.host}})"/time/now?user_key=$CATALOG_USER_KEY\n"`
+$ curl -v -k `echo -en "\nhttps://"$(oc get route/catalog-prod-apicast-$OCP_USER_ID -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY\n"`
 -----
 +
 .Sample Output
 -----
 ...
 
-{"value" : "The time is 2017-05-13T01:57:12.781Z"}
+{
+  "itemId" : "444435",
+  "name" : "Oculus Rift",
+  "desc" : "The world of gaming has also undergone some very unique and compelling tech advances in recent years. Virtual reality, the concept of complete immersion into a digital universe through a special headset, has been the white whale of gaming and digital technology ever since Nintendo marketed its Virtual Boy gaming system in 1995.",
+  "price" : 106.0
+}
 -----
 
 . If you are still tailing the log of your `apicast` pod, expect to see statements similar to this:
@@ -601,11 +616,10 @@ $ curl -v -k `echo -en "\nhttps://"$(oc get route/swarm-apicast-prod -o template
 -----
 ...
 
-2017/05/11 20:31:32 [info] 29#29: *179 [lua] proxy.lua:372: post_action(): [async] reporting to backend asynchronously, cached_key: 2555417742084:92042b24681f9f61dc48bce46f4eaa6f:usage%5Bhits%5D=1 while sending to client, client: 172.17.0.1, server: _, request: "GET /time/now?user_key=92042b24681f9f61dc48bce46f4eaa6f HTTP/1.1", upstream: "https://13.58.42.137:443/time/now?user_key=92042b24681f9f61dc48bce46f4eaa6f", host: "wfswarmdatestampservice-bservices.apps.13.58.42.137.xip.io"
+2018/08/06 19:07:46 [info] 24#24: *19 [lua] backend_client.lua:108: authrep(): backend client uri: http://backend-listener.3scale-mt-adm0:3000/transactions/authrep.xml?service_token=a4e0949f1b677611870dab3fb7c142df50871d1eca3d1c9f1615dd514c937df4&service_id=103&usage%5Bhits%5D=1&user_key=ccc4cbae7a44b363a6cd5907a54ff2f9 ok: true status: 200 body:  while sending to client, client: 172.17.0.1, server: _, request: "GET /products?user_key=ccc4cbae7a44b363a6cd5907a54ff2f9 HTTP/1.1", host: "catalog-service.rhte-mw-api-mesh-user1.svc.cluster.local"
 
 ...
 
-[11/May/2017:20:31:32 +0000] swarm-3scale-apicast.apps.13.58.42.137.xip.io:8080 172.17.0.1:40554 "GET /time/now?user_key=92042b24681f9f61dc48bce46f4eaa6f HTTP/1.1" 200 50 (0.090) 0.075
 -----
 
 

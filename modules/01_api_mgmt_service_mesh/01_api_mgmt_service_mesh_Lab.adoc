@@ -257,21 +257,34 @@ $ cat /tmp/3scale-apicast-2.2.yml | more
 
 . Check your knowledge
 
-. Create Apicast related resources in OpenShift:
+. Create Apicast staging related resources in OpenShift:
 +
 -----
 $ oc new-app \
      -f /tmp/3scale-apicast-2.2.yml \
      --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
-     --param APP_NAME=catalog-prod \
-     --param ROUTE_NAME=catalog-prod-apicast \
-     --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN > /tmp/3scale_apicast_istio_details.txt
+     --param APP_NAME=catalog-stage-apicast \
+     --param ROUTE_NAME=catalog-stage-apicast \
+     --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
+     -n $LAB_PROJECT > /tmp/catalog-stage-apicast_details.txt
 -----
 
-. Resume the intially paused deploy object:
+. Create Apicast production related resources in OpenShift:
 +
 -----
-$ oc rollout resume deploy apicast-prod-plain
+$ oc new-app \
+     -f /tmp/3scale-apicast-2.2.yml \
+     --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
+     --param APP_NAME=catalog-prod-apicast \
+     --param ROUTE_NAME=catalog-prod-apicast \
+     --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
+     -n $LAB_PROJECT > /tmp/catalog-prod-apicast_details.txt
+-----
+
+. Resume the intially paused deploy objects:
++
+-----
+$ oc rollout resume deploy catalog-stage-apicast catalog-prod-apicast
 -----
 
 === Configure and Test API Mgmt (Optional)
@@ -601,6 +614,7 @@ $ curl -v -k `echo -en "\nhttps://"$(oc get route/swarm-apicast-prod -o template
 ifdef::showscript[]
 
 export API_ADMIN_ACCESS_TOKEN=9a67667ef15213f421430aaa9fe3fa1ceab44f165324fdae30941d98110ea1ae
+export API_ADMIN_ACCESS_TOKEN=a3f62f9107104dc3aba1acb906e23d15d5227108e5bd11a3337de5f94f691dec
 
 endif::showscript[]
 

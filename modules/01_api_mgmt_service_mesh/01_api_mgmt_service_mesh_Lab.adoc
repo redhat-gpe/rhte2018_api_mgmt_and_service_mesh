@@ -17,6 +17,8 @@
 ** Completion of the _MSA and Service Mesh_ lab
 * Tools
 ** `curl` utility
+** `sed` utility
+** `istioctl` utility
 ** `oc` version 3.9 utility
 
 :numbered:
@@ -28,6 +30,12 @@ An _Istio_ based service mesh introduces features that somewhat resumble feature
 The purpose of this lab is to explore what a Container Native application managed by both a _service mesh_ and an API management solution could look like.
 
 === Benefits
+
+TO-DO
+
+=== OpenTracing APIcast vs Istio
+
+TO-DO
 
 == Lab Asset Overview
 
@@ -56,7 +64,7 @@ $ export API_ADMIN_ACCESS_TOKEN=<provided by your instructor>
 $ export OCP_WILDCARD_DOMAIN=apps.$REGION.openshift.opentlc.com
 $ export TENANT_NAME=$OCP_USER_ID-3scale
 $ export THREESCALE_PORTAL_ENDPOINT=https://${API_ADMIN_ACCESS_TOKEN}@$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
-$ export LAB_PROJECT=rhte-mw-api-mesh-$OCP_USER_ID
+$ export OCP_PROJECT=rhte-mw-api-mesh-$OCP_USER_ID
 -----
 
 ifdef::showscript[]
@@ -110,13 +118,27 @@ openshift v3.9.31
 kubernetes v1.9.1+a0ce1bc657
 -----
 
-.. In the above example, notice that version of the `oc` client (v3.9.30) is of the same minor release version of the OpenShift version (v3.9.31)
+.. In the above example, notice that version of the `oc` client is of the same minor release (v3.9.30) of the OpenShift server (v3.9.31)
 .. There a known subtle problems with using a version of the `oc` client that is different from your target OpenShift server.
+
+. View existing projects:
++
+-----
+$ oc get projects
+
+... 
+
+istio-system                                      Active
+rhte-mw-api-mesh-user1   rhte-mw-api-mesh-user1   Active
+-----
+
+.. Your OCP user has been provided with read-only access to the central _istio-system_ namespace with all _control plane_ Istio functionality.
+.. The namespace _rhte-mw-api-mesh-*_ is where you will be working throughout the duration of this lab.
 
 . Switch to your  OpenShift project
 +
 -----
-$ oc project $LAB_PROJECT
+$ oc project $OCP_PROJECT
 -----
 
 . Log into OpenShift Web Console
@@ -194,7 +216,7 @@ catalog-service-1-dqb28       1/1       Running     0          11m
 +
 [source,text]
 ----
-$ export CATALOG_ROUTE=http://$(oc get route catalog-unsecured -o template --template='{{.spec.host}}' -n $LAB_PROJECT)
+$ export CATALOG_ROUTE=http://$(oc get route catalog-unsecured -o template --template='{{.spec.host}}' -n $OCP_PROJECT)
 ----
 
 . Via the catalog route, retrieve the pre-seeded data in the Mongo database:
@@ -245,14 +267,14 @@ In a later section of this lab, this same _apicast_ gateway will be Istio enable
 . Retrieve Apicast template
 +
 -----
-$ curl -o /tmp/3scale-apicast-2.2.yml \
+$ curl -o $HOME/lab/3scale-apicast-2.2.yml \
           https://raw.githubusercontent.com/gpe-mw-training/3scale_onpremise_implementation_labs/master/resources/rhte/3scale-apicast-2.2.yml
 -----
 
 . Review Apicast template
 +
 -----
-$ cat /tmp/3scale-apicast-2.2.yml | more
+$ cat $HOME/lab/3scale-apicast-2.2.yml | more
 -----
 
 . Check your knowledge
@@ -263,26 +285,26 @@ TO-DO
 +
 -----
 $ oc new-app \
-     -f /tmp/3scale-apicast-2.2.yml \
+     -f $HOME/lab/3scale-apicast-2.2.yml \
      --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
      --param APP_NAME=catalog-stage-apicast \
      --param ROUTE_NAME=catalog-stage-apicast-$OCP_USER_ID \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
      --param THREESCALE_DEPLOYMENT_ENV=staging \
-     -n $LAB_PROJECT > /tmp/catalog-stage-apicast_details.txt
+     -n $OCP_PROJECT > $HOME/lab/catalog-stage-apicast_details.txt
 -----
 
 . Create Apicast production related resources in OpenShift:
 +
 -----
 $ oc new-app \
-     -f /tmp/3scale-apicast-2.2.yml \
+     -f $HOME/lab/3scale-apicast-2.2.yml \
      --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
      --param APP_NAME=catalog-prod-apicast \
      --param ROUTE_NAME=catalog-prod-apicast-$OCP_USER_ID \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
      --param THREESCALE_DEPLOYMENT_ENV=production \
-     -n $LAB_PROJECT > /tmp/catalog-prod-apicast_details.txt
+     -n $OCP_PROJECT > $HOME/lab/catalog-prod-apicast_details.txt
 -----
 
 . Resume the intially paused deploy objects:
@@ -305,6 +327,12 @@ If you are already experienced using Red Hat 3scale, then feel free to just proc
 
 === Overview
 
+Your lab assets should now consist of a _catalog_ RESTful service as well as both production and staging apicast gateways that are configured to send _authrep_ reports to the central multi-tenant 3scale AMP.
+
+In this section of the lab, you will now create new APIcast gateways that are injected with the Istio _Envoy_ proxy.
+
+The _Envoy_ proxy will interoperate with _service mesh control plane_ functionality found in the _istio-system_ namespace.
+
 TO-DO:  Architecture diagram
 
 === Procedure
@@ -324,48 +352,62 @@ TO-DO: view privileged scc on default sa
 $ oc describe configmap istio -n istio-system | more
 -----
 
+. Retrieve yaml representation of current apicast production deployment:
++
+-----
+$ oc get deploy catalog-prod-apicast -n $OCP_PROJECT -o yaml > $HOME/lab/catalog-prod-apicast.yaml
+-----
+
+. Differentiate your Istio enabled apicast gateway from your existing gateway:
++
+-----
+$ sed -i "s/catalog-prod-apicast/catalog-prod-apicast-istio/" $HOME/lab/catalog-prod-apicast.yaml
+-----
 
 . Inject Istio configs into a new apicast deployment
 +
 -----
 
-
-# The password can be either the :
-#   1) [provider key](https://support.3scale.net/docs/terminology#apikey) or 
-#   2) [access token](https://support.3scale.net/docs/terminology#tokens) 
-# Note: these should not be confused with [service tokens](https://support.3scale.net/docs/terminology#tokens)
-# Example: `https://ACCESS-TOKEN@ACCOUNT-admin.3scale.net` (where the host name is the same as the domain for the URL when you are logged into the admin portal from a browser.
-# When `THREESCALE_PORTAL_ENDPOINT` environment variable is provided, the gateway will download the configuration from the 3scale on initializing. 
-# The configuration includes all the settings provided on the Integration page of the API(s).
-
-# https://3e7d7556ff02f564ded302c6b1648e33@user1-3scale-admin.apps.dev39.openshift.opentlc.com
-
 $ istioctl kube-inject \
-           -f ~/lab/3scale_onpremise_implementation_labs/resources/apicast-deploy-istio.yml \
-           >> ~/lab/3scale_onpremise_implementation_labs/resources/3scale-apicast-2.2-istio.yml
-
-$ oc new-app \
-     -f ~/lab/3scale_onpremise_implementation_labs/resources/3scale-apicast-2.2-istio.yml \
-     --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
-     --param TENANT_NAME=$OCP_USER_ID-3scale \
-     --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN > /tmp/3scale_apicast_istio_details.txt
+           -f $HOME/lab/catalog-prod-apicast.yaml \
+           >> $HOME/lab/catalog-prod-apicast-istio.yaml
 -----
 
-
-. Resume pauased _apicast_
+. Deploy a new Istio enabled apicast production gateway:
 +
 -----
+$ oc create \
+     -f $HOME/lab/catalog-prod-apicast-istio.yaml \
+     -n $OCP_PROJECT
 -----
+
+. Inject required resource limits and requests into Istio related containers
++
+-----
+TO-DO
+-----
+
+. Change _APICAST_LOG_LEVEL_ environment variable to _info:
++
+-----
+$ oc patch deploy/catalog-prod-apicast-istio \
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"catalog-prod-apicast-istio", "env": [{"name":"APICAST_LOG_LEVEL","value":"info" }]}]}}}}'
+-----
++
+The _info_ log level in APIcast gateway actually provides more useful connection error details than does the _debug_ log level.
++
+This will become important because we are about to encounter connection related errors between apicast gateway and the 3scale AMP.
 
 
 . Investigate _apicast_ provisioning problem
 +
 -----
+$ oc logs -f `oc get pod | grep "apicast-istio" | awk '{print $1}'` -c catalog-prod-apicast-istio
 
 ...
 
-2018/08/02 08:32:23 [warn] 23#23: *2 [lua] remote_v2.lua:163: call(): failed to get list of services: invalid status: 0 url: https://ratwater-admin.3scale.net/admin/api/services.json, context: ngx.timer
-2018/08/02 08:32:23 [info] 23#23: *2 [lua] remote_v1.lua:98: call(): configuration request sent: https://ratwater-admin.3scale.net/admin/api/nginx/spec.json, context: ngx.timer
+2018/08/02 08:32:23 [warn] 23#23: *2 [lua] remote_v2.lua:163: call(): failed to get list of services: invalid status: 0 url: https://user1-3scale-admin.apps.7777.thinkpadratwater.com/admin/api/services.json, context: ngx.timer
+2018/08/02 08:32:23 [info] 23#23: *2 [lua] remote_v1.lua:98: call(): configuration request sent: https://user1-3scale-admin.apps.7777.thinkpadratwater.com/admin/api/nginx/spec.json, context: ngx.timer
 2018/08/02 08:32:23 [error] 23#23: *2 peer closed connection in SSL handshake, context: ngx.timer
 2018/08/02 08:32:23 [warn] 23#23: *2 [lua] remote_v1.lua:108: call(): configuration download error: handshake failed, context: ngx.timer
 ERROR: /opt/app-root/src/src/apicast/configuration_loader.lua:57: missing configuration
@@ -378,10 +420,37 @@ stack traceback:
 
 -----
 
-. Configure a custom Istio _Egress Route_ for Apicast gateway
+. Switch to use of 3scale AMP _service_ endpoint
 +
 -----
 -----
+
+=== Apply custom _Egress Route_
+
+. Configure a custom Istio _Egress Route_ for Apicast gateway config file:
++
+-----
+$ echo "apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: customer-apicast-egress-rule
+  namespace: $OCP_PROJECT
+spec:
+  hosts:
+  - $TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
+  ports:
+  - name: https-443
+    number: 443
+    protocol: https" > $HOME/lab/customer-apicast-egressrule.yaml
+-----
+
+. Inject configs from the configmap in _istio-system_ namespace:
++
+-----
+$ istioctl create -f $HOME/lab/customer-apicast-egressrule.yaml -n $OCP_PROJECT
+-----
+
+
 
 . Re-dploy Istio enabled Apicast gateway
 
@@ -505,19 +574,19 @@ image::images/add_base_url.png[]
 ... The internal URL will be the output of the following:
 +
 -----
-$ echo -en "\n\nhttp://catalog-service.$LAB_PROJECT.svc.cluster.local:8080\n\n"
+$ echo -en "\n\nhttp://catalog-service.$OCP_PROJECT.svc.cluster.local:8080\n\n"
 -----
 
 .. *Staging Public Base URL*: Populate this field with the output from the following command:
 +
 -----
-$ echo -en "\n`oc get route catalog-stage-apicast-$OCP_USER_ID -n $LAB_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
+$ echo -en "\n`oc get route catalog-stage-apicast-$OCP_USER_ID -n $OCP_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
 -----
 
 .. *Production Public Base URL*: Populate this field with the output from the following command:
 +
 -----
-$ echo -en "\n`oc get route catalog-prod-apicast-$OCP_USER_ID -n $LAB_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
+$ echo -en "\n`oc get route catalog-prod-apicast-$OCP_USER_ID -n $OCP_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
 -----
 
 .. *API test GET request*: Enter `/products`.

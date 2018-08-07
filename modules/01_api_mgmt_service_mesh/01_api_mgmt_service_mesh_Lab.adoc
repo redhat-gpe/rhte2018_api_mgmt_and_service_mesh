@@ -226,7 +226,7 @@ $ curl -X GET "$CATALOG_ROUTE/products"
 -----
 
 ==== Invoke _Open API Specification_ docs
-et
+
 The link:https://swagger.io/docs/specification/about/[OpenAPI Specification^] (formerly "Swagger Specification") is an API description format for REST APIs. link:https://swagger.io/[Swagger^] is a set of open-source tools built around the OpenAPI specification that can help you design, build, document, and consume REST APIs.
 
 Swagger documentation is available for the REST endpoints of the catalog microservice.
@@ -319,6 +319,9 @@ $ oc rollout resume deploy catalog-stage-apicast catalog-prod-apicast -n $OCP_PR
 
 In this section of the lab, you can optionally smoke test the management of your _catalog_ RESTful services using your 3scale AMP and APIcast gateways.
 
+Guidance is provided for both experienced and inexperienced 3scale users.
+Choose one and then proceed to the section pertaining to Istio enabling your apicast gateways.
+
 ==== Configure & Test: Experienced 3scale users
 
 If you are already proficient with 3scale, then configure and test the management of your _catalog_ RESTful API as per the following :
@@ -360,12 +363,6 @@ TO-DO: view privileged scc on default sa
 -----
 
 
-. View configmap in `istio-system` project
-+
------
-$ oc describe configmap istio -n istio-system | more
------
-
 . Retrieve yaml representation of current apicast production deployment:
 +
 -----
@@ -378,13 +375,27 @@ $ oc get deploy catalog-prod-apicast -n $OCP_PROJECT -o yaml > $HOME/lab/catalog
 $ sed -i "s/catalog-prod-apicast/catalog-prod-apicast-istio/" $HOME/lab/catalog-prod-apicast.yaml
 -----
 
+. Place the deployment in a paused state:
++
+-----
+$ sed -i "s/replicas:\ 1/replicas: 1\n  paused: true/" $HOME/lab/catalog-prod-apicast.yaml
+-----
+
+. View configmap in `istio-system` project
++
+-----
+$ oc describe configmap istio -n istio-system | more
+-----
++
+TO-DO:  Provide details and elaboration of the configs in the configmap.
+
 . Inject Istio configs into a new apicast deployment
 +
 -----
 
 $ istioctl kube-inject \
            -f $HOME/lab/catalog-prod-apicast.yaml \
-           >> $HOME/lab/catalog-prod-apicast-istio.yaml
+           > $HOME/lab/catalog-prod-apicast-istio.yaml
 -----
 
 . Deploy a new Istio enabled apicast production gateway:
@@ -395,7 +406,10 @@ $ oc create \
      -n $OCP_PROJECT
 -----
 
-. Inject required resource limits and requests into Istio related containers
+. Inject required resource limits and requests into Istio related containers :
++
+There is a clusterquota assigned to your OCP user.
+This clusterquota requires that all containers specify its _limits_ and _requests_.
 +
 -----
 TO-DO
@@ -410,8 +424,13 @@ $ oc patch deploy/catalog-prod-apicast-istio \
 +
 The _info_ log level in APIcast gateway actually provides more useful connection error details than does the _debug_ log level.
 +
-This will become important because we are about to encounter connection related errors between apicast gateway and the 3scale AMP.
+This will become important because we are about to encounter connection related errors between apicast gateway and the 3scale AMP now that Istio is introduced.
 
+. Resume the paused deployment:
++
+-----
+$ oc rollout resume deploy/catalog-prod-apicast-istio
+-----
 
 . Investigate _apicast_ provisioning problem
 +

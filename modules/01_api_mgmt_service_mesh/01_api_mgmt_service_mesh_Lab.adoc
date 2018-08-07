@@ -291,6 +291,7 @@ $ oc new-app \
      --param ROUTE_NAME=catalog-stage-apicast-$OCP_USER_ID \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
      --param THREESCALE_DEPLOYMENT_ENV=staging \
+     --param APICAST_CONFIGURATION_LOADER=lazy \
      -n $OCP_PROJECT > $HOME/lab/catalog-stage-apicast_details.txt
 -----
 
@@ -304,24 +305,37 @@ $ oc new-app \
      --param ROUTE_NAME=catalog-prod-apicast-$OCP_USER_ID \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
      --param THREESCALE_DEPLOYMENT_ENV=production \
+     --param APICAST_CONFIGURATION_LOADER=boot \
      -n $OCP_PROJECT > $HOME/lab/catalog-prod-apicast_details.txt
 -----
 
 . Resume the intially paused deploy objects:
 +
 -----
-$ oc rollout resume deploy catalog-stage-apicast catalog-prod-apicast
+$ oc rollout resume deploy catalog-stage-apicast catalog-prod-apicast -n $OCP_PROJECT
 -----
 
-=== Configure and Test API Mgmt (Optional)
+=== Configure and Test API Mgmt
 
-If you are new to API management using 3scale, it is recommended that you take this opportunity to refresh before continuing with the objectives of this lab.
+In this section of the lab, you can optionally smoke test the management of your _catalog_ RESTful services using your 3scale AMP and APIcast gateways.
 
-You can do so by following the instructions found in the <<configuretestapi>> section of the appendix of this lab.
+==== Configure & Test: Experienced 3scale users
+
+If you are already proficient with 3scale, then configure and test the management of your _catalog_ RESTful API as per the following :
+
+. Your Apicast gateways started correctly and the value of the _THREESCALE_ENDPOINT_ makes sense.
+. Create an API proxy service called _catalog_service_ and configure it to use the APIcast gateway and an API key for security.
+. Create an application plan called: _catalog_app_plan_
+. Create an application called: _catalog_app_
+. Capture the API key for the application and set its value as the following environment variable in your shell terminal:  _CATALOG_USER_KEY_ .
+. Configure the _Integration_ section of your _catalog_service_ .
+. Test the _/products_ resource of your _catalog_ RESTful via both your staging and production APIcast gateways.
+
+==== Configure & Test:  Inexperienced 3scale users
+
+If you are new to API management using 3scale, then follow the instructions found in the <<configuretestapi>> section of the appendix of this lab.
 
 Upon completion, return back to this point in the lab and proceed with next section.
-
-If you are already experienced using Red Hat 3scale, then feel free to just proceed to the next section.
 
 == Apicast: Istio enabled
 
@@ -613,10 +627,8 @@ image::images/stage_and_prod.png[]
 Your 3scale by Red Hat service is configured.
 Next, the configuration details of your service need to be propagated to your on-premise APIcast gateway.
 
-==== Run On-Premise APIcast
-
-===== Refresh APIcast at boot
-Every time a configuration change is made to a api proxy or application plan, the production APIcast gateways need to be refreshed with the latest changes.
+==== Refresh APIcast at boot
+Every time a configuration change is made to an api proxy or application plan, the production APIcast gateways need to be refreshed with the latest changes.
 
 The APIcast gateways are configured to refresh the latest configuration information from the API management platform every 5 minutes.
 When this internal NGINX timer is triggered, you see log statements in your APIcast gateway similar to the following:
@@ -651,7 +663,7 @@ Because the value of the _APICAST_CONFIGURATION_LOADER_ environment variable in 
 [lua] configuration_store.lua:103: configure(): added service 2555417742084 configuration with hosts: catalog-prod-apicast-user1.apps.7777.thinkpadratwater.com, catalog-stage-apicast-user1.apps.7777.thinkpadratwater.com ttl: 300
 -----
 
-===== Test Catalog Business Service
+==== Test Catalog Business Service
 
 In this section, you invoke your Catalog business service via your on-premise APIcast gateway.
 

@@ -574,6 +574,14 @@ TO-DO : View OpenTracing spans in Jaeger UI
 $ echo -en "\n\nhttp://"$(oc get route/tracing -o template --template {{.spec.host}} -n istio-system)"\n\n"
 -----
 
+. In the _Find Traces_ panel, scroll down to locate the traces associated with your OCP user name:
++
+image::images/trace_dropdown_selection.png[]
+
+. Click `Find Traces` and once you've done so, you should see an overview with timeline of all of your traces:
++
+image::images/trace_overview.png[]
+
 == Catalog Service: Istio enabled
 
 == 3scale mixer adapter

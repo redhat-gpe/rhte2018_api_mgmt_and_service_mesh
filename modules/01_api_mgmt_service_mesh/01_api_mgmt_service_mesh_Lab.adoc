@@ -29,6 +29,12 @@ An _Istio_ based service mesh introduces features that somewhat resumble feature
 
 The purpose of this lab is to explore what a Container Native application managed by both a _service mesh_ and an API management solution could look like.
 
+=== Container Native Application Platform configuration
+
+The emphasis of this lab is on configuration: specifically, configuration of a _Cloud Native App Platform (CNAP)_ that includes _API Management_ and a _Service Mesh_.
+
+Although this topic and the technologies employed in this lab should be of high interest to a developer responsible for business services running in production in a Cloud Native App Platform, 
+
 === Benefits
 
 TO-DO
@@ -729,6 +735,12 @@ ifdef::showscript[]
 
 export API_ADMIN_ACCESS_TOKEN=9a67667ef15213f421430aaa9fe3fa1ceab44f165324fdae30941d98110ea1ae
 export API_ADMIN_ACCESS_TOKEN=a3f62f9107104dc3aba1acb906e23d15d5227108e5bd11a3337de5f94f691dec
+
+TO-DO
+    1)  Is a liveness probe necessary for apicast ?  Apicast appears to error out on its own during boot problems.
+    2)  With liveness and readiness probes removed, apicast boot error behaves differently depending on whether it is injected with istio
+        - istio injected:   apicast boot errors cause fail-over the first 2 or 3 times.  Then no longer any errors.
+        - plain :           apicast continues to fail upon boot errors
 
 endif::showscript[]
 

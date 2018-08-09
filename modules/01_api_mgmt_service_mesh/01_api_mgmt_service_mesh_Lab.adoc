@@ -372,11 +372,13 @@ TO-DO: view privileged scc on default sa
 $ oc get deploy catalog-prod-apicast -n $OCP_PROJECT -o yaml > $HOME/lab/catalog-prod-apicast.yaml
 -----
 
-. Differentiate your Istio enabled apicast gateway from your existing gateway:
+. Differentiate your Istio enabled apicast gateway from your existing APIcast gateway:
 +
 -----
-$ sed -i "s/catalog-prod-apicast/catalog-prod-apicast-istio/" $HOME/lab/catalog-prod-apicast.yaml
+$ sed -i "s/catalog-prod-apicast/$OCP_USERNAME-catalog-prod-apicast-istio/" $HOME/lab/catalog-prod-apicast.yaml
 -----
++
+TO-DO:  elaborate as to why $OCP_USERNAME is utilized
 
 . Place the deployment in a paused state:
 +
@@ -401,6 +403,12 @@ $ istioctl kube-inject \
            > $HOME/lab/catalog-prod-apicast-istio.yaml
 -----
 
+. View Istio injected APIcast gateway deployment descriptor:
++
+-----
+$ cat $HOME/lab/catalog-prod-apicast-istio.yaml | more
+-----
+
 . Deploy a new Istio enabled apicast production gateway:
 +
 -----
@@ -418,28 +426,28 @@ This clusterquota requires that all containers specify its _limits_ and _request
 TO-DO
 -----
 
-. Change _APICAST_LOG_LEVEL_ environment variable to _info:
+. Change _APICAST_LOG_LEVEL_ environment variable to _info_:
 +
 -----
-$ oc patch deploy/catalog-prod-apicast-istio \
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"catalog-prod-apicast-istio", "env": [{"name":"APICAST_LOG_LEVEL","value":"info" }]}]}}}}'
+$ oc patch deploy/$OCP_USERNAME-catalog-prod-apicast-istio \
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-catalog-prod-apicast-istio", "env": [{"name":"APICAST_LOG_LEVEL","value":"info" }]}]}}}}'
 -----
 +
 The _info_ log level in APIcast gateway actually provides more useful connection error details than does the _debug_ log level.
 +
 This will become important because we are about to encounter a connection related error now that Istio is introduced .
-The connection problem will be in the apicast gateway at boot when it attempts to pull (using the value set in its THREESCALE_PORTAL_ENDPOINT env variable) _proxy-config_ information from the _backend-listener_ of 3scale AMP.
+The connection problem will be in the apicast gateway at boot when it attempts to pull (using the value set in its THREESCALE_PORTAL_ENDPOINT env variable) _proxy-config_ information from the _system-provider_ of 3scale AMP.
 
 . Resume the paused deployment:
 +
 -----
-$ oc rollout resume deploy/catalog-prod-apicast-istio
+$ oc rollout resume deploy/$OCP_USERNAME-catalog-prod-apicast-istio
 -----
 
 . Investigate _apicast_ provisioning problem
 +
 -----
-$ oc logs -f `oc get pod | grep "apicast-istio" | awk '{print $1}'` -c catalog-prod-apicast-istio
+$ oc logs -f `oc get pod | grep "apicast-istio" | awk '{print $1}'` -c $OCP_USERNAME-catalog-prod-apicast-istio
 
 ...
 
@@ -457,6 +465,36 @@ stack traceback:
 
 -----
 
+.. From the log file, notice that initial warning indicates a failure "to get list services" from the 3scale AMP _system-provider_ service.
+.. Interestingly, it is possible to ssh into the apicast gateway and execute the curl utility to manually retrieve the list of proxy service configuration:
++
+-----
+$ oc rsh `oc get pod -n $OCP_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
+     curl -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json \
+     | python -m json.tool | more
+
+...
+
+{
+    "services": [
+        {
+            "service": {
+                "backend_version": "1",
+                "created_at": "2018-08-07T11:13:03Z",
+                "end_user_registration_required": true,
+                "id": 3,
+                "links": [
+                    {
+                        "href": "https://user1-3scale-admin.apps.7777.thinkpadratwater.com/admin/api/services/3/metrics",
+                        "rel": "metrics"
+                    },
+
+
+....
+-----
++
+Why would you expect that the _curl_ utility to be able to pull the _service-proxy_ data when rsh'd into the apicast gateway but the apicast gateway itself fails to do so ?
+
 
 === Apply custom _Egress Route_
 
@@ -469,7 +507,7 @@ $ echo \
     "apiVersion: networking.istio.io/v1alpha3
 kind: ServiceEntry
 metadata:
-  name: customer-apicast-egress-rule-$OCP_USERNAME
+  name: $OCP_USERNAME-catalog-apicast-egress-rule
 spec:
   hosts:
   - $TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
@@ -479,19 +517,20 @@ spec:
     number: 443
     protocol: HTTPS 
   resolution: DNS" \
- > $HOME/lab/customer-apicast-egressrule.yaml
+ > $HOME/lab/catalog-apicast-egressrule.yaml
 -----
 
 . Inject configs from the configmap in _istio-system_ namespace:
 +
 -----
-$ istioctl create -f $HOME/lab/customer-apicast-egressrule.yaml -n $OCP_PROJECT
+$ istioctl create -f $HOME/lab/catalog-apicast-egressrule.yaml -n $OCP_PROJECT
 -----
 
 . Modify _service_ to route to new Istio enabled _apicast_
 +
 -----
-TO-DO
+$ oc patch service/catalog-prod-apicast \
+   --patch '{"spec":{"selector":{"app":"'$OCP_USERNAME'-catalog-prod-apicast-istio"}}}'
 -----
 
 . Make sure that your `$CATALOG_USER_KEY` environment variable is set:
@@ -760,13 +799,13 @@ ifdef::showscript[]
 
 export API_ADMIN_ACCESS_TOKEN=a3f62f9107104dc3aba1acb906e23d15d5227108e5bd11a3337de5f94f691dec
 
-echo -en "\n\ncurl -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json\n\n"                        :   test retrival of proxy service info from system-provider
+echo -en "\n\ncurl -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json\n\n"                                    :   test retrival of proxy service info from system-provider
 
-oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'`                                           :   ssh into istio enabled apicast gw
+oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'`                                                       :   ssh into istio enabled apicast gw
 
-oc logs -f  `oc get pod | grep "apicast-istio" | awk '{print $1}'` -c catalog-prod-apicast-istio        :   log of istio enabled apicast gw
+oc logs -f  `oc get pod | grep "apicast-istio" | awk '{print $1}'` -c $OCP_USERNAME-catalog-prod-apicast-istio      :   log of istio enabled apicast gw
 
-for i in `oc get pod | grep "apicast-istio" | awk '{print $1}'`; do oc delete pod $i; done              :   Re-dploy Istio enabled Apicast gateway
+for i in `oc get pod | grep "apicast-istio" | awk '{print $1}'`; do oc delete pod $i; done                          :   Re-dploy Istio enabled Apicast gateway
 
 
 TO-DO:

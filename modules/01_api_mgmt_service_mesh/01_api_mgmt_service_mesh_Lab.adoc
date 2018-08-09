@@ -29,6 +29,12 @@ An _Istio_ based service mesh introduces features that somewhat resumble feature
 
 The purpose of this lab is to explore what a Container Native application managed by both a _service mesh_ and an API management solution could look like.
 
+=== Container Native Application Platform configuration
+
+The emphasis of this lab is on configuration: specifically, configuration of a _Cloud Native App Platform (CNAP)_ that includes _API Management_ and a _Service Mesh_.
+
+Although this topic and the technologies employed in this lab should be of high interest to a developer responsible for business services running in production in a Cloud Native App Platform, 
+
 === Benefits
 
 TO-DO
@@ -808,16 +814,21 @@ oc logs -f  `oc get pod | grep "apicast-istio" | awk '{print $1}'` -c $OCP_USERN
 for i in `oc get pod | grep "apicast-istio" | awk '{print $1}'`; do oc delete pod $i; done                          :   Re-dploy Istio enabled Apicast gateway
 
 
-TO-DO:
-  1) investigate istio-ingress
+TO-DO
+  1)  Is a liveness probe necessary for apicast ?  Apicast appears to error out on its own during boot problems.
+  2)  With liveness and readiness probes removed, apicast boot error behaves differently depending on whether it is injected with istio
+        - istio injected:   apicast boot errors cause fail-over the first 2 or 3 times.  Then no longer any errors.
+        - plain :           apicast continues to fail upon boot errors
+
+  3) investigate istio-ingress
         OCP ha-proxy -> istio-ingress -> apicast gw -> catalog service
 
-  2) when apicast is in info log level, why does it stop rebooting itself when a THREESCALE_PORTAL_ENDPOINT related problem is encountered ?
+  4) when apicast is in info log level, why does it stop rebooting itself when a THREESCALE_PORTAL_ENDPOINT related problem is encountered ?
      when apicast is in debug log level, it continues to cycle when it encounters a THREESCALE_PORTAL_ENDPOINT problem .
 
-  3) with istio injected apicast, boot doesn't start however a curl within the same pod on THREESCALE_PORTAL_ENDPOINT does work
+  5) with istio injected apicast, boot doesn't start however a curl within the same pod on THREESCALE_PORTAL_ENDPOINT does work
 
-  4) allow user write access to istio-system to allow for execution of:  "istioctl create"
+  6) allow user write access to istio-system to allow for execution of:  "istioctl create"
 
 endif::showscript[]
 

@@ -532,7 +532,7 @@ $ curl -v -k `echo -en "\nhttps://"$(oc get route/catalog-prod-apicast-$OCP_USER
 TO-DO : View OpenTracing spans in Jaeger UI
 
 -----
-$ echo -en "\n\nhttps://"$(oc get route/tracing -o template --template {{.spec.host}} -n istio-system)"\n\n"
+$ echo -en "\n\nhttp://"$(oc get route/tracing -o template --template {{.spec.host}} -n istio-system)"\n\n"
 -----
 
 == Catalog Service: Istio enabled

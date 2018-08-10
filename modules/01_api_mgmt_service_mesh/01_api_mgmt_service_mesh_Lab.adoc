@@ -314,7 +314,7 @@ $ oc new-app \
      --param ROUTE_NAME=catalog-prod-apicast-$OCP_USERNAME \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
      --param THREESCALE_DEPLOYMENT_ENV=production \
-     --param APICAST_CONFIGURATION_LOADER=boot \
+     --param APICAST_CONFIGURATION_LOADER=lazy \
      -n $OCP_PROJECT > $HOME/lab/catalog-prod-apicast_details.txt
 -----
 
@@ -432,138 +432,14 @@ This clusterquota requires that all containers specify its _limits_ and _request
 TO-DO
 -----
 
-. Change _APICAST_LOG_LEVEL_ environment variable to _info_:
-+
------
-$ oc patch deploy/$OCP_USERNAME-catalog-prod-apicast-istio \
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-catalog-prod-apicast-istio", "env": [{"name":"APICAST_LOG_LEVEL","value":"info" }]}]}}}}'
------
-+
-The _info_ log level in APIcast gateway actually provides more useful connection error details than does the _debug_ log level.
-+
-This will become important because we are about to encounter a connection related error now that Istio is introduced .
-The connection problem will be in the apicast gateway at boot when it attempts to pull (using the value set in its THREESCALE_PORTAL_ENDPOINT env variable) _proxy-config_ information from the _system-provider_ of 3scale AMP.
-
 . Resume the paused deployment:
 +
 -----
 $ oc rollout resume deploy/$OCP_USERNAME-catalog-prod-apicast-istio
 -----
 
-. Investigate _apicast_ provisioning problem
-+
------
-$ oc logs -f `oc get pod | grep "apicast-istio" | awk '{print $1}'` -c $OCP_USERNAME-catalog-prod-apicast-istio
-
-...
-
-2018/08/02 08:32:23 [warn] 23#23: *2 [lua] remote_v2.lua:163: call(): failed to get list of services: invalid status: 0 url: https://user1-3scale-admin.apps.7777.thinkpadratwater.com/admin/api/services.json, context: ngx.timer
-2018/08/02 08:32:23 [info] 23#23: *2 [lua] remote_v1.lua:98: call(): configuration request sent: https://user1-3scale-admin.apps.7777.thinkpadratwater.com/admin/api/nginx/spec.json, context: ngx.timer
-2018/08/02 08:32:23 [error] 23#23: *2 peer closed connection in SSL handshake, context: ngx.timer
-2018/08/02 08:32:23 [warn] 23#23: *2 [lua] remote_v1.lua:108: call(): configuration download error: handshake failed, context: ngx.timer
-ERROR: /opt/app-root/src/src/apicast/configuration_loader.lua:57: missing configuration
-stack traceback:
-	/opt/app-root/src/src/apicast/configuration_loader.lua:57: in function 'boot'
-	/opt/app-root/src/libexec/boot.lua:6: in function 'file_gen'
-	init_worker_by_lua:49: in function <init_worker_by_lua:47>
-	[C]: in function 'xpcall'
-	init_worker_by_lua:56: in function <init_worker_by_lua:54>
-
------
-
-.. From the log file, notice that initial warning indicates a failure "to get list services" from the 3scale AMP _system-provider_ service.
-.. Interestingly, it is possible to ssh into the apicast gateway and execute the curl utility to manually retrieve the list of proxy service configuration:
-+
------
-$ oc rsh `oc get pod -n $OCP_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
-     curl -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json \
-     | python -m json.tool | more
-
-...
-
-{
-    "services": [
-        {
-            "service": {
-                "backend_version": "1",
-                "created_at": "2018-08-07T11:13:03Z",
-                "end_user_registration_required": true,
-                "id": 3,
-                "links": [
-                    {
-                        "href": "https://user1-3scale-admin.apps.7777.thinkpadratwater.com/admin/api/services/3/metrics",
-                        "rel": "metrics"
-                    },
 
 
-....
------
-+
-Why would you expect that the _curl_ utility to be able to pull the _service-proxy_ data when rsh'd into the apicast gateway but the apicast gateway itself fails to do so ?
-
-
-=== Apply custom _Egress Route_
-
-In this section, you create a custom Istio _ServiceEntry_ that allows your APIcast gateway to connect to the _backend-listener_ of the multi-tenant 3scale AMP.
-
-. Configure a custom Istio _Egress Route_ for Apicast gateway config file:
-+
------
-$ echo \
-    "apiVersion: networking.istio.io/v1alpha3
-kind: ServiceEntry
-metadata:
-  name: $OCP_USERNAME-catalog-apicast-egress-rule
-spec:
-  hosts:
-  - $TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
-  location: MESH_EXTERNAL
-  ports:
-  - name: https-443
-    number: 443
-    protocol: HTTPS 
-  resolution: DNS" \
- > $HOME/lab/catalog-apicast-egressrule.yaml
------
-
-. Inject configs from the configmap in _istio-system_ namespace:
-+
------
-$ istioctl create -f $HOME/lab/catalog-apicast-egressrule.yaml -n $OCP_PROJECT
------
-
-. Modify _service_ to route to new Istio enabled _apicast_
-+
------
-$ oc patch service/catalog-prod-apicast \
-   --patch '{"spec":{"selector":{"app":"'$OCP_USERNAME'-catalog-prod-apicast-istio"}}}'
------
-
-. Make sure that your `$CATALOG_USER_KEY` environment variable is set:
-+
------
-$ echo $CATALOG_USER_KEY
-
-d59904ad4515522ecccb8b81c761a283
------
-
-. From the terminal, execute the following:
-+
------
-$ curl -v -k `echo -en "\nhttps://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY\n"`
------
-+
-.Sample Output
------
-...
-
-{
-  "itemId" : "444435",
-  "name" : "Oculus Rift",
-  "desc" : "The world of gaming has also undergone some very unique and compelling tech advances in recent years. Virtual reality, the concept of complete immersion into a digital universe through a special headset, has been the white whale of gaming and digital technology ever since Nintendo marketed its Virtual Boy gaming system in 1995.",
-  "price" : 106.0
-}
------
 
 
 == Jaeger UI
@@ -937,8 +813,11 @@ for i in `oc get pod | grep "apicast-istio" | awk '{print $1}'`; do oc delete po
 TO-DO
   1)  Is a liveness probe necessary for apicast ?  Apicast appears to error out on its own during boot problems.
   2)  With liveness and readiness probes removed, apicast boot error behaves differently depending on whether it is injected with istio
-        - istio injected:   apicast boot errors cause fail-over the first 2 or 3 times.  Then no longer any errors.
-        - plain :           apicast continues to fail upon boot errors
+        - istio injected :   apicast boot errors cause fail-over the first 2 or 3 times.  Then no longer any errors.
+        - no istio       :   apicast continues to fail upon boot errors
+
+      Turns out envoy proxy is blocking outbound calls at boot for about 1 minute or so
+      All outbound calls from primary pods (ie:  apicast invocation to THREESCALE_PORTAL_ENDPOINT and vert.x / fabric8 invocation to kubernetes API to query for configmap) during that time are blocked.
 
   3) investigate istio-ingress
         OCP ha-proxy -> istio-ingress -> apicast gw -> catalog service
@@ -953,6 +832,132 @@ TO-DO
 endif::showscript[]
 
 ifdef::showscript[]
+
+. Change _APICAST_LOG_LEVEL_ environment variable to _info_:
++
+-----
+$ oc patch deploy/$OCP_USERNAME-catalog-prod-apicast-istio \
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-catalog-prod-apicast-istio", "env": [{"name":"APICAST_LOG_LEVEL","value":"info" }]}]}}}}'
+-----
++
+The _info_ log level in APIcast gateway actually provides more useful connection error details than does the _debug_ log level.
++
+This will become important because we are about to encounter a connection related error now that Istio is introduced .
+The connection problem will be in the apicast gateway at boot when it attempts to pull (using the value set in its THREESCALE_PORTAL_ENDPOINT env variable) _proxy-config_ information from the _system-provider_ of 3scale AMP.
+
+. Investigate _apicast_ provisioning problem
++
+-----
+$ oc logs -f `oc get pod | grep "apicast-istio" | awk '{print $1}'` -c $OCP_USERNAME-catalog-prod-apicast-istio
+
+...
+
+2018/08/02 08:32:23 [warn] 23#23: *2 [lua] remote_v2.lua:163: call(): failed to get list of services: invalid status: 0 url: https://user1-3scale-admin.apps.7777.thinkpadratwater.com/admin/api/services.json, context: ngx.timer
+2018/08/02 08:32:23 [info] 23#23: *2 [lua] remote_v1.lua:98: call(): configuration request sent: https://user1-3scale-admin.apps.7777.thinkpadratwater.com/admin/api/nginx/spec.json, context: ngx.timer
+2018/08/02 08:32:23 [error] 23#23: *2 peer closed connection in SSL handshake, context: ngx.timer
+2018/08/02 08:32:23 [warn] 23#23: *2 [lua] remote_v1.lua:108: call(): configuration download error: handshake failed, context: ngx.timer
+ERROR: /opt/app-root/src/src/apicast/configuration_loader.lua:57: missing configuration
+stack traceback:
+	/opt/app-root/src/src/apicast/configuration_loader.lua:57: in function 'boot'
+	/opt/app-root/src/libexec/boot.lua:6: in function 'file_gen'
+	init_worker_by_lua:49: in function <init_worker_by_lua:47>
+	[C]: in function 'xpcall'
+	init_worker_by_lua:56: in function <init_worker_by_lua:54>
+
+-----
+
+.. From the log file, notice that initial warning indicates a failure "to get list services" from the 3scale AMP _system-provider_ service.
+.. Interestingly, it is possible to ssh into the apicast gateway and execute the curl utility to manually retrieve the list of proxy service configuration:
++
+-----
+$ oc rsh `oc get pod -n $OCP_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
+     curl -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json \
+     | python -m json.tool | more
+
+...
+
+{
+    "services": [
+        {
+            "service": {
+                "backend_version": "1",
+                "created_at": "2018-08-07T11:13:03Z",
+                "end_user_registration_required": true,
+                "id": 3,
+                "links": [
+                    {
+                        "href": "https://user1-3scale-admin.apps.7777.thinkpadratwater.com/admin/api/services/3/metrics",
+                        "rel": "metrics"
+                    },
+
+
+....
+-----
++
+Why would you expect that the _curl_ utility to be able to pull the _service-proxy_ data when rsh'd into the apicast gateway but the apicast gateway itself fails to do so ?
+
+=== Apply custom _Egress Route_
+
+In this section, you create a custom Istio _ServiceEntry_ that allows your APIcast gateway to connect to the _backend-listener_ of the multi-tenant 3scale AMP.
+
+. Configure a custom Istio _Egress Route_ for Apicast gateway config file:
++
+-----
+$ echo \
+    "apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: $OCP_USERNAME-catalog-apicast-egress-rule
+spec:
+  hosts:
+  - $TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
+  location: MESH_EXTERNAL
+  ports:
+  - name: https-443
+    number: 443
+    protocol: HTTPS 
+  resolution: DNS" \
+ > $HOME/lab/catalog-apicast-egressrule.yaml
+-----
+
+. Inject configs from the configmap in _istio-system_ namespace:
++
+-----
+$ istioctl create -f $HOME/lab/catalog-apicast-egressrule.yaml -n $OCP_PROJECT
+-----
+
+. Modify _service_ to route to new Istio enabled _apicast_
++
+-----
+$ oc patch service/catalog-prod-apicast \
+   --patch '{"spec":{"selector":{"app":"'$OCP_USERNAME'-catalog-prod-apicast-istio"}}}'
+-----
+
+. Make sure that your `$CATALOG_USER_KEY` environment variable is set:
++
+-----
+$ echo $CATALOG_USER_KEY
+
+d59904ad4515522ecccb8b81c761a283
+-----
+
+. From the terminal, execute the following:
++
+-----
+$ curl -v -k `echo -en "\nhttps://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY\n"`
+-----
++
+.Sample Output
+-----
+...
+
+{
+  "itemId" : "444435",
+  "name" : "Oculus Rift",
+  "desc" : "The world of gaming has also undergone some very unique and compelling tech advances in recent years. Virtual reality, the concept of complete immersion into a digital universe through a special headset, has been the white whale of gaming and digital technology ever since Nintendo marketed its Virtual Boy gaming system in 1995.",
+  "price" : 106.0
+}
+-----
 
 endif::showscript[]
 

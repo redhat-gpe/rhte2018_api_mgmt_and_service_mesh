@@ -819,6 +819,9 @@ TO-DO
       Turns out envoy proxy is blocking outbound calls at boot for about 1 minute or so
       All outbound calls from primary pods (ie:  apicast invocation to THREESCALE_PORTAL_ENDPOINT and vert.x / fabric8 invocation to kubernetes API to query for configmap) during that time are blocked.
 
+      https://github.com/istio/istio/issues/3533        :   startup time of istio-proxy causes comm issues for up to 30 seconds
+
+
   3) investigate istio-ingress
         OCP ha-proxy -> istio-ingress -> apicast gw -> catalog service
 

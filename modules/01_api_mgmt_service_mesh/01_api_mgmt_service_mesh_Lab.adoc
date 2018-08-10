@@ -27,21 +27,53 @@
 
 An _Istio_ based service mesh introduces features that somewhat resumble features found in an API management solution.
 
-The purpose of this lab is to explore what a Container Native application managed by both a _service mesh_ and an API management solution could look like.
+The purpose of this lab is to apply both a _service mesh_ and an API management solution to a container native application.
 
-=== Container Native Application Platform configuration
+Along the way, we'll compare and contrast some of the features between API Mgmt and Service Mesh using Red Hat products and community projects.
+
+
+=== Configuration of CNAP solutions
 
 The emphasis of this lab is on configuration: specifically, configuration of a _Cloud Native App Platform (CNAP)_ that includes _API Management_ and a _Service Mesh_.
 
-Although this topic and the technologies employed in this lab should be of high interest to a developer responsible for business services running in production in a Cloud Native App Platform, 
+Although this topic and the technologies employed in this lab should be of high interest to a developer responsible for business services running in production in a Cloud Native App Platform,
+Students of this lab will not write any business logic.
+Development of CNAP business and integration logic can be written in a wide variety of development platforms offered by Red Hat:
 
-=== Benefits
+. Red Hat Openshift Application Runtimes (RHOAR)
+. Red Hat Fuse on OpenShift
 
-TO-DO
+Details about these Red Hat development platforms are out of scope for this lab however please enroll in Red Hat GPTE's courses on these topics if you are interested.
 
-=== OpenTracing APIcast vs Istio
+=== Background
 
-TO-DO
+ TO-DO
+
+. What is Red Hat's API Management solution ?  Red Hat 3scale
+. Describe Red Hat's investments in the _Istio_ project ?
+. What is the scope of API Management ?
+. What is the scope of a Service Mesh ?
+
+
+=== Alternatives
+
+==== OpenTracing APIcast vs Istio
+ 
+Of related interest is that the upstream community APIcast gateway from Red Hat's 3scale product already bundles _OpenTracing_ libraries.
+This allows it already to particpate in distributed tracing when paired with implementations such as zepplin or Jaeger.
+ 
+_Observability_ is a major focus of a _service mesh_ and Istio in particular.
+As such, Istio supports distributed tracing out of the box by bundling Jaeger.
+ 
+In this lab, you will not use the _OpenTracing_ libraries bundled in APIcast.
+Instead, APIcast will be injected with the _Envoy_ sidecar of Istio and the _Envoy_ sidecar will handle tracing communication of the _OpenTracing_ mixer of Istio.
+ 
+==== 3scale mixer adapter
+ 
+TO-DO :  Juaquim will elaborate on this on Aug 9 during the 3scale F2F .
+ 
+ 
+
 
 == Lab Asset Overview
 
@@ -60,7 +92,8 @@ endif::showscript[]
 ######  Instructor will provide the values to these environment variables #######
 
 $ export REGION=<provided by your instructor>
-$ export OCP_USERNAME=<provided by your instructor>
+$ export GUID=<provided by your instructor>
+$ export OCP_PASSWD=<provided by your instructor>
 $ export API_ADMIN_ACCESS_TOKEN=<provided by your instructor>
 
 
@@ -73,7 +106,8 @@ $ export TENANT_NAME=$OCP_USERNAME-3scale
 # Notice the value of this variable is being set to the route to the 3scale _system-provider_ 
 $ export THREESCALE_PORTAL_ENDPOINT=https://${API_ADMIN_ACCESS_TOKEN}@$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
 
-$ export OCP_PROJECT=rhte-mw-api-mesh-$OCP_USERNAME
+$ export OCP_USERNAME=user$GUID
+$ export OCP_PROJECT=rhte-mw-api-mesh-$GUID
 -----
 
 ifdef::showscript[]
@@ -90,13 +124,14 @@ Your lab environment includes access to a multi-tenant 3scale AMP installation.
 For the purpose of this lab, you will serve as the administrator of your own 3scale _tenant_ (aka: _domain_)
 
 . Log into the admin portal of your 3scale AMP environment using the information to do provided by your instructor
+
 . To access the admin portal of your 3scale environment, point to your browser to the output of the following:
 +
 -----
 $ echo -en "\n\nhttps://$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN\n\n"
 -----
 
-. Authenticate using credentials provided to you by your instructor
+. Authenticate using the values of $OCP_USERNAME and $OCP_PASSWD   (Your 3scale credentials are the same as your OCP credentials).
 +
 image::images/3scale_login.png[]
 
@@ -110,7 +145,7 @@ Access to your OCP resources can be gained via both the `oc` utility as well as 
 . Log into OpenShift
 +
 -----
-$ oc login https://master.$REGION.openshift.opentlc.com -u $OCP_USERNAME -p <OCP user password provided by instructor>
+$ oc login https://master.$REGION.openshift.opentlc.com -u $OCP_USERNAME -p $OCP_PASSWD
 -----
 
 . Ensure that your `oc` client is the same minor release version as the server:
@@ -141,7 +176,11 @@ istio-system                                      Active
 rhte-mw-api-mesh-user1   rhte-mw-api-mesh-user1   Active
 -----
 
-.. Your OCP user has been provided with read-only access to the central _istio-system_ namespace with all _control plane_ Istio functionality.
+.. Your OCP user has been provided with _view_ and _edit_ access to the central _istio-system_ namespace with all _control plane_ Istio functionality.
++
+Later in this lab, you'll use a utility called _istioctl_ .
+This utility will need both view and edit privlidges to the _istio-system_ namespace.
+
 .. The namespace _rhte-mw-api-mesh-*_ is where you will be working throughout the duration of this lab.
 
 . Switch to your  OpenShift project
@@ -158,7 +197,7 @@ $ oc project $OCP_PROJECT
 $ echo -en "\n\nhttps://master.$REGION.openshift.opentlc.com\n\n"
 -----
 
-.. Authenticate using the OpenShift userId and passwd provided to you by your instructor
+.. Authenticate using the values of $OCP_USERNAME and $OCP_PASSWD
 
 
 === Deployment vs DeploymentConfig 
@@ -188,7 +227,7 @@ link:https://docs.openshift.com/container-platform/3.10/dev_guide/deployments/ku
 . Review DeploymentConfig
 +
 -----
-$ oc get dc
+$ oc get dc -n $OCP_PROJECT
 
 ...
 
@@ -199,7 +238,7 @@ catalog-mongodb   1          1         1         config,image(mongodb:3.4)
 . Review Deployment
 +
 -----
-$ oc get deploy
+$ oc get deploy -n $OCP_PROJECT
 
 ...
 
@@ -207,7 +246,7 @@ NAME              DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
 catalog-service   1         1         1            1           4m
 -----
 
-. Review running pods
+. Review running pods -n $OCP_PROJECT
 +
 -----
 $ oc get pods
@@ -232,6 +271,18 @@ $ export NAKED_CATALOG_ROUTE=http://$(oc get route catalog-unsecured -o template
 +
 -----
 $ curl -X GET "$NAKED_CATALOG_ROUTE/products"
+-----
++
+.Sample Output
+-----
+...
+
+{
+  "itemId" : "444435",
+  "name" : "Oculus Rift",
+  "desc" : "The world of gaming has also undergone some very unique and compelling tech advances in recent years. Virtual reality, the concept of complete immersion into a digital universe through a special headset, has been the white whale of gaming and digital technology ever since Nintendo marketed its Virtual Boy gaming system in 1995.",
+  "price" : 106.0
+}
 -----
 
 ==== Invoke _Open API Specification_ docs
@@ -264,6 +315,9 @@ image::images/swagger-ui-response.png[]
 == Apicast: Plain
 
 In this lab, you will provision your own 3scale _apicast_ gateway to manage your CoolStore _catalog_ service.
+
+image::images/deployment_apicast.png[]
+
 
 This apicast gateway is similar to an unmodified supported APIcast gateway with the exception that management of your APIcast gw occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_. 
 
@@ -329,7 +383,7 @@ $ oc rollout resume deploy catalog-stage-apicast catalog-prod-apicast -n $OCP_PR
 In this section of the lab, you can optionally smoke test the management of your _catalog_ RESTful services using your 3scale AMP and APIcast gateways.
 
 Guidance is provided for both experienced and inexperienced 3scale users.
-Choose one and then proceed to the section pertaining to Istio enabling your apicast gateways.
+Choose only one.
 
 ==== Configure & Test: Experienced 3scale users
 
@@ -343,12 +397,15 @@ If you are already proficient with 3scale, then configure and test the managemen
 . Configure the _Integration_ section of your _catalog_service_ .
 . Test the _/products_ resource of your _catalog_ RESTful via both your staging and production APIcast gateways.
 
+Proceed to the section: <<apicast_istio>>
+
 ==== Configure & Test:  Inexperienced 3scale users
 
 If you are new to API management using 3scale, then follow the instructions found in the <<configuretestapi>> section of the appendix of this lab.
 
-Upon completion, return back to this point in the lab and proceed with next section.
+Upon completion, return back to this point and proceed with next section: <<apicast_istio>>.
 
+[[apicast_istio]]
 == Apicast: Istio enabled
 
 === Overview
@@ -539,22 +596,9 @@ d59904ad4515522ecccb8b81c761a283
 . From the terminal, execute the following:
 +
 -----
-+
------
 $ curl -v -k `echo -en "\nhttps://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY\n"`
 -----
-+
-.Sample Output
------
-...
 
-{
-  "itemId" : "444435",
-  "name" : "Oculus Rift",
-  "desc" : "The world of gaming has also undergone some very unique and compelling tech advances in recent years. Virtual reality, the concept of complete immersion into a digital universe through a special headset, has been the white whale of gaming and digital technology ever since Nintendo marketed its Virtual Boy gaming system in 1995.",
-  "price" : 106.0
-}
------
 
 
 == 3scale Analytics
@@ -572,16 +616,18 @@ Defining of fine grained _methods_ and _mappings_ for your catalog API will subs
 The analytics provided by 3scale compliment the distributed tracing capabilities of Jaeger.
 
 
-== 3scale mixer adapter
-
-TO-DO :  Juaquim will elaborate on this on Aug 9 during the 3scale F2F .
 
 
-== Conclusion
+== Conclusions
 
 As you know, Openresty is Nginx + luaJIT, and right now, we only get OpenTracing information for the "Nginx" part of it, there aren't any OpenTracing libraries for lua.
 We are working on being able to use the OpenTracing C++ libraries from LUA, so we can create spans directly from it, and gain even more visibility into APIcast internals. 
 For example, this could help debug if that custom policy you just installed is making things slower.
+
+
+== Questions
+
+TO-DO :  questions to test student knowledge of the concepts / learning objectives of this lab
 
 == Appendix
 

@@ -683,8 +683,17 @@ $ curl -v -k `echo -en "\nhttps://"$(oc get route/catalog-prod-apicast-$OCP_USER
 
 == 3scale Analytics
 
-TO-DO
+Return back to your 3scale AMP as the domain admin and navigate to the _Analytics_ tab at the top.
 
+image::images/3scale_analytics.png[]
+
+Notice that the _hits_ metric for your _catalog_service_ API is automatically depicted.
+3scale analytics can depict the total count of _hits_ on both the API as well as the API method level graphed over time.
+
+Your API analytics are currently course grained in that the _hits_ are the sum of invocations on all methods of your catalog service.
+Defining of fine grained _methods_ and _mappings_ for your catalog API will subsequently provide for more fine grained analytics at the method level.
+
+The analytics provided by 3scale compliment the distributed tracing capabilities of Jaeger.
 
 
 == 3scale mixer adapter

@@ -8,16 +8,16 @@
 | 2 |ansible - istio-system                        |   100%     | ocp-workload-rhte-mw-api-mesh
 | 3 |ansible - student OCP project & privs         |   100%     | ocp-workload-rhte-mw-api-mesh
 | 4 |ansible - catalog service                     |   100%     | ocp-workload-rhte-mw-api-mesh
-| 5 |ansible - 3scale provision                    |   90%      | ocp-workload-3scale-multitenant
+| 5 |ansible - 3scale provision                    |   100%     | ocp-workload-3scale-multitenant
 | 6 |ansible - 3scale multi-tenant setup           |   100%     | ocp-workload-3scale-multitenant
 | 7 |lab - catalog service - plain                 |   100%     |
-| 8 |lab - apicast plain                           |   50%      |
-| 9 |lab - appendix - API Mgmt review              |   0%       |
+| 8 |lab - apicast plain                           |   100%     |
+| 9 |lab - appendix - API Mgmt review              |   100%     |
 | 10 |lab - istio enabled architecture diagram     |   0%       |
-| 11|lab - apicast - istio enabled                 |   50%      |
-| 12|lab - istio egress route                      |   0%       |
-| 13|lab - Jaeger UI                               |   0%       |
-| 14|lab - catalog service - istio enabled         |   0%      |
+| 11|lab - apicast - istio enabled                 |   100%     |
+| 12|lab - istio egress route                      |   100%     |
+| 13|lab - Jaeger UI                               |   50%      |
+| 14|lab - catalog service - istio enabled         |   90%      |
 | 15|lab - istio / 3scale mixer                    |   0%       | Jauquim to elaborate on 9 Aug
 | 16|slides                                        |   0%       |
 | 17|lab - QA                                      |   0%       | 3scale ILT on 20 Aug

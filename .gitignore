@@ -21,4 +21,5 @@ build.metadata
 target/
 .camel/
 lib
+*.autosave
 

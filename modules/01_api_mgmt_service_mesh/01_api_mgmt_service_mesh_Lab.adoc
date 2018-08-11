@@ -389,13 +389,13 @@ Choose only one.
 
 If you are already proficient with 3scale, then configure and test the management of your _catalog_ RESTful API as per the following :
 
-. Your Apicast gateways started correctly and the value of the _THREESCALE_ENDPOINT_ makes sense.
+. Ensure your Apicast gateways started correctly and the value of the _THREESCALE_ENDPOINT_ makes sense.
 . Create an API proxy service called _catalog_service_ and configure it to use the APIcast gateway and an API key for security.
 . Create an application plan called: _catalog_app_plan_
 . Create an application called: _catalog_app_
 . Capture the API key for the application and set its value as the following environment variable in your shell terminal:  _CATALOG_USER_KEY_ .
 . Configure the _Integration_ section of your _catalog_service_ .
-. Test the _/products_ resource of your _catalog_ RESTful via both your staging and production APIcast gateways.
+. Test the _/products_ endpoint of your _catalog_ RESTful service via both your staging and production APIcast gateways.
 
 Proceed to the section: <<apicast_istio>>
 
@@ -413,6 +413,8 @@ Upon completion, return back to this point and proceed with next section: <<apic
 Your lab assets should now consist of a _catalog_ RESTful service as well as both production and staging apicast gateways that are configured to send _authrep_ reports to the central multi-tenant 3scale AMP.
 
 In this section of the lab, you will now create new APIcast gateways that are injected with the Istio _Envoy_ proxy.
+
+image::images/deployment_apicast-istio.png[]
 
 The _Envoy_ proxy will interoperate with _service mesh control plane_ functionality found in the _istio-system_ namespace.
 
@@ -518,6 +520,7 @@ image::images/trace_overview.png[]
 == Catalog Service: Istio enabled
 
 
+image::images/deployment_catalog-istio.png[]
 
 === Procedure
 
@@ -633,7 +636,7 @@ TO-DO :  questions to test student knowledge of the concepts / learning objectiv
 
 
 [[configuretestapi]]
-=== Configure and Test API Mgmt (Optional)
+=== Configure and Test API Mgmt
 
 In this section, you define a service that manages access to the Coolstore Catalog service that has already been provisioned for you.
 

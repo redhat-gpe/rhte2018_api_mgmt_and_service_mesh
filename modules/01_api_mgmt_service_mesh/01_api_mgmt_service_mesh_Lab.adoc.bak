@@ -32,6 +32,19 @@ The purpose of this lab is to apply both a _service mesh_ and an API management 
 Along the way, we'll compare and contrast some of the features between API Mgmt and Service Mesh using Red Hat products and community projects.
 
 
+=== Configuration of CNAP solutions
+
+The emphasis of this lab is on configuration: specifically, configuration of a _Cloud Native App Platform (CNAP)_ that includes _API Management_ and a _Service Mesh_.
+
+Although this topic and the technologies employed in this lab should be of high interest to a developer responsible for business services running in production in a Cloud Native App Platform,
+Students of this lab will not write any business logic.
+Development of CNAP business and integration logic can be written in a wide variety of development platforms offered by Red Hat:
+
+. Red Hat Openshift Application Runtimes (RHOAR)
+. Red Hat Fuse on OpenShift
+
+Details about these Red Hat development platforms are out of scope for this lab however please enroll in Red Hat GPTE's courses on these topics if you are interested.
+
 === Background
 
  TO-DO
@@ -57,21 +70,9 @@ Instead, APIcast will be injected with the _Envoy_ sidecar of Istio and the _Env
  
 ==== 3scale mixer adapter
  
-TO-DO :  Vacuum will elaborate on this on Aug 9 during the 3scale F2F .
+TO-DO :  Juaquim will elaborate on this on Aug 9 during the 3scale F2F .
  
  
-=== Lab Focus: Configuration
-
-The emphasis of this lab is on configuration: specifically, configuration of a _Cloud Native _ application managed by 3scale and an Istio  _Service Mesh_.
-
-Students of this lab will not write any business logic.
-Development of cloud native applications can be written in a wide variety of development platforms offered by Red Hat to include:
-
-. Red Hat Openshift Application Runtimes (RHOAR)
-. Red Hat Fuse on OpenShift
-
-Details about these Red Hat development platforms are out of scope for this lab.
-
 
 
 == Lab Asset Overview
@@ -102,7 +103,7 @@ $ export API_ADMIN_ACCESS_TOKEN=<provided by your instructor>
 $ export OCP_WILDCARD_DOMAIN=apps.$REGION.openshift.opentlc.com
 $ export TENANT_NAME=$OCP_USERNAME-3scale
 
-# Notice the value of this variable is being set to the route of the 3scale AMP system-provider 
+# Notice the value of this variable is being set to the route to the 3scale _system-provider_ 
 $ export THREESCALE_PORTAL_ENDPOINT=https://${API_ADMIN_ACCESS_TOKEN}@$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
 
 $ export OCP_USERNAME=user$GUID
@@ -371,7 +372,7 @@ $ oc new-app \
      -n $OCP_PROJECT > $HOME/lab/catalog-prod-apicast_details.txt
 -----
 
-. Resume the paused deploy objects:
+. Resume the initialed paused deploy objects:
 +
 -----
 $ oc rollover resume deploy catalog-stage-apicast catalog-prod-apicast -n $OCP_PROJECT
@@ -488,13 +489,6 @@ $ oc patch deploy/$OCP_USERNAME-catalog-prod-apicast-istio \
    --patch '{"spec":{"template":{"spec":{"initContainers":[{"name":"istio-init", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
 -----
 
-. Change _APICAST_LOG_LEVEL_ environment variable to _info_:
-+
------
-$ oc patch deploy/$OCP_USERNAME-catalog-prod-apicast-istio \
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-catalog-prod-apicast-istio", "env": [{"name":"APICAST_LOG_LEVEL","value":"info" }]}]}}}}'
------
-
 . Resume the paused deployment:
 +
 -----
@@ -535,56 +529,9 @@ d59904ad4515522ecccb8b81c761a283
 -----
 $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
-.. The response should actually be a HTTP 404.
-.. Why would this be the case ?
-... Inspect the APIcast gateway log file for any clues.
-... Is the request making it to your new Istio enabled APIcast gateway ?
-... The root problem is that your Istio enabled APIcast gateway is unable to connect to the _system-provider_ endpoint exposed by the multi-tenant 3scale AMP via the value of: $THREESCALE_PORTAL_ENDPOINT.
 +
-Your APICast gateway needs to do this to retrieve all of the policy management configuration data from 3scale AMP.
-The reason your APIcast can not make a connection to the 3scale AMP is that $THREESCALE_PORTAL_ENDPOINT references an external internet URL.
-By default, Istio blocks all outbound requests to the internet.
-In the next section, you'll define an _egress route_ to allow your APIcast gateway to communicate with the 3scale AMP.
-
-=== Apply custom _Egress Route_
-
-In this section, you create a custom Istio _ServiceEntry_ that allows your APIcast gateway to connect to the _backend-listener_ of the multi-tenant 3scale AMP.
-
-. Configure a custom Istio _Egress Route_ for Apicast gateway config file:
-+
------
-$ echo \
-    "apiVersion: networking.istio.io/v1alpha3
-kind: ServiceEntry
-metadata:
-  name: $OCP_USERNAME-catalog-apicast-egress-rule
-spec:
-  hosts:
-  - $TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
-  location: MESH_EXTERNAL
-  ports:
-  - name: https-443
-    number: 443
-    protocol: HTTPS 
-  resolution: DNS" \
- > $HOME/lab/catalog-apicast-egressrule.yaml
------
-
-. Inject configs from the configmap in _istio-system_ namespace:
-+
------
-$ istioctl create -f $HOME/lab/catalog-apicast-egressrule.yaml -n $OCP_PROJECT
------
-+
-TO-DO:  provide sufficient credentials to users to execute this command.
-
-. Now that a custom _egress route_ has been added, your APIcast should be able to pull configuration data from the 3scale AMP.
-+
-Re-attempt the request to retrieve catalog data via your istio enabled APIcast gateway using the curl utility.
-+
-This time, you should see the catalog data in the response.
+You should see the catalog data in the response.
 This request now flows through your istio enabled APIcast (instead of the original out of the box APIcast)
-
 
 == Jaeger UI
 
@@ -931,6 +878,8 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 
 ifdef::showscript[]
 
+export API_ADMIN_ACCESS_TOKEN=a3f62f9107104dc3aba1acb906e23d15d5227108e5bd11a3337de5f94f691dec
+
 echo -en "\n\ncurl -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json\n\n"                                    :   test retrival of proxy service info from system-provider
 
 oc rsh `oc get pod | grep "catalog-prod-apicast-istio" | awk '{print $1}'` curl localhost:8090/status/live          :   test liveness probe of istio enabled apicast
@@ -965,10 +914,17 @@ TO-DO
 
   6) allow user write access to istio-system to allow for execution of:  "istioctl create"
 
+endif::showscript[]
 
+ifdef::showscript[]
 
-
-
+. Change _APICAST_LOG_LEVEL_ environment variable to _info_:
++
+-----
+$ oc patch deploy/$OCP_USERNAME-catalog-prod-apicast-istio \
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-catalog-prod-apicast-istio", "env": [{"name":"APICAST_LOG_LEVEL","value":"info" }]}]}}}}'
+-----
++
 The _info_ log level in APIcast gateway actually provides more useful connection error details than does the _debug_ log level.
 +
 This will become important because we are about to encounter a connection related error now that Istio is introduced .
@@ -1024,6 +980,36 @@ $ oc rsh `oc get pod -n $OCP_PROJECT | grep "apicast-istio" | awk '{print $1}'` 
 -----
 +
 Why would you expect that the _curl_ utility to be able to pull the _service-proxy_ data when rsh'd into the apicast gateway but the apicast gateway itself fails to do so ?
+
+=== Apply custom _Egress Route_
+
+In this section, you create a custom Istio _ServiceEntry_ that allows your APIcast gateway to connect to the _backend-listener_ of the multi-tenant 3scale AMP.
+
+. Configure a custom Istio _Egress Route_ for Apicast gateway config file:
++
+-----
+$ echo \
+    "apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: $OCP_USERNAME-catalog-apicast-egress-rule
+spec:
+  hosts:
+  - $TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
+  location: MESH_EXTERNAL
+  ports:
+  - name: https-443
+    number: 443
+    protocol: HTTPS 
+  resolution: DNS" \
+ > $HOME/lab/catalog-apicast-egressrule.yaml
+-----
+
+. Inject configs from the configmap in _istio-system_ namespace:
++
+-----
+$ istioctl create -f $HOME/lab/catalog-apicast-egressrule.yaml -n $OCP_PROJECT
+-----
 
 
 

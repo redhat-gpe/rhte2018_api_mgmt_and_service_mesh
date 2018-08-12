@@ -483,19 +483,14 @@ $ oc create \
 . Inject required resource limits and requests into Istio related containers :
 +
 There is a clusterquota assigned to your OCP user.
-This clusterquota requires that all containers specify its _limits_ and _requests_.
-
-.. TO-DO
+This clusterquota requires that all containers (including the _istio-proxy_ and _istio-init_ ) specify _limits_ and _requests_.
 +
 -----
-        resources:
-          limits:
-            cpu: 50m
-            memory: 64Mi
-          requests:
-            cpu: 10m
-            memory: 16Mi
+$ oc patch deploy/$OCP_USERNAME-catalog-prod-apicast-istio \
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"istio-proxy", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
 
+$ oc patch deploy/$OCP_USERNAME-catalog-prod-apicast-istio \
+   --patch '{"spec":{"template":{"spec":{"initContainers":[{"name":"istio-init", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
 -----
 
 . Resume the paused deployment:
@@ -536,7 +531,7 @@ d59904ad4515522ecccb8b81c761a283
 . From the terminal, execute the following:
 +
 -----
-$ curl -v -k `echo -en "\nhttps://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY\n"`
+$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 +
 You should see the catalog data in the response.
@@ -640,7 +635,7 @@ d59904ad4515522ecccb8b81c761a283
 . From the terminal, execute the following:
 +
 -----
-$ curl -v -k `echo -en "\nhttps://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY\n"`
+$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
 
@@ -855,7 +850,7 @@ $ echo $CATALOG_USER_KEY
 . From the terminal, execute the following:
 +
 -----
-$ curl -v -k `echo -en "\nhttps://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY\n"`
+$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 +
 .Sample Output
@@ -1019,6 +1014,17 @@ spec:
 -----
 $ istioctl create -f $HOME/lab/catalog-apicast-egressrule.yaml -n $OCP_PROJECT
 -----
+
+
+
+== istio / OCP workshop problem
+
+[2018-08-11 21:02:53.607][154][info][config] external/envoy/source/server/listener_manager_impl.cc:903] all dependencies initialized. starting workers
+2018-08-11T21:02:57.106685Z	warn	Epoch 0 terminated with an error: signal: killed
+2018-08-11T21:02:57.106713Z	warn	Aborted all epochs
+2018-08-11T21:02:57.106739Z	info	Epoch 0: set retry delay to 3.2s, budget to 5
+2018-08-11T21:03:00.306904Z	info	Reconciling configuration (budget 5)
+
 
 
 endif::showscript[]

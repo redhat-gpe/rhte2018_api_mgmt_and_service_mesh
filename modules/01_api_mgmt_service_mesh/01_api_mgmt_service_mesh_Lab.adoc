@@ -47,7 +47,7 @@ Along the way, we'll compare and contrast some of the features between API Mgmt 
 ==== OpenTracing APIcast vs Istio
  
 Of related interest is that the upstream community APIcast gateway from Red Hat's 3scale product already bundles _OpenTracing_ libraries.
-This allows it already to participate in distributed tracing when paired with implementations such as zepplin or Jaeger.
+This allows it already to participate in distributed tracing when paired with implementations such as Zipkin or Jaeger.
  
 _Observability_ is a major focus of a _service mesh_ and Istio in particular.
 As such, Istio supports distributed tracing out of the box by bundling Jaeger.
@@ -416,7 +416,10 @@ In this section of the lab, you will now create new APIcast gateways that are in
 
 image::images/deployment_apicast-istio.png[]
 
-The _Envoy_ proxy will interoperate with _service mesh control plane_ functionality found in the _istio-system_ namespace.
+In the above diagram, notice the introduction of a new pod: _catalog-prod-apicast-istio_.
+Ingress requests through the route and service are now directed to this new Istio enabled APIcast pod (instead of the original apicast that is not Istio enabled).
+
+The _Envoy_ proxy of your _catalog-prod-apicast-istio_ pod will interoperate with _service mesh control plane_ functionality found in the _istio-system_ namespace.
 
 === Procedure
 
@@ -580,7 +583,38 @@ TO-DO:  provide sufficient credentials to users to execute this command.
 
 . Now that a custom _egress route_ has been added, your APIcast should be able to pull configuration data from the 3scale AMP.
 +
-Re-attempt the request to retrieve catalog data via your istio enabled APIcast gateway using the curl utility.
+Use a command like the following to verify that your Istio enabled apicast can now poll the 3scale AMP for proxy service configuration information::
++
+-----
+$ oc rsh `oc get pod -n $OCP_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
+     curl -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json \
+     | python -m json.tool | more
+
+...
+
+{
+    "services": [
+        {
+            "service": {
+                "backend_version": "1",
+                "created_at": "2018-08-07T11:13:03Z",
+                "end_user_registration_required": true,
+                "id": 3,
+                "links": [
+                    {
+                        "href": "https://user1-3scale-admin.apps.7777.thinkpadratwater.com/admin/api/services/3/metrics",
+                        "rel": "metrics"
+                    },
+
+
+....
+-----
+
+. Using the curl utility, re-attempt the request to retrieve catalog data via your istio enabled APIcast gateway .
++
+-----
+$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+-----
 +
 This time, you should see the catalog data in the response.
 This request now flows through your istio enabled APIcast (instead of the original out of the box APIcast)
@@ -588,11 +622,32 @@ This request now flows through your istio enabled APIcast (instead of the origin
 
 == Jaeger UI
 
+=== Overview
 TO-DO : Elaborate OpenTracing spans in Jaeger UI
 
+Often the first thing to understand about your microservices architecture is specifically which microservices are involved in and end-user transaction.
+Istio's Mixer comes with the ability to pull tracing spans from your distributed microservices.
+
+Although Istio supports both Zipkin and Jaeger, for our purposes we focus on Jaeger, which implements OpenTracing, a vendor neutral tracing API.
+Jaeger was originally open sourced by the Uber Technologies team and is a distributed tracing system specifically focused on microservices architecture.
+
+One important term to understand is _span_.
+Jaeger defines span as: “a logical unit of work in the system that has an operation name, the start time of the operation, and the duration. Spans can be nested and ordered to model causal relationships.
+An RPC call is an example of a span.”
+
+Another important term to understand is _trace_ 
++
+Jaeger defines _trace_ as “adata/execution path through the system, and can be thought of as a directed acyclic graph of spans"
+
+=== Procedure
+
+. Identify the URL to the Jaeger UI:
++
 -----
 $ echo -en "\n\nhttp://"$(oc get route/tracing -o template --template {{.spec.host}} -n istio-system)"\n\n"
 -----
++
+Using your browser, navigate to this URL.
 
 . In the _Find Traces_ panel, scroll down to locate the traces associated with your OCP user name:
 +
@@ -602,12 +657,22 @@ image::images/trace_dropdown_selection.png[]
 +
 image::images/trace_overview.png[]
 
-== Catalog Service: Istio enabled
+Traces pertaining to your Istio enabled APIcast gateway are now available .
+However, what is missing is tracing that includes the backend _catalog_ service.
 
+In the next section, you'll enable your _catalog_ service to provide tracing data .
+
+
+== Catalog Service: OpenTracing and Istio enabled
 
 image::images/deployment_catalog-istio.png[]
 
-=== Procedure
+In the above diagram, notice the introduction of a new pod: _catalog-service-istio_.
+Ingress requests through the _catalog-service_ are now directed to this new Istio enabled _catalog_ pod (instead of the original _catalog_ pod that is not Istio enabled).
+
+=== OpenTracing libraries included in _catalog_service
+
+=== Inject Envoy into _catalog_ service
 
 . Retrieve yaml representation of current _catalog service_ deployment:
 +
@@ -618,7 +683,7 @@ $ oc get deploy catalog-service -n $OCP_PROJECT -o yaml > $HOME/lab/catalog-serv
 . Differentiate your Istio enabled catalog service from your existing catalog service:
 +
 -----
-$ sed -i "s/catalog-service/$OCP_USERNAME-catalog-service/" $HOME/lab/catalog-service.yaml
+$ sed -i "s/ catalog-service/ $OCP_USERNAME-catalog-service/" $HOME/lab/catalog-service.yaml
 -----
 
 . Place the deployment in a paused state:
@@ -654,11 +719,16 @@ $ oc create \
 . Inject required resource limits and requests into Istio related containers :
 +
 There is a clusterquota assigned to your OCP user.
-This clusterquota requires that all containers specify its _limits_ and _requests_.
+This clusterquota requires that all containers (including the _istio-proxy_ and _istio-init_ ) specify _limits_ and _requests_.
 +
 -----
-TO-DO
+$ oc patch deploy/$OCP_USERNAME-catalog-service \
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"istio-proxy", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
+
+$ oc patch deploy/$OCP_USERNAME-catalog-service \
+   --patch '{"spec":{"template":{"spec":{"initContainers":[{"name":"istio-init", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
 -----
+
 
 . Resume the paused deployment:
 +
@@ -996,32 +1066,6 @@ stack traceback:
 -----
 
 .. From the log file, notice that initial warning indicates a failure "to get list services" from the 3scale AMP _system-provider_ service.
-.. Interestingly, it is possible to ssh into the apicast gateway and execute the curl utility to manually retrieve the list of proxy service configuration:
-+
------
-$ oc rsh `oc get pod -n $OCP_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
-     curl -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json \
-     | python -m json.tool | more
-
-...
-
-{
-    "services": [
-        {
-            "service": {
-                "backend_version": "1",
-                "created_at": "2018-08-07T11:13:03Z",
-                "end_user_registration_required": true,
-                "id": 3,
-                "links": [
-                    {
-                        "href": "https://user1-3scale-admin.apps.7777.thinkpadratwater.com/admin/api/services/3/metrics",
-                        "rel": "metrics"
-                    },
-
-
-....
------
 +
 Why would you expect that the _curl_ utility to be able to pull the _service-proxy_ data when rsh'd into the apicast gateway but the apicast gateway itself fails to do so ?
 

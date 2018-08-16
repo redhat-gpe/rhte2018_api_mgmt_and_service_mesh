@@ -326,38 +326,29 @@ image::images/swagger-ui-coolstore-catalog.png[]
 
 == Apicast: Plain
 
-In this lab, you will provision your own 3scale _apicast_ gateway to manage your CoolStore _catalog_ service.
+In this section of the lab, you will provision a supported version of 3scale _apicast_ gateway to manage your CoolStore _catalog_ service.
+Your APIcast will retrive _proxy service_ configurations from the pre-existing 3scale multi-tenant environment.
 
 image::images/deployment_apicast.png[]
 
+The management of this APIcast gateway occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_. 
+The reason for this is discussed previously in the section: <<dvsdc>>.
 
-This apicast gateway is similar to the supported APIcast gateway that is included with 3scale AMP.
-Its differences with the supported APIcast are as follows:
-
-. Management of this APIcast gateway occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_. 
-+
-The reason for this change is discussed previously in the section: <<dvsdc>>.
-. The APIcast gateway used in this lab includes an additional library called:  _libjaegertracing.so_ .
-This library provides support for the _OpenTracing_ specification using _Jaeger_.
-
-As in the supported variant, your APIcast gateway will pull _proxy_ configuration data from the pre-provisioned multi-tenant 3scale AMP using the value of: $THREESCALE_PORTAL_ENDPOINT.
-The multi-tenant 3scale AMP is pre-provisioned by the cluster-admin in a namespace called:  _3scale-mt-adm0_.
-
-In a later section of this lab, this same _apicast_ gateway will be Istio enabled.
+In a later section of this lab, you will switch to the use of a community variant of APIcast that is enabled with _OpenTracing_ and _Jaeger_ client libraries to participate in distributed tracing.
 
 === Deploy Apicast
 
 . Retrieve Apicast template
 +
 -----
-$ curl -o $HOME/lab/3scale-apicast-2.2.yml \
-          https://raw.githubusercontent.com/gpe-mw-training/3scale_onpremise_implementation_labs/master/resources/rhte/3scale-apicast-2.2.yml
+$ curl -o $HOME/lab/3scale-apicast.yml \
+          https://raw.githubusercontent.com/gpe-mw-training/3scale_onpremise_implementation_labs/master/resources/rhte/3scale-apicast.yml
 -----
 
 . Review Apicast template
 +
 -----
-$ cat $HOME/lab/3scale-apicast-2.2.yml | more
+$ cat $HOME/lab/3scale-apicast.yml | more
 -----
 
 . Check your knowledge
@@ -368,34 +359,34 @@ TO-DO
 +
 -----
 $ oc new-app \
-     -f $HOME/lab/3scale-apicast-2.2.yml \
+     -f $HOME/lab/3scale-apicast.yml \
      --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
-     --param APP_NAME=catalog-stage-apicast \
+     --param APP_NAME=stage-apicast \
      --param ROUTE_NAME=catalog-stage-apicast-$OCP_USERNAME \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
      --param THREESCALE_DEPLOYMENT_ENV=sandbox \
      --param APICAST_CONFIGURATION_LOADER=lazy \
-     -n $OCP_PROJECT > $HOME/lab/catalog-stage-apicast_details.txt
+     -n $OCP_PROJECT > $HOME/lab/stage-apicast_details.txt
 -----
 
 . Create Apicast production related resources in OpenShift:
 +
 -----
 $ oc new-app \
-     -f $HOME/lab/3scale-apicast-2.2.yml \
+     -f $HOME/lab/3scale-apicast.yml \
      --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
-     --param APP_NAME=catalog-prod-apicast \
+     --param APP_NAME=prod-apicast \
      --param ROUTE_NAME=catalog-prod-apicast-$OCP_USERNAME \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
      --param THREESCALE_DEPLOYMENT_ENV=production \
      --param APICAST_CONFIGURATION_LOADER=lazy \
-     -n $OCP_PROJECT > $HOME/lab/catalog-prod-apicast_details.txt
+     -n $OCP_PROJECT > $HOME/lab/prod-apicast_details.txt
 -----
 
 . Resume the paused deploy objects:
 +
 -----
-$ oc rollover resume deploy catalog-stage-apicast catalog-prod-apicast -n $OCP_PROJECT
+$ oc rollout resume deploy stage-apicast prod-apicast -n $OCP_PROJECT
 -----
 
 === Configure and Test API Mgmt
@@ -417,6 +408,12 @@ If you are already proficient with 3scale, then configure and test the managemen
 . Capture the API key for the application and set its value as the following environment variable in your shell terminal:  _CATALOG_USER_KEY_ .
 . Configure the _Integration_ section of your _catalog_service_ .
 . Test the _/products_ endpoint of your _catalog_ RESTful service via both your staging and production APIcast gateways.
++
+You'll likely want to use the curl utility in a manner similar to the following:
++
+-----
+$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+-----
 
 Proceed to the section: <<apicast_istio>>
 
@@ -431,29 +428,34 @@ Upon completion, return back to this point and proceed with next section: <<apic
 
 === Overview
 
-Your lab assets should now consist of a _catalog_ RESTful service as well as both production and staging apicast gateways that are configured to send _authrep_ reports to the central multi-tenant 3scale AMP.
+Your lab assets should now consist of a _catalog_ RESTful service managed by out of the box 3scale AMP 2.2 functionality.
 
-In this section of the lab, you will now create new APIcast gateways that are injected with the Istio _Envoy_ proxy.
+In this section of the lab, you will now use a new APIcast gateway that includes _OpenTracing_ libraries and is injected with the Istio _Envoy_ proxy.
 
 image::images/deployment_apicast-istio.png[]
 
-In the above diagram, notice the introduction of a new pod: _catalog-prod-apicast-istio_.
-Ingress requests through the route and service are now directed to this new Istio enabled APIcast pod (instead of the original apicast that is not Istio enabled).
+In the above diagram, notice the introduction of a new pod: _prod-apicast-istio_.
+Ingress requests through the route and service are now directed to this new OpenTracing / Istio enabled APIcast pod (instead of the original 3scale AMP 2.2 apicast that is not OpenTracing enabled).
 
-The _Envoy_ proxy of your _catalog-prod-apicast-istio_ pod will interoperate with _service mesh control plane_ functionality found in the _istio-system_ namespace.
+. More specifically, the APIcast gateway used in this section of the lab includes an additional library called:  _libjaegertracing.so_ .
+This library provides support for the _OpenTracing_ specification using _Jaeger_.
+
+The _Envoy_ sidecar in your _prod-apicast-istio_ pod will interoperate with _service mesh control plane_ functionality found in the _istio-system_ namespace.
+
+As in the supported variant, your APIcast gateway will pull _proxy_ configuration data from the pre-provisioned multi-tenant 3scale AMP using the value of: $THREESCALE_PORTAL_ENDPOINT.
 
 === Procedure
 
 . Retrieve yaml representation of current apicast production deployment:
 +
 -----
-$ oc get deploy catalog-prod-apicast -n $OCP_PROJECT -o yaml > $HOME/lab/catalog-prod-apicast.yaml
+$ oc get deploy prod-apicast -n $OCP_PROJECT -o yaml > $HOME/lab/prod-apicast.yml
 -----
 
 . Differentiate your Istio enabled apicast gateway from your existing APIcast gateway:
 +
 -----
-$ sed -i "s/catalog-prod-apicast/$OCP_USERNAME-catalog-prod-apicast-istio/" $HOME/lab/catalog-prod-apicast.yaml
+$ sed -i "s/prod-apicast/$OCP_USERNAME-prod-apicast-istio/" $HOME/lab/prod-apicast.yml
 -----
 .. The reason you've included $OCP_USERNAME in the name of your istio enabled apicast is because you will need to differentiate with all other istio enabled apicast gateways that may also be managed in the same service mesh.
 .. Also, the _observability_ user interfaces included in Istio such as Jaeger are not (currently) multi-tenant.
@@ -463,7 +465,7 @@ Subsequently, by providing a unique identifer as a prefix to your apicast name, 
 . Place the deployment in a paused state:
 +
 -----
-$ sed -i "s/replicas:\ 1/replicas: 1\n  paused: true/" $HOME/lab/catalog-prod-apicast.yaml
+$ sed -i "s/replicas:\ 1/replicas: 1\n  paused: true/" $HOME/lab/prod-apicast.yml
 -----
 
 . View configmap in `istio-system` project
@@ -481,22 +483,29 @@ The _istio_ configmap is generated by a cluster-admin when the Istio control pla
 -----
 
 $ istioctl kube-inject \
-           -f $HOME/lab/catalog-prod-apicast.yaml \
-           > $HOME/lab/catalog-prod-apicast-istio.yaml
+           -f $HOME/lab/prod-apicast.yml \
+           > $HOME/lab/prod-apicast-istio.yml
 -----
 
 . View Istio injected APIcast gateway deployment descriptor:
 +
 -----
-$ cat $HOME/lab/catalog-prod-apicast-istio.yaml | more
+$ cat $HOME/lab/prod-apicast-istio.yml | more
 -----
 
 . Deploy a new Istio enabled apicast production gateway:
 +
 -----
 $ oc create \
-     -f $HOME/lab/catalog-prod-apicast-istio.yaml \
+     -f $HOME/lab/prod-apicast-istio.yml \
      -n $OCP_PROJECT
+-----
+
+. Switch to use of Opentracing and Jaeger version of APIcast
++
+-----
+$ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-prod-apicast-istio", "image": "quay.io/3scale/apicast:master" }]}}}}'
 -----
 
 . Inject required resource limits and requests into Istio related containers :
@@ -505,24 +514,24 @@ There is a clusterquota assigned to your OCP user.
 This clusterquota requires that all containers (including the _istio-proxy_ and _istio-init_ ) specify _limits_ and _requests_.
 +
 -----
-$ oc patch deploy/$OCP_USERNAME-catalog-prod-apicast-istio \
+$ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
    --patch '{"spec":{"template":{"spec":{"containers":[{"name":"istio-proxy", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
 
-$ oc patch deploy/$OCP_USERNAME-catalog-prod-apicast-istio \
+$ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
    --patch '{"spec":{"template":{"spec":{"initContainers":[{"name":"istio-init", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
 -----
 
 . Change _APICAST_LOG_LEVEL_ environment variable to _info_:
 +
 -----
-$ oc patch deploy/$OCP_USERNAME-catalog-prod-apicast-istio \
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-catalog-prod-apicast-istio", "env": [{"name":"APICAST_LOG_LEVEL","value":"info" }]}]}}}}'
+$ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-prod-apicast-istio", "env": [{"name":"APICAST_LOG_LEVEL","value":"info" }]}]}}}}'
 -----
 
 . Resume the paused deployment:
 +
 -----
-$ oc rollout resume deploy/$OCP_USERNAME-catalog-prod-apicast-istio
+$ oc rollout resume deploy/$OCP_USERNAME-prod-apicast-istio
 -----
 
 .. In order for your new istio enabled apicast pod to start, it needs the _anyuid_ SCC.
@@ -542,8 +551,8 @@ A future version of the Red Hat supported Istio eliminate the need for this _any
 . Modify _service_ to route to new Istio enabled _apicast_
 +
 -----
-$ oc patch service/catalog-prod-apicast \
-   --patch '{"spec":{"selector":{"app":"'$OCP_USERNAME'-catalog-prod-apicast-istio"}}}'
+$ oc patch service/prod-apicast \
+   --patch '{"spec":{"selector":{"app":"'$OCP_USERNAME'-prod-apicast-istio"}}}'
 -----
 
 . Make sure that your `$CATALOG_USER_KEY` environment variable is set:
@@ -591,16 +600,21 @@ spec:
     number: 443
     protocol: HTTPS 
   resolution: DNS" \
- > $HOME/lab/catalog-apicast-egressrule.yaml
+ > $HOME/lab/catalog-apicast-egressrule.yml
 -----
+
 
 . Inject configs from the configmap in _istio-system_ namespace:
 +
 -----
-$ istioctl create -f $HOME/lab/catalog-apicast-egressrule.yaml -n $OCP_PROJECT
+$ oc create -f $HOME/lab/catalog-apicast-egressrule.yml -n $OCP_PROJECT --as=system:admin
 -----
+
+. View new ServiceEntry
 +
-TO-DO:  provide sufficient credentials to users to execute this command.
+-----
+$ oc describe serviceentry $OCP_USERNAME-catalog-apicast-egress-rule --as=system:admin
+-----
 
 . Now that a custom _egress route_ has been added, your APIcast should be able to pull configuration data from the 3scale AMP.
 +
@@ -640,11 +654,74 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 This time, you should see the catalog data in the response.
 This request now flows through your istio enabled APIcast (instead of the original out of the box APIcast)
 
+== APIcast: OpenTracing enabled
+
+-----
+$   cat <<EOF > $HOME/lab/jaeger_config.json
+{
+    "service_name": "$OCP_USERNAME-apicast",
+    "disabled": false,
+    "sampler": {
+      "type": "const",
+      "param": 1
+    },
+    "reporter": {
+      "queueSize": 100,
+      "bufferFlushInterval": 10,
+      "logSpans": false,
+      "localAgentHostPort": "jaeger-agent.istio-system:6831"
+    },
+    "headers": {
+      "jaegerDebugHeader": "debug-id",
+      "jaegerBaggageHeader": "baggage",
+      "TraceContextHeaderName": "uber-trace-id",
+      "traceBaggageHeaderPrefix": "testctx-"
+    },
+    "baggage_restrictions": {
+        "denyBaggageOnInitializationFailure": false,
+        "hostPort": "jaeger-agent.istio-system:5778",
+        "refreshInterval": 60
+    }
+}
+EOF
+-----
+
+-----
+$ oc create configmap jaeger-config --from-file=$HOME/lab/jaeger_config.json -n $OCP_PROJECT
+-----
+
+-----
+$ oc volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ --configmap-name jaeger-config -n $OCP_PROJECT
+-----
+
+-----
+$ oc env deploy/$OCP_USERNAME-prod-apicast-istio OPENTRACING_TRACER=jaeger OPENTRACING_CONFIG=/tmp/jaeger/jaeger_config.json -n $OCP_PROJECT
+-----
+
+Failed to open tracer configuration file /tmp/jaeger/jaeger_config.jso (2: No such file or directory)
+
+Failed to construct tracer: `service_name` not provided
+ 
+- name: OPENTRACING_TRACER
+            value: jaeger
+          - name: OPENTRACING_CONFIG
+            value: "/tmp/jaeger/jaeger_config.json"
+
 
 == Jaeger UI
 
+Thus far, you have Istio enabled your APIcast gateway pod.
+Along with all other components that will eventually run in your Istio service mesh, it is subject to its various policies .
+
+This next section of the lab introduces you to _OpenTracing_ and _Jaeger_.
+
+OpenTracing is a consistent, expressive, vendor-neutral APIs for distributed tracing and context propagation.
+
+Jaeger is one of several implementations of OpenTracing.
+
+Istio provides Jaeger functionality out of the box.
+
 === Overview
-TO-DO : Elaborate OpenTracing spans in Jaeger UI
 
 Often the first thing to understand about your microservices architecture is specifically which microservices are involved in and end-user transaction.
 Istio's Mixer comes with the ability to pull tracing spans from your distributed microservices.
@@ -684,6 +761,7 @@ However, what is missing is tracing that includes the backend _catalog_ service.
 In the next section, you'll enable your _catalog_ service to provide tracing data .
 
 
+
 == Catalog Service: OpenTracing and Istio enabled
 
 image::images/deployment_catalog-istio.png[]
@@ -706,19 +784,19 @@ ENV JAEGER_SERVICE_NAME=customer\
 . Retrieve yaml representation of current _catalog service_ deployment:
 +
 -----
-$ oc get deploy catalog-service -n $OCP_PROJECT -o yaml > $HOME/lab/catalog-service.yaml
+$ oc get deploy catalog-service -n $OCP_PROJECT -o yaml > $HOME/lab/catalog-service.yml
 -----
 
 . Differentiate your Istio enabled catalog service from your existing catalog service:
 +
 -----
-$ sed -i "s/ catalog-service/ $OCP_USERNAME-catalog-service/" $HOME/lab/catalog-service.yaml
+$ sed -i "s/ catalog-service/ $OCP_USERNAME-catalog-service/" $HOME/lab/catalog-service.yml
 -----
 
 . Place the deployment in a paused state:
 +
 -----
-$ sed -i "s/replicas:\ 1/replicas: 1\n  paused: true/" $HOME/lab/catalog-service.yaml
+$ sed -i "s/replicas:\ 1/replicas: 1\n  paused: true/" $HOME/lab/catalog-service.yml
 -----
 
 
@@ -727,21 +805,21 @@ $ sed -i "s/replicas:\ 1/replicas: 1\n  paused: true/" $HOME/lab/catalog-service
 -----
 
 $ istioctl kube-inject \
-           -f $HOME/lab/catalog-service.yaml \
-           > $HOME/lab/catalog-service-istio.yaml
+           -f $HOME/lab/catalog-service.yml \
+           > $HOME/lab/catalog-service-istio.yml
 -----
 
 . View Istio injected catalog service deployment descriptor:
 +
 -----
-$ cat $HOME/lab/catalog-service-istio.yaml | more
+$ cat $HOME/lab/catalog-service-istio.yml | more
 -----
 
 . Deploy a new Istio enabled apicast production gateway:
 +
 -----
 $ oc create \
-     -f $HOME/lab/catalog-service-istio.yaml \
+     -f $HOME/lab/catalog-service-istio.yml \
      -n $OCP_PROJECT
 -----
 
@@ -982,7 +1060,7 @@ Because the value of the _APICAST_CONFIGURATION_LOADER_ environment variable in 
 +
 .Sample Output
 -----
-[lua] configuration_store.lua:103: configure(): added service 2555417742084 configuration with hosts: catalog-prod-apicast-user1.apps.7777.thinkpadratwater.com, catalog-stage-apicast-user1.apps.7777.thinkpadratwater.com ttl: 300
+[lua] configuration_store.lua:103: configure(): added service 2555417742084 configuration with hosts: prod-apicast-user1.apps.7777.thinkpadratwater.com, catalog-stage-apicast-user1.apps.7777.thinkpadratwater.com ttl: 300
 -----
 
 ==== Test Catalog Business Service
@@ -1032,14 +1110,14 @@ ifdef::showscript[]
 
 echo -en "\n\ncurl -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json\n\n"                                    :   test retrival of proxy service info from system-provider
 
-oc rsh `oc get pod | grep "catalog-prod-apicast-istio" | awk '{print $1}'` curl localhost:8090/status/live          :   test liveness probe of istio enabled apicast
-oc rsh `oc get pod | grep "catalog-prod-apicast-istio" | awk '{print $1}'` curl localhost:8090/status/ready         :   test readiness probe of istio enabled apicast
+oc rsh `oc get pod | grep "prod-apicast-istio" | awk '{print $1}'` curl localhost:8090/status/live                  :   test liveness probe of istio enabled apicast
+oc rsh `oc get pod | grep "prod-apicast-istio" | awk '{print $1}'` curl localhost:8090/status/ready                 :   test readiness probe of istio enabled apicast
 
 oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'`                                                       :   ssh into istio enabled apicast gw
 
 oc logs -f  `oc get pod | grep "apicast-istio" \
             | grep "Running" \
-            | awk '{print $1}'` -c $OCP_USERNAME-catalog-prod-apicast-istio                                         :   log of istio enabled apicast gw
+            | awk '{print $1}'` -c $OCP_USERNAME-prod-apicast-istio                                                 :   log of istio enabled apicast gw
 
 for i in `oc get pod | grep "apicast-istio" | awk '{print $1}'`; do oc delete pod $i; done                          :   Re-dploy Istio enabled Apicast gateway
 
@@ -1073,51 +1151,6 @@ TO-DO
         - OPENTRACING_HEADER_FORWARD:   By default, uses uber-trace-id, if your OpenTracing has a different configuration, you will need to change this value, if not, ignore it.
 
 
------
-$ cat <<EOF > $HOME/lab/jaeger_config.json
- {
- “service_name”: “apicast”,
- “disabled”: false,
- “sampler”: {
- “type”: “const”,
- “param”: 1
- },
- “reporter”: {
- “queueSize”: 100,
- “bufferFlushInterval”: 10,
- “logSpans”: false,
- “localAgentHostPort”: “jaeger-agent:6831”
- },
- “headers”: {
- “jaegerDebugHeader”: “debug-id”,
- “jaegerBaggageHeader”: “baggage”,
- “TraceContextHeaderName”: “uber-trace-id”,
- “traceBaggageHeaderPrefix”: “testctx-”
- },
- “baggage_restrictions”: {
- “denyBaggageOnInitializationFailure”: false,
- “hostPort”: “127.0.0.1:5778”,
- “refreshInterval”: 60
- }
- }
-EOF
------
-
------
-$ oc create configmap jaeger-config --from-file=$HOME/lab/jaeger_config.json
------
-
------
-$ oc volume deploy/$OCP_USERNAME-catalog-prod-apicast-istio --add -m /tmp/jaeger/ --configmap-name jaeger-config
------
-
------
-$ oc env deploy/$OCP_USERNAME-catalog-prod-apicast-istio OPENTRACING_TRACER=jaeger OPENTRACING_CONFIG=/tmp/jaeger/jaeger_config.yaml
------
-
-Failed to open tracer configuration file /tmp/jaeger/jaeger_config.jso (2: No such file or directory)
-
-Failed to construct tracer: `service_name` not provided
 
 
 
@@ -1131,7 +1164,7 @@ The connection problem will be in the apicast gateway at boot when it attempts t
 . Investigate _apicast_ provisioning problem
 +
 -----
-$ oc logs -f `oc get pod | grep "apicast-istio" | awk '{print $1}'` -c $OCP_USERNAME-catalog-prod-apicast-istio
+$ oc logs -f `oc get pod | grep "apicast-istio" | awk '{print $1}'` -c $OCP_USERNAME-prod-apicast-istio
 
 ...
 

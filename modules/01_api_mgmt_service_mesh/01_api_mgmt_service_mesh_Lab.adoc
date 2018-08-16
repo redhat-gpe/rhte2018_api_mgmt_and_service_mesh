@@ -23,57 +23,69 @@
 
 :numbered:
 
+
 == Overview
 
-An _Istio_ based service mesh introduces features that somewhat resemble features found in an API management solution.
+An _Istio_ based service mesh introduces features that are similar to those found in an API management solution.
 
 The purpose of this lab is to apply both a _service mesh_ and an API management solution to a container native application.
 
-Along the way, we'll compare and contrast some of the features between API Mgmt and Service Mesh using Red Hat products and community projects.
-
+Along the way, a comparison of some features between API Mgmt and a Service Mesh will be conducted.
 
 === Background
 
- TO-DO
+_Gartner's Magic Quadrant for Full Life Cylce API Management_ puts Red Hat's API management solution in the leader's quadrant.
 
-. What is Red Hat's API Management solution ?  Red Hat 3scale
-. Describe Red Hat's investments in the _Istio_ project ?
-. What is the scope of API Management ?
-. What is the scope of a Service Mesh ?
+Red Hat is also a significant innovator in the technologies used to facilitate _Dev Ops_ and _MicroService Architectures_ (MSAs).
 
+With MSAs, the need for a _service mesh_ becomes critical.
+As such, Red Hat is contributing to the Istio community project.
+In addition, Red Hat is actively working to productize Istio as a supported product on Red Hat's OpenShift Container Platform (OCP).
+
+The following table provides an overview of a feature comparison between API Management and a Service Mesh.
+
+=== Reference
+
+. Istio / Service Mesh
+
+. Distributed Tracing:
+.. link:https://github.com/opentracing[Github organization for OpenTracing]
++
+Includes the OpenTracing specification as well as the OpenTracing client libraries for many languages.
+
+.. link:https://www.jaegertracing.io/[jaegertracing.io]
+.. link:https://github.com/jaegertracing/[Github organization for community Jaeger]
++
+Includes source code to community Jaeger as well as Jaeger client libraries for many languages (that implement the corresponding OpenTracing client libraries]
 
 === Alternatives
 
-==== OpenTracing APIcast vs Istio
+In regards to API Management and a MSA service mesh, the following are related community initiatives that are not covered in this lab.
+
+==== OpenTracing vs Istio
  
-Of related interest is that the upstream community APIcast gateway from Red Hat's 3scale product already bundles _OpenTracing_ libraries.
-This allows it already to participate in distributed tracing when paired with implementations such as Zipkin or Jaeger.
- 
-_Observability_ is a major focus of a _service mesh_ and Istio in particular.
-As such, Istio supports distributed tracing out of the box by bundling Jaeger.
- 
-In this lab, you will not use the _OpenTracing_ libraries bundled in APIcast.
-Instead, APIcast will be injected with the _Envoy_ sidecar of Istio and the _Envoy_ sidecar will handle tracing communication of the _OpenTracing_ mixer of Istio.
+Of related interest is that the upstream community APIcast gateway from Red Hat's 3scale product already bundles _OpenTracing_ client library using _Jaeger_.
+This already allows it to participate in distributed tracing where the traces and spans could be viewed in a standalone Jaeger installation as discussed in link:https://medium.com/@jmprusi_49013/adding-opentracing-support-to-apicast-api-gateway-a8e0a38347d2[this tutorial].
+
+As part of its _control plane_, Istio bundles in Jaeger. 
+In this lab, this Jaeger based tracing functionality provided by Istio is utilized instead of a standalone Jaeger installation.
  
 ==== 3scale mixer adapter
+
+The Red Hat 3scale engineering team is actively working on an Istio _mixer_.
+This Istio _mixer_ will allow 3scale API Management policies to be applied directly to the _service mesh_ . 
+
+
+==== Istio API Management Working Group
+
+Istio activity is organized into _working groups_.
+
+One of this Istio working groups is on link:https://github.com/istio/community/blob/master/WORKING-GROUPS.md#api-management[API Management].
+
+Members of the  Red Hat engineering team are currently participating in this Istio API Management working group.
+
+Outcomes of this working group may potentially guide the development and roadmap of future releases of the Red Hat 3scale API Management product.
  
-TO-DO :  Vacuum will elaborate on this on Aug 9 during the 3scale F2F .
- 
- 
-=== Lab Focus: Configuration
-
-The emphasis of this lab is on configuration: specifically, configuration of a _Cloud Native _ application managed by 3scale and an Istio  _Service Mesh_.
-
-Students of this lab will not write any business logic.
-Development of cloud native applications can be written in a wide variety of development platforms offered by Red Hat to include:
-
-. Red Hat Openshift Application Runtimes (RHOAR)
-. Red Hat Fuse on OpenShift
-
-Details about these Red Hat development platforms are out of scope for this lab.
-
-
-
 == Lab Asset Overview
 
 === Environment Variables
@@ -172,6 +184,7 @@ $ oc get projects
 ... 
 
 istio-system                                      Active
+3scale-mt-adm0           3scale-mt-adm0           Active
 rhte-mw-api-mesh-user1   rhte-mw-api-mesh-user1   Active
 -----
 
@@ -179,6 +192,8 @@ rhte-mw-api-mesh-user1   rhte-mw-api-mesh-user1   Active
 +
 Later in this lab, you'll use a utility called _istioctl_ .
 This utility will need both view and edit privileges to the _istio-system_ namespace.
+
+.. Your OCP use has also been provided with _view_ access to a multi-tenant 
 
 .. The namespace _rhte-mw-api-mesh-*_ is where you will be working throughout the duration of this lab.
 
@@ -316,10 +331,16 @@ In this lab, you will provision your own 3scale _apicast_ gateway to manage your
 image::images/deployment_apicast.png[]
 
 
-This apicast gateway is similar to the supported APIcast gateway that is included with 3scale AMP with the exception that management of this APIcast gateway occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_. 
-The reason for this change is discussed previously in the section: <<dvsdc>>.
+This apicast gateway is similar to the supported APIcast gateway that is included with 3scale AMP.
+Its differences with the supported APIcast are as follows:
 
-Your APIcast gateway will pull configurations from the pre-provisioned multi-tenant 3scale AMP using the value of: $THREESCALE_PORTAL_ENDPOINT.
+. Management of this APIcast gateway occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_. 
++
+The reason for this change is discussed previously in the section: <<dvsdc>>.
+. The APIcast gateway used in this lab includes an additional library called:  _libjaegertracing.so_ .
+This library provides support for the _OpenTracing_ specification using _Jaeger_.
+
+As in the supported variant, your APIcast gateway will pull _proxy_ configuration data from the pre-provisioned multi-tenant 3scale AMP using the value of: $THREESCALE_PORTAL_ENDPOINT.
 The multi-tenant 3scale AMP is pre-provisioned by the cluster-admin in a namespace called:  _3scale-mt-adm0_.
 
 In a later section of this lab, this same _apicast_ gateway will be Istio enabled.
@@ -1016,7 +1037,9 @@ oc rsh `oc get pod | grep "catalog-prod-apicast-istio" | awk '{print $1}'` curl 
 
 oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'`                                                       :   ssh into istio enabled apicast gw
 
-oc logs -f  `oc get pod | grep "apicast-istio" | awk '{print $1}'` -c $OCP_USERNAME-catalog-prod-apicast-istio      :   log of istio enabled apicast gw
+oc logs -f  `oc get pod | grep "apicast-istio" \
+            | grep "Running" \
+            | awk '{print $1}'` -c $OCP_USERNAME-catalog-prod-apicast-istio                                         :   log of istio enabled apicast gw
 
 for i in `oc get pod | grep "apicast-istio" | awk '{print $1}'`; do oc delete pod $i; done                          :   Re-dploy Istio enabled Apicast gateway
 
@@ -1042,6 +1065,59 @@ TO-DO
   5) with istio injected apicast, boot doesn't start however a curl within the same pod on THREESCALE_PORTAL_ENDPOINT does work
 
   6) allow user write access to istio-system to allow for execution of:  "istioctl create"
+
+  7) opentracing enabled apicast
+        - quay.io/3scale/apicast:master
+        - OPENTRACING_TRACER:           Which Tracer implementation to use, right now, only Jaeger is available.
+        - OPENTRACING_CONFIG:           Each tracer has a default configuration file, you can see an example here: jaeger.example.json
+        - OPENTRACING_HEADER_FORWARD:   By default, uses uber-trace-id, if your OpenTracing has a different configuration, you will need to change this value, if not, ignore it.
+
+
+-----
+$ cat <<EOF > $HOME/lab/jaeger_config.json
+ {
+ “service_name”: “apicast”,
+ “disabled”: false,
+ “sampler”: {
+ “type”: “const”,
+ “param”: 1
+ },
+ “reporter”: {
+ “queueSize”: 100,
+ “bufferFlushInterval”: 10,
+ “logSpans”: false,
+ “localAgentHostPort”: “jaeger-agent:6831”
+ },
+ “headers”: {
+ “jaegerDebugHeader”: “debug-id”,
+ “jaegerBaggageHeader”: “baggage”,
+ “TraceContextHeaderName”: “uber-trace-id”,
+ “traceBaggageHeaderPrefix”: “testctx-”
+ },
+ “baggage_restrictions”: {
+ “denyBaggageOnInitializationFailure”: false,
+ “hostPort”: “127.0.0.1:5778”,
+ “refreshInterval”: 60
+ }
+ }
+EOF
+-----
+
+-----
+$ oc create configmap jaeger-config --from-file=$HOME/lab/jaeger_config.json
+-----
+
+-----
+$ oc volume deploy/$OCP_USERNAME-catalog-prod-apicast-istio --add -m /tmp/jaeger/ --configmap-name jaeger-config
+-----
+
+-----
+$ oc env deploy/$OCP_USERNAME-catalog-prod-apicast-istio OPENTRACING_TRACER=jaeger OPENTRACING_CONFIG=/tmp/jaeger/jaeger_config.yaml
+-----
+
+Failed to open tracer configuration file /tmp/jaeger/jaeger_config.jso (2: No such file or directory)
+
+Failed to construct tracer: `service_name` not provided
 
 
 
@@ -1087,6 +1163,19 @@ Why would you expect that the _curl_ utility to be able to pull the _service-pro
 2018-08-11T21:02:57.106739Z	info	Epoch 0: set retry delay to 3.2s, budget to 5
 2018-08-11T21:03:00.306904Z	info	Reconciling configuration (budget 5)
 
+
+=== Lab Focus: Configuration
+
+The emphasis of this lab is on configuration: specifically, configuration of a _Cloud Native _ application managed by 3scale and an Istio  _Service Mesh_.
+
+Students of this lab will not write any business logic.
+
+Development of cloud native applications can be written in a wide variety of development platforms offered by Red Hat to include:
+
+. Red Hat Openshift Application Runtimes (RHOAR)
+. Red Hat Fuse on OpenShift
+
+Details about these Red Hat development platforms are out of scope for this specific lab.
 
 
 endif::showscript[]

@@ -62,12 +62,16 @@ Includes source code to community Jaeger as well as Jaeger client libraries for 
 
 In regards to API Management and a MSA service mesh, the following are related community initiatives that are not covered in this lab.
 
-==== OpenTracing vs Istio
+==== Standalone community Jaeger
  
-Of related interest is that the upstream community APIcast gateway from Red Hat's 3scale product already bundles _OpenTracing_ client library using _Jaeger_.
-This already allows it to participate in distributed tracing where the traces and spans could be viewed in a standalone Jaeger installation as discussed in link:https://medium.com/@jmprusi_49013/adding-opentracing-support-to-apicast-api-gateway-a8e0a38347d2[this tutorial].
+Of related interest is that the upstream community APIcast gateway from Red Hat's 3scale product bundles _OpenTracing_ client library using _Jaeger_.
+Subsequently, this allows community apicast to participate in distributed tracing.
 
-As part of its _control plane_, Istio bundles in Jaeger. 
+Also available in the open-source community is the _all-in-one_ community Jaeger that includes a jaeger-agent, jaeger-collector and jaeger-collector.
+link:https://medium.com/@jmprusi_49013/adding-opentracing-support-to-apicast-api-gateway-a8e0a38347d2[This tutorial] very nicely details the use of opentracing enabled apicast with the _all-in-one_ community Jaeger.
+
+
+As an alternative to the _all-in-one_ standalone Jaeger, Istio also now comes included with Jaeger. 
 In this lab, this Jaeger based tracing functionality provided by Istio is utilized instead of a standalone Jaeger installation.
  
 ==== 3scale mixer adapter
@@ -430,15 +434,12 @@ Upon completion, return back to this point and proceed with next section: <<apic
 
 Your lab assets should now consist of a _catalog_ RESTful service managed by out of the box 3scale AMP 2.2 functionality.
 
-In this section of the lab, you will now use a new APIcast gateway that includes _OpenTracing_ libraries and is injected with the Istio _Envoy_ proxy.
+In this section of the lab, you will now inject your APIcast gateway with the _Envoy_ sidecar proxy from Istio.
 
 image::images/deployment_apicast-istio.png[]
 
 In the above diagram, notice the introduction of a new pod: _prod-apicast-istio_.
-Ingress requests through the route and service are now directed to this new OpenTracing / Istio enabled APIcast pod (instead of the original 3scale AMP 2.2 apicast that is not OpenTracing enabled).
-
-. More specifically, the APIcast gateway used in this section of the lab includes an additional library called:  _libjaegertracing.so_ .
-This library provides support for the _OpenTracing_ specification using _Jaeger_.
+Ingress requests through the route and service are now directed to this new Istio enabled APIcast pod.
 
 The _Envoy_ sidecar in your _prod-apicast-istio_ pod will interoperate with _service mesh control plane_ functionality found in the _istio-system_ namespace.
 
@@ -499,13 +500,6 @@ $ cat $HOME/lab/prod-apicast-istio.yml | more
 $ oc create \
      -f $HOME/lab/prod-apicast-istio.yml \
      -n $OCP_PROJECT
------
-
-. Switch to use of Opentracing and Jaeger version of APIcast
-+
------
-$ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-prod-apicast-istio", "image": "quay.io/3scale/apicast:master" }]}}}}'
 -----
 
 . Inject required resource limits and requests into Istio related containers :
@@ -654,12 +648,30 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 This time, you should see the catalog data in the response.
 This request now flows through your istio enabled APIcast (instead of the original out of the box APIcast)
 
+
 == APIcast: OpenTracing enabled
 
+OpenTracing is a consistent, expressive, vendor-neutral APIs for distributed tracing and context propagation.
+
+Jaeger is one of several implementations of OpenTracing.
+
+More specifically, the APIcast gateway used in this section of the lab includes an additional library called:  _libjaegertracing.so_ .
+This library provides support for the _OpenTracing_ specification using _Jaeger_.
+You'll make use of these opentracing client libraries in a later section of this lab.
+
+. You'll be making quite a few changes to your Istio enabled apicast gateway.  Put it in a paused state while those changes are being made:
++
+-----
+$ oc rollout pause deploy $OCP_USERNAME-prod-apicast-istio
+-----
+
+
+. Create a json config file that instructs the _nginx-opentracing_ and _jaeger-cpp_ client libraries in the apicast gateway how to push traces to the Jaeger agent:
++
 -----
 $   cat <<EOF > $HOME/lab/jaeger_config.json
 {
-    "service_name": "$OCP_USERNAME-apicast",
+    "service_name": "$OCP_USERNAME-prod-apicast-istio",
     "disabled": false,
     "sampler": {
       "type": "const",
@@ -686,44 +698,82 @@ $   cat <<EOF > $HOME/lab/jaeger_config.json
 EOF
 -----
 
+.. Pay special attention to the value of _localAgentHostPort_ .
++
+The opentracing libraries in your apicast will push traces in the form of UDP packets to this jaeger-agent host and port.
+
+.. You can verify that the jaeger-agent actually exists by executing and is expecting UDP packets on port 6831:
++
+-----
+$  oc get service jaeger-agent -n istio-system
+
+NAME           TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                      AGE
+jaeger-agent   ClusterIP   None         <none>        5775/UDP,6831/UDP,6832/UDP   4d
+-----
+
+. Create a configmap from opentracing json file:
++
 -----
 $ oc create configmap jaeger-config --from-file=$HOME/lab/jaeger_config.json -n $OCP_PROJECT
 -----
 
+. Mount the configmap to your Istio and opentracing  enabled apicast:
++
 -----
 $ oc volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ --configmap-name jaeger-config -n $OCP_PROJECT
 -----
 
+. Set environment variables that indicate to the apicast where to read opentracing related configurations:
++
 -----
 $ oc env deploy/$OCP_USERNAME-prod-apicast-istio OPENTRACING_TRACER=jaeger OPENTRACING_CONFIG=/tmp/jaeger/jaeger_config.json -n $OCP_PROJECT
 -----
 
-Failed to open tracer configuration file /tmp/jaeger/jaeger_config.jso (2: No such file or directory)
+. Switch to the use an APIcast gateway that is Opentracing and Jaeger enabled:
++
+-----
+$ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-prod-apicast-istio", "image": "quay.io/3scale/apicast:master" }]}}}}'
+-----
 
-Failed to construct tracer: `service_name` not provided
+. Resume your Istio and opentracing enabled apicast gateway.
++
+-----
+$ oc rollout resume deploy $OCP_USERNAME-prod-apicast-istio
+-----
+
+. Verify opentracing related libraries in the APIcast gateway.
++
+Once your apicast is back up and running, execute commands such as the following :
++
+-----
+$ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
+
+-rwxr-xr-x. 1 root root 1457848 Jun 11 06:29 /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
+
+
+
+
+$ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /opt/app-root/lib/libjaegertracing.so.0
+
+lrwxrwxrwx. 1 root root 25 Jun 11 06:38 /opt/app-root/lib/libjaegertracing.so.0 -> libjaegertracing.so.0.3.0
+
+-----
+
  
-- name: OPENTRACING_TRACER
-            value: jaeger
-          - name: OPENTRACING_CONFIG
-            value: "/tmp/jaeger/jaeger_config.json"
-
-
 == Jaeger UI
 
 Thus far, you have Istio enabled your APIcast gateway pod.
 Along with all other components that will eventually run in your Istio service mesh, it is subject to its various policies .
 
-This next section of the lab introduces you to _OpenTracing_ and _Jaeger_.
+This next section of the lab introduces you to _Jaeger_ user inferface.
 
-OpenTracing is a consistent, expressive, vendor-neutral APIs for distributed tracing and context propagation.
-
-Jaeger is one of several implementations of OpenTracing.
 
 Istio provides Jaeger functionality out of the box.
 
 === Overview
 
-Often the first thing to understand about your microservices architecture is specifically which microservices are involved in and end-user transaction.
+Often the first thing to understand about your microservices architecture is specifically which microservices are involved in an end-user transaction.
 Istio's Mixer comes with the ability to pull tracing spans from your distributed microservices.
 
 Although Istio supports both Zipkin and Jaeger, for our purposes we focus on Jaeger, which implements OpenTracing, a vendor neutral tracing API.
@@ -759,7 +809,6 @@ Traces pertaining to your Istio enabled APIcast gateway are now available .
 However, what is missing is tracing that includes the backend _catalog_ service.
 
 In the next section, you'll enable your _catalog_ service to provide tracing data .
-
 
 
 == Catalog Service: OpenTracing and Istio enabled

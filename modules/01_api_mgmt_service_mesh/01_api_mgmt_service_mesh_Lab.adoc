@@ -23,7 +23,6 @@
 
 :numbered:
 
-
 == Overview
 
 An _Istio_ based service mesh introduces features that are similar to those found in an API management solution.
@@ -57,6 +56,8 @@ Includes the OpenTracing specification as well as the OpenTracing client librari
 .. link:https://github.com/jaegertracing/[Github organization for community Jaeger]
 +
 Includes source code to community Jaeger as well as Jaeger client libraries for many languages (that implement the corresponding OpenTracing client libraries]
+
+.. link:https://istio.io/blog/2018/v1alpha3-routing/[Overview of Istio v1alpha3 routing API]
 
 === Alternatives
 
@@ -113,7 +114,7 @@ $ export API_ADMIN_ACCESS_TOKEN=<provided by your instructor>
 
 
 
-#######  Using above variables, the following can be copied and pasted in same terminal window   ########
+#  Using above variables, copy & paste the following in same terminal #
 
 $ export OCP_WILDCARD_DOMAIN=apps.$REGION.openshift.opentlc.com
 $ export TENANT_NAME=$OCP_USERNAME-3scale
@@ -1290,3 +1291,40 @@ endif::showscript[]
 
 
 
+ifdef::showscript[]
+
+Which of the following libraries is embedded in community apicast to support distributed tracing?
+
+a) ngx_http_opentracing_module.so
+b) libjaegertracing.so.0
+c) libzipkintracing.so.0
+d) A and B                  *
+
+
+
+What is the name of the CustomResourceDefinition introduced by Istio's v1alpha3 routing API that allows for configuration of an egress route?
+
+a) EgressRule
+b) DestinationRule
+c) ServiceEntry             *
+d) EgressRoute  
+
+
+
+The Jaeger java client library provides which of the following features?
+
+a) Propogation of traces to the jaeger-agent via UDP on port 6831
+b) Propogation of traces to the jaeger-collector via TCP by specifying the environment variable: JAEGER_ENDPOINT
+c) Setting of the trace sampler type via the environment variable: JAEGER_SAMPLER_TYPE
+d) All of the above         *
+
+
+
+Which of the following are feature of the Red Hat 3scale product that are not found in Istio ?
+
+a) Developer portal
+b) Rate limiting
+c) Billing
+d) A and C                  *
+
+endif::showscript[]

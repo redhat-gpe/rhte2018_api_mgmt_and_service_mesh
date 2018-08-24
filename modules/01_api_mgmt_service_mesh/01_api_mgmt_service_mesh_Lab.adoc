@@ -25,11 +25,17 @@
 
 == Overview
 
-An _Istio_ based service mesh introduces features that are similar to those found in an API management solution.
+_API Management_ facilitates relationships between API consumers and producers.
+It lowers the link:https://en.wikipedia.org/wiki/Transaction_cost[transaction costs] (ie: search costs, price discovery, policing and enforcement costs, etc ) that would otherwise hinder mutually beneficial exchange between API consumer and producer.
+It is often the case that these API producers and consumers do not personally know each other.
 
-The purpose of this lab is to apply both a _service mesh_ and an API management solution to a container native application.
+A _service mesh_ provides the technical resilience and _observability_ needed to facilitate a Microservice Architecture (MSA).
 
-Along the way, a comparison of some features between API Mgmt and a Service Mesh will be conducted.
+The two technologies target different use cases.
+However, there is some overlap.
+
+The purpose of this lab is to discover how the two technologies can complement each other.
+You do this by applying both a _service mesh_ and an _API Management_ solution to a _cloud native_ application.
 
 === Background
 
@@ -64,7 +70,7 @@ Includes source code to community Jaeger as well as Jaeger client libraries for 
 In regards to API Management and a MSA service mesh, the following are related community initiatives that are not covered in this lab.
 
 ==== Standalone community Jaeger
- 
+
 Of related interest is that the upstream community APIcast gateway from Red Hat's 3scale product bundles _OpenTracing_ client library using _Jaeger_.
 Subsequently, this allows community apicast to participate in distributed tracing.
 
@@ -72,13 +78,10 @@ Also available in the open-source community is the _all-in-one_ community Jaeger
 link:https://medium.com/@jmprusi_49013/adding-opentracing-support-to-apicast-api-gateway-a8e0a38347d2[This tutorial] very nicely details the use of opentracing enabled apicast with the _all-in-one_ community Jaeger.
 
 
-As an alternative to the _all-in-one_ standalone Jaeger, Istio also now comes included with Jaeger. 
+As an alternative to the _all-in-one_ standalone Jaeger, Istio also now comes included with Jaeger.
 In this lab, this Jaeger based tracing functionality provided by Istio is utilized instead of a standalone Jaeger installation.
- 
-==== 3scale mixer adapter
 
-The Red Hat 3scale engineering team is actively working on an Istio _mixer_.
-This Istio _mixer_ will allow 3scale API Management policies to be applied directly to the _service mesh_ . 
+
 
 
 ==== Istio API Management Working Group
@@ -90,7 +93,7 @@ One of this Istio working groups is on link:https://github.com/istio/community/b
 Members of the  Red Hat engineering team are currently participating in this Istio API Management working group.
 
 Outcomes of this working group may potentially guide the development and roadmap of future releases of the Red Hat 3scale API Management product.
- 
+
 == Lab Asset Overview
 
 === Environment Variables
@@ -117,12 +120,9 @@ $ export API_ADMIN_ACCESS_TOKEN=<provided by your instructor>
 #  Using above variables, copy & paste the following in same terminal #
 
 $ export OCP_WILDCARD_DOMAIN=apps.$REGION.openshift.opentlc.com
-$ export TENANT_NAME=$OCP_USERNAME-3scale
+$ export OCP_USERNAME=user$GUID
+$ export TENANT_NAME=$OCP_USERNAME-3scale-mt
 
-#   THREESCALE_PORTAL_ENDPOINT
-#   - Notice the value of this variable is being set to the route of the 3scale AMP system-provider 
-#   - Technically, it could instead be the system-provider service endpoint of 3scale AMP.
-#   - Later in this lab We'll use a route instead of a service to highlight default traffic management settings in Istio
 
 $ export THREESCALE_PORTAL_ENDPOINT=https://${API_ADMIN_ACCESS_TOKEN}@$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
 
@@ -143,7 +143,7 @@ Your lab environment includes access to a multi-tenant 3scale AMP installation.
 
 For the purpose of this lab, you will serve as the administrator of your own 3scale _tenant_ (aka: _domain_)
 
-. Log into the admin portal of your 3scale AMP environment using the information to do provided by your instructor
+. Log into the admin portal of your 3scale AMP environment using the information provided to you by your instructor
 
 . To access the admin portal of your 3scale environment, point to your browser to the output of the following:
 +
@@ -190,7 +190,7 @@ kubernetes v1.9.1+a0ce1bc657
 -----
 $ oc get projects
 
-... 
+...
 
 istio-system                                      Active
 3scale-mt-adm0           3scale-mt-adm0           Active
@@ -202,7 +202,7 @@ rhte-mw-api-mesh-user1   rhte-mw-api-mesh-user1   Active
 Later in this lab, you'll use a utility called _istioctl_ .
 This utility will need both view and edit privileges to the _istio-system_ namespace.
 
-.. Your OCP use has also been provided with _view_ access to a multi-tenant 
+.. Your OCP use has also been provided with _view_ access to a multi-tenant
 
 .. The namespace _rhte-mw-api-mesh-*_ is where you will be working throughout the duration of this lab.
 
@@ -224,7 +224,7 @@ $ echo -en "\n\nhttps://master.$REGION.openshift.opentlc.com\n\n"
 
 
 [[dvsdc]]
-=== Deployment vs DeploymentConfig 
+=== Deployment vs DeploymentConfig
 
 Your lab assets consist of a mix of OpenShift _Deployment_ and _DeploymentConfig_ resources.
 
@@ -272,10 +272,10 @@ NAME              DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
 catalog-service   1         1         1            1           4m
 -----
 
-. Review running pods -n $OCP_PROJECT
+. Review running pods
 +
 -----
-$ oc get pods
+$ oc get pods -n $OCP_PROJECT
 
 ...
 
@@ -319,7 +319,6 @@ Swagger documentation is available for the REST endpoints of the catalog microse
 
 . Display the URL for your project:
 +
-[source,text]
 ----
 $ echo $NAKED_CATALOG_ROUTE
 ----
@@ -331,7 +330,6 @@ image::images/swagger-ui-coolstore-catalog.png[]
 
 . Click *GET /products Get a list of products* to expand the item.
 . Click the *Try it out* button, click *Execute* and view the response.
-. Use the Swagger UI to test the other REST endpoints for the catalog microservice.
 
 == Apicast: Plain
 
@@ -340,12 +338,18 @@ Your APIcast will retrive _proxy service_ configurations from the pre-existing 3
 
 image::images/deployment_apicast.png[]
 
-The management of this APIcast gateway occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_. 
+The management of this APIcast gateway occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_.
 The reason for this is discussed previously in the section: <<dvsdc>>.
 
 In a later section of this lab, you will switch to the use of a community variant of APIcast that is enabled with _OpenTracing_ and _Jaeger_ client libraries to participate in distributed tracing.
 
 === Deploy Apicast
+
+. Create a directory to store files related to this lab:
++
+-----
+$ mkdir -p $HOME/lab
+-----
 
 . Retrieve Apicast template
 +
@@ -359,10 +363,6 @@ $ curl -o $HOME/lab/3scale-apicast.yml \
 -----
 $ cat $HOME/lab/3scale-apicast.yml | more
 -----
-
-. Check your knowledge
-+
-TO-DO
 
 . Create Apicast staging related resources in OpenShift:
 +
@@ -413,15 +413,19 @@ If you are already proficient with 3scale, then configure and test the managemen
 . Ensure your Apicast gateways started correctly and the value of the _THREESCALE_ENDPOINT_ makes sense.
 . Create an API proxy service called _catalog_service_ and configure it to use the APIcast gateway and an API key for security.
 . Create an application plan called: _catalog_app_plan_
-. Create an application called: _catalog_app_
+. Using the existing _Developer_ account and the _catalog_app_plan_, create an application called: _catalog_app_
 . Capture the API key for the application and set its value as the following environment variable in your shell terminal:  _CATALOG_USER_KEY_ .
-. Configure the _Integration_ section of your _catalog_service_ .
+. Configure the _Integration_ section of your _catalog_service_ and publish the service to production.
 . Test the _/products_ endpoint of your _catalog_ RESTful service via both your staging and production APIcast gateways.
 +
 You'll likely want to use the curl utility in a manner similar to the following:
 +
 -----
-$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+$ curl -v -k \
+       `echo "https://"$(\
+        oc get route/catalog-prod-apicast-$OCP_USERNAME \
+        -n $OCP_PROJECT \
+        -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
 Proceed to the section: <<apicast_istio>>
@@ -430,7 +434,7 @@ Proceed to the section: <<apicast_istio>>
 
 If you are new to API management using 3scale, then follow the instructions found in the <<configuretestapi>> section of the appendix of this lab.
 
-Upon completion, return back to this point and proceed with next section: <<apicast_istio>>.
+Upon completion, proceed with next section: <<apicast_istio>>.
 
 [[apicast_istio]]
 == Apicast: Istio enabled
@@ -545,7 +549,15 @@ Error creating: pods "customer-7dcd544ff9-" is forbidden: unable to validate aga
 +
 However, for the purpose of this lab, the cluster-admin of your OCP environment previously set the _default_ service account for your OCP project with the _anyuid_ SCC.
 This is considered a significant security risk.
-A future version of the Red Hat supported Istio eliminate the need for this _anyuid_ SCC.
+A future version of the Red Hat supported Istio will eliminate the need for this _anyuid_ SCC.
+
+.. [red]#TODO Investigate why liveness and readiness probes are failing#
++
+-----
+Readiness probe failed: Get http://10.1.3.121:8090/status/ready: dial tcp 10.1.3.121:8090: getsockopt: connection refused
+Liveness probe failed: Get http://10.1.3.121:8090/status/live: dial tcp 10.1.3.121:8090: getsockopt: connection refused
+
+-----
 
 . Modify _service_ to route to new Istio enabled _apicast_
 +
@@ -565,7 +577,7 @@ d59904ad4515522ecccb8b81c761a283
 . From the terminal, execute the following:
 +
 -----
-$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -n $OCP_PROJECT -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 .. The response should actually be a HTTP 404.
 .. Why would this be the case ?
@@ -597,7 +609,7 @@ spec:
   ports:
   - name: https-443
     number: 443
-    protocol: HTTPS 
+    protocol: HTTPS
   resolution: DNS" \
  > $HOME/lab/catalog-apicast-egressrule.yml
 -----
@@ -672,7 +684,7 @@ OpenTracing is a consistent, expressive, vendor-neutral API for distributed trac
 
 Jaeger is one of several implementations of OpenTracing.
 
-The APIcast gateway used in this section of the lab includes a couple of additional libraries:  
+The APIcast gateway used in this section of the lab includes a couple of additional libraries:
 
 . /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
 . /opt/app-root/lib/libjaegertracing.so.0
@@ -792,7 +804,7 @@ $ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /opt/app-r
 lrwxrwxrwx. 1 root root 25 Jun 11 06:38 /opt/app-root/lib/libjaegertracing.so.0 -> libjaegertracing.so.0.3.0
 -----
 
- 
+
 == Jaeger UI
 
 
@@ -809,7 +821,7 @@ One important term to understand is _span_.
 Jaeger defines span as: “a logical unit of work in the system that has an operation name, the start time of the operation, and the duration. Spans can be nested and ordered to model causal relationships.
 An RPC call is an example of a span.”
 
-Another important term to understand is _trace_ 
+Another important term to understand is _trace_
 +
 Jaeger defines _trace_ as “adata/execution path through the system, and can be thought of as a directed acyclic graph of spans"
 
@@ -956,13 +968,18 @@ Defining of fine grained _methods_ and _mappings_ for your catalog API will subs
 
 The analytics provided by 3scale compliment the distributed tracing capabilities of Jaeger.
 
+== 3scale mixer adapter
 
+[red]#TO_DO#
+
+The Red Hat 3scale engineering team is actively working on an Istio _mixer_.
+This Istio _mixer_ will allow 3scale API Management policies to be applied directly to the _service mesh_ .
 
 
 == Conclusions
 
 As you know, Openresty is Nginx + luaJIT, and right now, we only get OpenTracing information for the "Nginx" part of it, there aren't any OpenTracing libraries for lua.
-We are working on being able to use the OpenTracing C++ libraries from LUA, so we can create spans directly from it, and gain even more visibility into APIcast internals. 
+We are working on being able to use the OpenTracing C++ libraries from LUA, so we can create spans directly from it, and gain even more visibility into APIcast internals.
 For example, this could help debug if that custom policy you just installed is making things slower.
 
 
@@ -1120,10 +1137,10 @@ When this internal NGINX timer is triggered, you see log statements in your APIc
 
 For the purpose of this lab, instead of potentially waiting for 5 minutes, you can simply bounce your apicast pods .
 
-. Delete existing apicast related pods:
+. Bounce apicast related pods:
 +
 -----
-$ for i in `oc get pod | grep "apicast" | awk '{print $1}'`; do oc delete pod $i; done
+$ for i in `oc get pod -n $OCP_PROJECT | grep "apicast" | awk '{print $1}'`; do oc delete pod $i; done
 -----
 +
 Kubernetes will detect the absence of these pods and start new ones.
@@ -1307,7 +1324,7 @@ What is the name of the CustomResourceDefinition introduced by Istio's v1alpha3 
 a) EgressRule
 b) DestinationRule
 c) ServiceEntry             *
-d) EgressRoute  
+d) EgressRoute
 
 
 

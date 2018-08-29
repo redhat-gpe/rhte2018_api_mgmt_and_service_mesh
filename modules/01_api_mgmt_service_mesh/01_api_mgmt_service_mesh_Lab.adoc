@@ -94,6 +94,8 @@ Members of the  Red Hat engineering team are currently participating in this Ist
 
 Outcomes of this working group may potentially guide the development and roadmap of future releases of the Red Hat 3scale API Management product.
 
+In the future, this lab may demonstrate initiatives that may come out of this Istio API Management Working Group.
+
 == Lab Asset Overview
 
 === Environment Variables
@@ -121,21 +123,11 @@ $ export API_ADMIN_ACCESS_TOKEN=<provided by your instructor>
 
 $ export OCP_WILDCARD_DOMAIN=apps.$REGION.openshift.opentlc.com
 $ export OCP_USERNAME=user$GUID
+$ export MSA_PROJECT=rhte-mw-api-mesh-$GUID
 $ export TENANT_NAME=$OCP_USERNAME-3scale-mt
-
-
 $ export THREESCALE_PORTAL_ENDPOINT=https://${API_ADMIN_ACCESS_TOKEN}@$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
 
-$ export OCP_USERNAME=user$GUID
-$ export OCP_PROJECT=rhte-mw-api-mesh-$GUID
 -----
-
-ifdef::showscript[]
-
-# Potential alternative using service endpoint (may need to use master)
-$ export THREESCALE_PORTAL_ENDPOINT=http://${API_ADMIN_ACCESS_TOKEN}@system-provider.3scale-mt-adm0.svc.cluster.local
-
-endif::showscript[]
 
 === 3scale AMP access
 
@@ -197,24 +189,30 @@ istio-system                                      Active
 rhte-mw-api-mesh-user1   rhte-mw-api-mesh-user1   Active
 -----
 
-.. Your OCP user has been provided with _view_ and _edit_ access to the central _istio-system_ namespace with all _control plane_ Istio functionality.
+.. *istio-system*
++
+Your OCP user has been provided with _view_ and _edit_ access to the central _istio-system_ namespace with all _control plane_ Istio functionality.
 +
 Later in this lab, you'll use a utility called _istioctl_ .
 This utility will need both view and edit privileges to the _istio-system_ namespace.
 
-.. Your OCP use has also been provided with _view_ access to a multi-tenant
+.. *3scale-mt-adm0*
++
+Your OCP use has also been provided with _view_ access to a multi-tenant 3scale environment.
 
-.. The namespace _rhte-mw-api-mesh-*_ is where you will be working throughout the duration of this lab.
+.. *rhte-mw-api-mesh-**
++
+The namespace _rhte-mw-api-mesh-*_ is where you will be working throughout the duration of this lab.
 
 . Switch to your  OpenShift project
 +
 -----
-$ oc project $OCP_PROJECT
+$ oc project $MSA_PROJECT
 -----
 
 . Log into OpenShift Web Console
-.. Many OpenShift related tasks found in this lab can be completed in the Web Console (as an alternative to using the `oc` utility`.
-.. To access, point to your browser to the output of the following:
+.. Many OpenShift related tasks found in this lab can be completed in the Web Console (as an alternative to using the `oc` utility.
+.. To access the OCP web console, point to your browser to the output of the following:
 +
 -----
 $ echo -en "\n\nhttps://master.$REGION.openshift.opentlc.com\n\n"
@@ -253,7 +251,7 @@ link:https://docs.openshift.com/container-platform/3.10/dev_guide/deployments/ku
 . Review DeploymentConfig
 +
 -----
-$ oc get dc -n $OCP_PROJECT
+$ oc get dc -n $MSA_PROJECT
 
 ...
 
@@ -264,7 +262,7 @@ catalog-mongodb   1          1         1         config,image(mongodb:3.4)
 . Review Deployment
 +
 -----
-$ oc get deploy -n $OCP_PROJECT
+$ oc get deploy -n $MSA_PROJECT
 
 ...
 
@@ -275,7 +273,7 @@ catalog-service   1         1         1            1           4m
 . Review running pods
 +
 -----
-$ oc get pods -n $OCP_PROJECT
+$ oc get pods -n $MSA_PROJECT
 
 ...
 
@@ -290,7 +288,7 @@ catalog-service-1-dqb28       1/1       Running     0          11m
 +
 [source,text]
 ----
-$ export NAKED_CATALOG_ROUTE=http://$(oc get route catalog-unsecured -o template --template='{{.spec.host}}' -n $OCP_PROJECT)
+$ export NAKED_CATALOG_ROUTE=http://$(oc get route catalog-unsecured -o template --template='{{.spec.host}}' -n $MSA_PROJECT)
 ----
 
 . Via the catalog route, retrieve the pre-seeded data in the Mongo database:
@@ -375,7 +373,7 @@ $ oc new-app \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
      --param THREESCALE_DEPLOYMENT_ENV=sandbox \
      --param APICAST_CONFIGURATION_LOADER=lazy \
-     -n $OCP_PROJECT > $HOME/lab/stage-apicast_details.txt
+     -n $MSA_PROJECT > $HOME/lab/stage-apicast_details.txt
 -----
 
 . Create Apicast production related resources in OpenShift:
@@ -389,13 +387,13 @@ $ oc new-app \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
      --param THREESCALE_DEPLOYMENT_ENV=production \
      --param APICAST_CONFIGURATION_LOADER=lazy \
-     -n $OCP_PROJECT > $HOME/lab/prod-apicast_details.txt
+     -n $MSA_PROJECT > $HOME/lab/prod-apicast_details.txt
 -----
 
 . Resume the paused deploy objects:
 +
 -----
-$ oc rollout resume deploy stage-apicast prod-apicast -n $OCP_PROJECT
+$ oc rollout resume deploy stage-apicast prod-apicast -n $MSA_PROJECT
 -----
 
 === Configure and Test API Mgmt
@@ -424,7 +422,7 @@ You'll likely want to use the curl utility in a manner similar to the following:
 $ curl -v -k \
        `echo "https://"$(\
         oc get route/catalog-prod-apicast-$OCP_USERNAME \
-        -n $OCP_PROJECT \
+        -n $MSA_PROJECT \
         -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
@@ -459,7 +457,7 @@ Your APIcast gateway will continue to pull _service proxy_ configurations from t
 . Retrieve yaml representation of current apicast production deployment:
 +
 -----
-$ oc get deploy prod-apicast -n $OCP_PROJECT -o yaml > $HOME/lab/prod-apicast.yml
+$ oc get deploy prod-apicast -n $MSA_PROJECT -o yaml > $HOME/lab/prod-apicast.yml
 -----
 
 . Differentiate your Istio enabled apicast gateway from your existing APIcast gateway:
@@ -508,7 +506,7 @@ $ cat $HOME/lab/prod-apicast-istio.yml | more
 -----
 $ oc create \
      -f $HOME/lab/prod-apicast-istio.yml \
-     -n $OCP_PROJECT
+     -n $MSA_PROJECT
 -----
 
 . Inject required resource limits and requests into Istio related containers :
@@ -577,7 +575,7 @@ d59904ad4515522ecccb8b81c761a283
 . From the terminal, execute the following:
 +
 -----
-$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -n $OCP_PROJECT -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -n $MSA_PROJECT -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 .. The response should actually be a HTTP 404.
 .. Why would this be the case ?
@@ -621,7 +619,7 @@ spec:
 . Inject configs from the configmap in _istio-system_ namespace:
 +
 -----
-$ oc create -f $HOME/lab/catalog-apicast-egressrule.yml -n $OCP_PROJECT --as=system:admin
+$ oc create -f $HOME/lab/catalog-apicast-egressrule.yml -n $MSA_PROJECT --as=system:admin
 -----
 +
 WARNING:  Your OCP user has been provided with the ability to _impersonate_ the _system:admin_ user so as to execute this command.
@@ -641,7 +639,7 @@ WARNING:  This command also requires _cluster admin_ capabilities to execute.
 Use a command like the following to verify that your Istio enabled apicast can now poll the 3scale AMP for proxy service configuration information::
 +
 -----
-$ oc rsh `oc get pod -n $OCP_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
+$ oc rsh `oc get pod -n $MSA_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
      curl -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json \
      | python -m json.tool | more
 
@@ -755,13 +753,13 @@ Thi is the URL that your apicast will push traces (via UDP) to the _jaeger-agent
 . Create a configmap from the opentracing json file:
 +
 -----
-$ oc create configmap jaeger-config --from-file=$HOME/lab/jaeger_config.json -n $OCP_PROJECT
+$ oc create configmap jaeger-config --from-file=$HOME/lab/jaeger_config.json -n $MSA_PROJECT
 -----
 
 . Mount the configmap to your opentracing enabled apicast:
 +
 -----
-$ oc volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ --configmap-name jaeger-config -n $OCP_PROJECT
+$ oc volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ --configmap-name jaeger-config -n $MSA_PROJECT
 -----
 
 . Set environment variables that indicate to the apicast where to read opentracing related configurations:
@@ -770,7 +768,7 @@ $ oc volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ --conf
 $ oc env deploy/$OCP_USERNAME-prod-apicast-istio \
          OPENTRACING_TRACER=jaeger \
          OPENTRACING_CONFIG=/tmp/jaeger/jaeger_config.json \
-         -n $OCP_PROJECT
+         -n $MSA_PROJECT
 -----
 
 . Update the APIcast _deployment_ to use the Opentracing and Jaeger enabled image:
@@ -872,7 +870,7 @@ ENV JAEGER_SERVICE_NAME=customer\
 . Retrieve yaml representation of current _catalog service_ deployment:
 +
 -----
-$ oc get deploy catalog-service -n $OCP_PROJECT -o yaml > $HOME/lab/catalog-service.yml
+$ oc get deploy catalog-service -n $MSA_PROJECT -o yaml > $HOME/lab/catalog-service.yml
 -----
 
 . Differentiate your Istio enabled catalog service from your existing catalog service:
@@ -908,7 +906,7 @@ $ cat $HOME/lab/catalog-service-istio.yml | more
 -----
 $ oc create \
      -f $HOME/lab/catalog-service-istio.yml \
-     -n $OCP_PROJECT
+     -n $MSA_PROJECT
 -----
 
 . Inject required resource limits and requests into Istio related containers :
@@ -953,6 +951,10 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 -----
 
 
+== Istio Ingress gateway
+
+https://istio.io/docs/tasks/traffic-management/ingress/
+
 
 == 3scale Analytics
 
@@ -985,7 +987,52 @@ For example, this could help debug if that custom policy you just installed is m
 
 == Questions
 
-TO-DO :  questions to test student knowledge of the concepts / learning objectives of this lab
+
+
+. Which of the following libraries is embedded in community apicast to support distributed tracing?
++
+-----
+a) ngx_http_opentracing_module.so
+b) libjaegertracing.so.0
+c) libzipkintracing.so.0
+d) A and B
+-----
+
+. What is the name of the CustomResourceDefinition introduced by Istio's v1alpha3 routing API that allows for configuration of an egress route?
++
+-----
+a) EgressRule
+b) DestinationRule
+c) ServiceEntry
+d) EgressRoute
+-----
+
+
+
+. The Jaeger java client library provides which of the following features?
++
+-----
+a) Propogation of traces to the jaeger-agent via UDP on port 6831
+b) Propogation of traces to the jaeger-collector via TCP by specifying the environment variable: JAEGER_ENDPOINT
+c) Setting of the trace sampler type via the environment variable: JAEGER_SAMPLER_TYPE
+d) All of the above
+-----
+
+. Which of the following are feature of the Red Hat 3scale product that are not found in Istio ?
++
+-----
+a) Developer portal
+b) Rate limiting
+c) Billing
+d) A and C
+-----
+
+ifdef::showscript[]
+1)  answer D
+2)  answer C
+3)  answer D
+4)  answer D
+endif::showscript[]
 
 == Appendix
 
@@ -1081,19 +1128,19 @@ image::images/publish_app_plan.png[]
 ... The internal URL will be the output of the following:
 +
 -----
-$ echo -en "\n\nhttp://catalog-service.$OCP_PROJECT.svc.cluster.local:8080\n\n"
+$ echo -en "\n\nhttp://catalog-service.$MSA_PROJECT.svc.cluster.local:8080\n\n"
 -----
 
 .. *Staging Public Base URL*: Populate this field with the output from the following command:
 +
 -----
-$ echo -en "\n`oc get route catalog-stage-apicast-$OCP_USERNAME -n $OCP_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
+$ echo -en "\n`oc get route catalog-stage-apicast-$OCP_USERNAME -n $MSA_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
 -----
 
 .. *Production Public Base URL*: Populate this field with the output from the following command:
 +
 -----
-$ echo -en "\n`oc get route catalog-prod-apicast-$OCP_USERNAME -n $OCP_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
+$ echo -en "\n`oc get route catalog-prod-apicast-$OCP_USERNAME -n $MSA_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
 -----
 
 .. *API test GET request*: Enter `/products`.
@@ -1140,7 +1187,7 @@ For the purpose of this lab, instead of potentially waiting for 5 minutes, you c
 . Bounce apicast related pods:
 +
 -----
-$ for i in `oc get pod -n $OCP_PROJECT | grep "apicast" | awk '{print $1}'`; do oc delete pod $i; done
+$ for i in `oc get pod -n $MSA_PROJECT | grep "apicast" | awk '{print $1}'`; do oc delete pod $i; done
 -----
 +
 Kubernetes will detect the absence of these pods and start new ones.
@@ -1303,45 +1350,5 @@ Development of cloud native applications can be written in a wide variety of dev
 
 Details about these Red Hat development platforms are out of scope for this specific lab.
 
-
-endif::showscript[]
-
-
-
-ifdef::showscript[]
-
-Which of the following libraries is embedded in community apicast to support distributed tracing?
-
-a) ngx_http_opentracing_module.so
-b) libjaegertracing.so.0
-c) libzipkintracing.so.0
-d) A and B                  *
-
-
-
-What is the name of the CustomResourceDefinition introduced by Istio's v1alpha3 routing API that allows for configuration of an egress route?
-
-a) EgressRule
-b) DestinationRule
-c) ServiceEntry             *
-d) EgressRoute
-
-
-
-The Jaeger java client library provides which of the following features?
-
-a) Propogation of traces to the jaeger-agent via UDP on port 6831
-b) Propogation of traces to the jaeger-collector via TCP by specifying the environment variable: JAEGER_ENDPOINT
-c) Setting of the trace sampler type via the environment variable: JAEGER_SAMPLER_TYPE
-d) All of the above         *
-
-
-
-Which of the following are feature of the Red Hat 3scale product that are not found in Istio ?
-
-a) Developer portal
-b) Rate limiting
-c) Billing
-d) A and C                  *
 
 endif::showscript[]

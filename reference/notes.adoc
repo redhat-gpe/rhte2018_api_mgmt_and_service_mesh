@@ -27,6 +27,20 @@ Intro to Cloud-Native App Dev
 +
 nginx-opentracing
 
+== Apigee Mixer in Istio
+
+. https://groups.google.com/forum/#!topic/istio-users/zKtk4uswGLQ
++
+-----
+We absolutely want Istio to be able to play in this space, both as a standalone project and as the datapath for existing commercial API management solutions.
+
+Istio can already validate JWTs and enforce basic rate limiting.  See docs here and here.
+
+Those are fine for some use cases (not many unique clients), but you may want to have a system that isn't dependent on CRDs for clients or individual rate limits. 
+To show that, we've released a Mixer adapter that is an integration with our Apigee Edge enterprise API management product. 
+This allows you to use Apigee for, for example, creation of API keys or client IDs (Apigee has a portal in which your customers can create their own credentials self-service) and rate limits. 
+Istio can then enforce the policies defined in the api management system by way of a Mixer adapter.
+-----
 
 == Guidance from Mark Cheshire
 

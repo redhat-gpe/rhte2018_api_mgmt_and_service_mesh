@@ -7,8 +7,8 @@
 = API Mgmt and Service Mesh Lab
 
 .Goals
-* Inject Istio Envoy proxy configs into an Apicast gateway
-* Configure an Istio Egress Route for an Apicast gateway
+* Inject Istio Envoy proxy configs into an API gateway
+* Configure an Istio Egress Route for an API gateway
 * End-to-end distributed tracing of a MSA application using Jaeger implementation of the _OpenTracing_ specification
 
 .Prerequisite
@@ -71,11 +71,11 @@ In regards to API Management and a MSA service mesh, the following are related c
 
 ==== Standalone community Jaeger
 
-Of related interest is that the upstream community APIcast gateway from Red Hat's 3scale product bundles _OpenTracing_ client library using _Jaeger_.
-Subsequently, this allows community apicast to participate in distributed tracing.
+Of related interest is that the upstream community API gateway from Red Hat's 3scale product bundles _OpenTracing_ client library using _Jaeger_.
+Subsequently, this allows community API gateway to participate in distributed tracing.
 
 Also available in the open-source community is the _all-in-one_ community Jaeger that includes a jaeger-agent, jaeger-collector and jaeger-collector.
-link:https://medium.com/@jmprusi_49013/adding-opentracing-support-to-apicast-api-gateway-a8e0a38347d2[This tutorial] very nicely details the use of opentracing enabled apicast with the _all-in-one_ community Jaeger.
+link:https://medium.com/@jmprusi_49013/adding-opentracing-support-to-apicast-api-gateway-a8e0a38347d2[This tutorial] very nicely details the use of opentracing enabled API gateway with the _all-in-one_ community Jaeger.
 
 
 As an alternative to the _all-in-one_ standalone Jaeger, Istio also now comes included with Jaeger.
@@ -121,31 +121,15 @@ $ export API_ADMIN_ACCESS_TOKEN=<provided by your instructor>
 
 #  Using above variables, copy & paste the following in same terminal #
 
-$ export OCP_WILDCARD_DOMAIN=apps.$REGION.openshift.opentlc.com
-$ export OCP_USERNAME=user$GUID
-$ export MSA_PROJECT=rhte-mw-api-mesh-$GUID
-$ export TENANT_NAME=$OCP_USERNAME-3scale-mt
-$ export THREESCALE_PORTAL_ENDPOINT=https://${API_ADMIN_ACCESS_TOKEN}@$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
+export OCP_WILDCARD_DOMAIN=apps.$REGION.openshift.opentlc.com
+export OCP_USERNAME=user$GUID
+export MSA_PROJECT=rhte-mw-api-mesh-$GUID
+export TENANT_NAME=$OCP_USERNAME-3scale-mt
+export THREESCALE_PORTAL_ENDPOINT=https://${API_ADMIN_ACCESS_TOKEN}@$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
 
 -----
 
-=== 3scale AMP access
 
-Your lab environment includes access to a multi-tenant 3scale AMP installation.
-
-For the purpose of this lab, you will serve as the administrator of your own 3scale _tenant_ (aka: _domain_)
-
-. Log into the admin portal of your 3scale AMP environment using the information provided to you by your instructor
-
-. To access the admin portal of your 3scale environment, point to your browser to the output of the following:
-+
------
-$ echo -en "\n\nhttps://$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN\n\n"
------
-
-. Authenticate using the values of $OCP_USERNAME and $OCP_PASSWD   (Your 3scale credentials are the same as your OCP credentials).
-+
-image::images/3scale_login.png[]
 
 
 === OpenShift access
@@ -165,16 +149,16 @@ $ oc login https://master.$REGION.openshift.opentlc.com -u $OCP_USERNAME -p $OCP
 -----
 $ oc version
 
-oc v3.9.30
-kubernetes v1.9.1+a0ce1bc657
+oc v3.10.14
+kubernetes v1.10.0+b81c8f8
 features: Basic-Auth GSSAPI Kerberos SPNEGO
 
-Server https://master.a4ec.openshift.opentlc.com:443
-openshift v3.9.31
-kubernetes v1.9.1+a0ce1bc657
+Server https://master.8091.openshift.opentlc.com:443
+openshift v3.10.14
+kubernetes v1.10.0+b81c8f8
 -----
 
-.. In the above example, notice that version of the `oc` client is of the same minor release (v3.9.30) of the OpenShift server (v3.9.31)
+.. In the above example, notice that version of the `oc` client is of the same release as the remote OCP master API.
 .. There a known subtle problems with using a version of the `oc` client that is different from your target OpenShift server.
 
 . View existing projects:
@@ -186,7 +170,7 @@ $ oc get projects
 
 istio-system                                      Active
 3scale-mt-adm0           3scale-mt-adm0           Active
-rhte-mw-api-mesh-user1   rhte-mw-api-mesh-user1   Active
+rhte-mw-api-mesh-1       rhte-mw-api-mesh-1       Active
 -----
 
 .. *istio-system*
@@ -219,6 +203,24 @@ $ echo -en "\n\nhttps://master.$REGION.openshift.opentlc.com\n\n"
 -----
 
 .. Authenticate using the values of $OCP_USERNAME and $OCP_PASSWD
+
+=== API Manager access
+
+Your lab environment includes access to a multi-tenant API Manager installation.
+
+For the purpose of this lab, you will serve as the administrator of your own 3scale _tenant_ (aka: _domain_)
+
+. Log into the admin portal of your API Manager environment using the information provided to you by your instructor
+
+. To access the admin portal of your 3scale environment, point to your browser to the output of the following:
++
+-----
+$ echo -en "\n\nhttps://$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN\n\n"
+-----
+
+. Authenticate using the values of $OCP_USERNAME and $OCP_PASSWD   (Your 3scale credentials are the same as your OCP credentials).
++
+image::images/3scale_login.png[]
 
 
 [[dvsdc]]
@@ -332,14 +334,14 @@ image::images/swagger-ui-coolstore-catalog.png[]
 == Apicast: Plain
 
 In this section of the lab, you will provision a supported version of 3scale _apicast_ gateway to manage your CoolStore _catalog_ service.
-Your APIcast will retrive _proxy service_ configurations from the pre-existing 3scale multi-tenant environment.
+Your API gateway will retrive _proxy service_ configurations from the pre-existing 3scale multi-tenant environment.
 
 image::images/deployment_apicast.png[]
 
-The management of this APIcast gateway occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_.
+The management of this API gateway occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_.
 The reason for this is discussed previously in the section: <<dvsdc>>.
 
-In a later section of this lab, you will switch to the use of a community variant of APIcast that is enabled with _OpenTracing_ and _Jaeger_ client libraries to participate in distributed tracing.
+In a later section of this lab, you will switch to the use of a community variant of API gateway that is enabled with _OpenTracing_ and _Jaeger_ client libraries to participate in distributed tracing.
 
 === Deploy Apicast
 
@@ -349,20 +351,20 @@ In a later section of this lab, you will switch to the use of a community varian
 $ mkdir -p $HOME/lab
 -----
 
-. Retrieve Apicast template
+. Retrieve API gateway template
 +
 -----
 $ curl -o $HOME/lab/3scale-apicast.yml \
           https://raw.githubusercontent.com/gpe-mw-training/3scale_onpremise_implementation_labs/master/resources/rhte/3scale-apicast.yml
 -----
 
-. Review Apicast template
+. Review API gateway template
 +
 -----
 $ cat $HOME/lab/3scale-apicast.yml | more
 -----
 
-. Create Apicast staging related resources in OpenShift:
+. Create API gateway staging related resources in OpenShift:
 +
 -----
 $ oc new-app \
@@ -376,7 +378,7 @@ $ oc new-app \
      -n $MSA_PROJECT > $HOME/lab/stage-apicast_details.txt
 -----
 
-. Create Apicast production related resources in OpenShift:
+. Create API gateway production related resources in OpenShift:
 +
 -----
 $ oc new-app \
@@ -398,7 +400,7 @@ $ oc rollout resume deploy stage-apicast prod-apicast -n $MSA_PROJECT
 
 === Configure and Test API Mgmt
 
-In this section of the lab, you can optionally smoke test the management of your _catalog_ RESTful services using your 3scale AMP and APIcast gateways.
+In this section of the lab, you can optionally smoke test the management of your _catalog_ RESTful services using your API Manager and API gateways.
 
 Guidance is provided for both experienced and inexperienced 3scale users.
 Choose one only.
@@ -408,13 +410,13 @@ Afterwards, continue with the section: <<apicast_istio>>
 
 If you are already proficient with 3scale, then configure and test the management of your _catalog_ RESTful API as per the following :
 
-. Ensure your Apicast gateways started correctly and the value of the _THREESCALE_ENDPOINT_ makes sense.
-. Create an API proxy service called _catalog_service_ and configure it to use the APIcast gateway and an API key for security.
+. Ensure your API gateways started correctly and the value of the _THREESCALE_ENDPOINT_ makes sense.
+. Create an API proxy service called _catalog_service_ and configure it to use the API gateway and an API key for security.
 . Create an application plan called: _catalog_app_plan_
 . Using the existing _Developer_ account and the _catalog_app_plan_, create an application called: _catalog_app_
 . Capture the API key for the application and set its value as the following environment variable in your shell terminal:  _CATALOG_USER_KEY_ .
 . Configure the _Integration_ section of your _catalog_service_ and publish the service to production.
-. Test the _/products_ endpoint of your _catalog_ RESTful service via both your staging and production APIcast gateways.
+. Test the _/products_ endpoint of your _catalog_ RESTful service via both your staging and production API gateways.
 +
 You'll likely want to use the curl utility in a manner similar to the following:
 +
@@ -425,8 +427,10 @@ $ curl -v -k \
         -n $MSA_PROJECT \
         -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
++
+WARNING: [red]#Don't proceed beyond this section until this smoke test of your non istio enabled environment passes and the response from your production API gateway is a listing of catalog data#
 
-Proceed to the section: <<apicast_istio>>
+Once you've smoke tested your API managed environment, proceed to the section: <<apicast_istio>>
 
 ==== Configure & Test:  Inexperienced 3scale users
 
@@ -439,36 +443,36 @@ Upon completion, proceed with next section: <<apicast_istio>>.
 
 === Overview
 
-Your lab environment should now consist of a _catalog_ RESTful service managed by out of the box 3scale AMP 2.2 functionality.
+Your lab environment should now consist of a _catalog_ RESTful service managed by out of the box API Manager 2.2 functionality.
 
-In this section of the lab, you will now inject your APIcast gateway with the _Envoy_ sidecar proxy from Istio.
+In this section of the lab, you will now inject your API gateway with the _Envoy_ sidecar proxy from Istio.
 
 image::images/deployment_apicast-istio.png[]
 
 In the above diagram, notice the introduction of a new pod: _prod-apicast-istio_.
-Ingress requests through the apicast production route and service are now directed to this new apicast pod injected with Istio's envoy sidecar.
+Ingress requests through the API gateway production route and service are now directed to this new API gateway pod injected with Istio's envoy sidecar.
 
 The _Envoy_ sidecar in your _prod-apicast-istio_ pod will interoperate with _service mesh control plane_ functionality found in the _istio-system_ namespace.
 
-Your APIcast gateway will continue to pull _service proxy_ configurations from the pre-provisioned multi-tenant 3scale AMP using the value of their  _$THREESCALE_PORTAL_ENDPOINT_ environment variable.
+Your API gateway will continue to pull _service proxy_ configurations from the pre-provisioned multi-tenant API Manager using the value of their  _$THREESCALE_PORTAL_ENDPOINT_ environment variable.
 
 === Procedure
 
-. Retrieve yaml representation of current apicast production deployment:
+. Retrieve yaml representation of current API gateway production deployment:
 +
 -----
 $ oc get deploy prod-apicast -n $MSA_PROJECT -o yaml > $HOME/lab/prod-apicast.yml
 -----
 
-. Differentiate your Istio enabled apicast gateway from your existing APIcast gateway:
+. Differentiate your Istio enabled API gateway from your existing API gateway:
 +
 -----
 $ sed -i "s/prod-apicast/$OCP_USERNAME-prod-apicast-istio/" $HOME/lab/prod-apicast.yml
 -----
-.. The reason you've included $OCP_USERNAME in the name of your istio enabled apicast is because you will need to differentiate with all other istio enabled apicast gateways that may also be managed in the same service mesh.
+.. The reason you've included $OCP_USERNAME in the name of your istio enabled API gateway is because you will need to differentiate with all other istio enabled API gateways that may also be managed in the same service mesh.
 .. Also, the _observability_ user interfaces included in Istio such as Jaeger are not (currently) multi-tenant.
 +
-Subsequently, by providing a unique identifer as a prefix to your apicast name, you will be more easily able to identify logs and traces amongst every one else on the system.
+Subsequently, by providing a unique identifer as a prefix to your API gateway name, you will be more easily able to identify logs and traces amongst every one else on the system.
 
 . Place the deployment in a paused state:
 +
@@ -486,7 +490,7 @@ Your OCP user has already been enabled with _view_ access on the _istio-system_ 
 This provides access to the _istio_ configuration map.
 The _istio_ configmap is generated by a cluster-admin when the Istio control plane was installed on OCP.
 
-. Inject Istio configs (from the _istio_ configmap) into a new apicast deployment:
+. Inject Istio configs (from the _istio_ configmap) into a new API gateway deployment:
 +
 -----
 
@@ -495,13 +499,13 @@ $ istioctl kube-inject \
            > $HOME/lab/prod-apicast-istio.yml
 -----
 
-. View Istio injected APIcast gateway deployment descriptor:
+. View Istio injected API gateway deployment descriptor:
 +
 -----
 $ cat $HOME/lab/prod-apicast-istio.yml | more
 -----
 
-. Deploy a new Istio enabled apicast production gateway:
+. Deploy a new Istio enabled API gateway production gateway:
 +
 -----
 $ oc create \
@@ -535,29 +539,45 @@ $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
 $ oc rollout resume deploy/$OCP_USERNAME-prod-apicast-istio
 -----
 
-.. In order for your new istio enabled apicast pod to start, it needs the _anyuid_ SCC.
+.. Notice the presence of an additional container in your new pod.  This additional container is the istio proxy sidecar.
+.. Both containers in the new pod should have started and the pod should be in a _Running_ state:
++
+-----
+NAME                                         READY     STATUS    RESTARTS   AGE
+catalog-mongodb-1-hfwqw                      1/1       Running   0          57m
+catalog-service-5558855cfd-wwrth             1/1       Running   0          56m
+prod-apicast-57db66b8b7-fm268                1/1       Running   0          28m
+stage-apicast-7f9d46f6dc-vtkrr               1/1       Running   0          43m
+
+
+user50-prod-apicast-istio-784dc96c75-gvh5f   2/2       Running   0          5m
+
+-----
++
+If either of the containers did not start up and the _READY_ column indicates anything other than _2/2_, then this an indication of a problem.
+It's likely that _liveness_ and/or _readiness_ probes on the API gateway are failing.
+It's possible that this is due to a mis-configuration of Istio.
+As an initial troubleshooting step, remove the _liveness_ and _readiness_ probes defined in the deployment.
+After doing so, do both containers start ?
+Talk to your instructor about additional steps to troubleshoot the likely Istio related problem(s).
+
+.. In order for your new istio enabled API gateway pod to start, it needs the _anyuid_ SCC.
 +
 The reason for this is that the _envoy_ side car containers from Istio currently run as a specific userId.
 Unlike most middleware containers that can run using any arbitrary userId that is assigned to them at runtime by OCP, the _envoy_ side car containers would immediately fail upon start-up without the _anyuid_ SCC.
 You'd see an error similiar to the following:
 +
 -----
-Error creating: pods "customer-7dcd544ff9-" is forbidden: unable to validate against any security context constraint: [spec.initContainers[0].securityContext.privileged: Invalid value: true: Privileged containers are not allowed capabilities.add: Invalid value: "NET_ADMIN": capability may not be added spec.initContainers[0].securityContext.privileged: Invalid value: true: Privileged containers are not allowed capabilities.add: Invalid value: "NET_ADMIN":
+Error creating: pods "catalog-7dcd544ff9-" is forbidden: unable to validate against any security context constraint: [spec.initContainers[0].securityContext.privileged: Invalid value: true: Privileged containers are not allowed capabilities.add: Invalid value: "NET_ADMIN": capability may not be added spec.initContainers[0].securityContext.privileged: Invalid value: true: Privileged containers are not allowed capabilities.add: Invalid value: "NET_ADMIN":
 -----
 +
 However, for the purpose of this lab, the cluster-admin of your OCP environment previously set the _default_ service account for your OCP project with the _anyuid_ SCC.
 This is considered a significant security risk.
 A future version of the Red Hat supported Istio will eliminate the need for this _anyuid_ SCC.
 
-.. [red]#TODO Investigate why liveness and readiness probes are failing#
-+
------
-Readiness probe failed: Get http://10.1.3.121:8090/status/ready: dial tcp 10.1.3.121:8090: getsockopt: connection refused
-Liveness probe failed: Get http://10.1.3.121:8090/status/live: dial tcp 10.1.3.121:8090: getsockopt: connection refused
 
------
 
-. Modify _service_ to route to new Istio enabled _apicast_
+. Modify the _prod-apicast_ service to route to new Istio enabled _apicast_
 +
 -----
 $ oc patch service/prod-apicast \
@@ -579,20 +599,44 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 -----
 .. The response should actually be a HTTP 404.
 .. Why would this be the case ?
-... Inspect the APIcast gateway log file for any clues.
-... Is the request making it to your new Istio enabled APIcast gateway ?
-... The root problem is that your Istio enabled APIcast gateway is unable to connect to the _system-provider_ endpoint exposed by the multi-tenant 3scale AMP via the value of: $THREESCALE_PORTAL_ENDPOINT.
+... Inspect the API gateway log file for any clues.
+... Is the request making it to your new Istio enabled API gateway ?
+... The root problem is that your Istio enabled API gateway is unable to connect to the _system-provider_ endpoint exposed by the multi-tenant API Manager via the value of: $THREESCALE_PORTAL_ENDPOINT.
 +
-Your APICast gateway needs to do this to retrieve all of the policy management configuration data from 3scale AMP.
-The reason your APIcast can not make a connection to the 3scale AMP is that $THREESCALE_PORTAL_ENDPOINT references an external internet URL.
+Your API gateway needs to do this to retrieve all of the policy management configuration data from the API Manager.
+The reason your API gateway can not make a connection to the 3scale API Manager is that $THREESCALE_PORTAL_ENDPOINT references an external internet URL.
 By default, Istio blocks all outbound requests to the internet.
-In the next section, you'll define an _egress route_ to allow your APIcast gateway to communicate with the 3scale AMP.
+In the next section, you'll define an _egress route_ to allow your API gateway to communicate with the API Manager.
+
+.  Isolate the problem with your new Istio enabled API gateway by testing the call to the _system-provider_ from within the API gateway.
++
+Use a command such as the following:
++
+-----
+$ oc rsh `oc get pod -n $MSA_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
+          curl -v -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json
+
+
+...
+
+Defaulting container name to user50-prod-apicast-istio.
+Use 'oc describe pod/user50-prod-apicast-istio-784dc96c75-vxxz5 -n rhte-mw-api-mesh-50' to see all of the containers in this pod.
+* About to connect() to user50-3scale-mt-admin.apps.8091.openshift.opentlc.com port 443 (#0)
+*   Trying 52.7.161.237...
+* Connected to user50-3scale-mt-admin.apps.8091.openshift.opentlc.com (52.7.161.237) port 443 (#0)
+* Initializing NSS with certpath: sql:/etc/pki/nssdb
+* NSS error -5938 (PR_END_OF_FILE_ERROR)
+* Encountered end of file
+* Closing connection 0
+curl: (35) Encountered end of file
+command terminated with exit code 35
+-----
 
 === Apply custom _Egress Route_
 
-In this section, you create a custom Istio _ServiceEntry_ that allows your APIcast gateway to connect to the _backend-listener_ of the multi-tenant 3scale AMP.
+In this section, you create a custom Istio _ServiceEntry_ that allows your API gateway to connect to the _backend-listener_ of the multi-tenant API Manager.
 
-. Create a custom Istio _Egress Route_ for Apicast gateway config file:
+. Create a custom Istio _Egress Route_ for API gateway config file:
 +
 -----
 $ echo \
@@ -612,11 +656,11 @@ spec:
  > $HOME/lab/catalog-apicast-egressrule.yml
 -----
 
-.. Note the value of `spec -> hosts` is set to the same value of the $THREESCALE_PORTAL_ENDPOINT specified in your 3scale apicast gateway.
-.. This should allow your apicast gateway to connect to the _system-provider_ service your the multi-tenant 3scale AMP.
+.. Note the value of `spec -> hosts` is set to the same value of the $THREESCALE_PORTAL_ENDPOINT specified in your 3scale API gateway.
+.. This should allow your API gateway to connect to the route that exposes the _system-provider_ service of the multi-tenant API Manager.
 
 
-. Inject configs from the configmap in _istio-system_ namespace:
+. Load the new egress rule:
 +
 -----
 $ oc create -f $HOME/lab/catalog-apicast-egressrule.yml -n $MSA_PROJECT --as=system:admin
@@ -634,9 +678,9 @@ $ oc describe serviceentry $OCP_USERNAME-catalog-apicast-egress-rule --as=system
 +
 WARNING:  This command also requires _cluster admin_ capabilities to execute.
 
-. Now that a custom _egress route_ has been added, your APIcast should be able to pull configuration data from the 3scale AMP.
+. Now that a custom _egress route_ has been added, your API gateway should be able to pull configuration data from the API Manager.
 +
-Use a command like the following to verify that your Istio enabled apicast can now poll the 3scale AMP for proxy service configuration information::
+Use a command like the following to verify that your Istio enabled API gateway can now poll the API Manager for proxy service configuration information::
 +
 -----
 $ oc rsh `oc get pod -n $MSA_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
@@ -663,14 +707,17 @@ $ oc rsh `oc get pod -n $MSA_PROJECT | grep "apicast-istio" | awk '{print $1}'` 
 ....
 -----
 
-. Using the curl utility, re-attempt the request to retrieve catalog data via your istio enabled APIcast gateway .
+. Either wait up to 5 minutes for your Istio enabled API gateway to refresh its proxy configuration (because pulling this config data previously failed) or bounce the pod.
+. Using the curl utility, re-attempt the request to retrieve catalog data via your istio enabled API gateway .
 +
 -----
 $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 +
 This time, you should see the catalog data in the response.
-This request now flows through your istio enabled APIcast .
+This request now flows through your istio enabled API gateway .
+
+[blue]#Although at this point nothing has changed from a functional perspective in your lab, you are now well on your way toward accomplishing a non-functional objective of this lab: apply a service mesh to your API managed application.#
 
 
 == APIcast: OpenTracing enabled
@@ -682,20 +729,25 @@ OpenTracing is a consistent, expressive, vendor-neutral API for distributed trac
 
 Jaeger is one of several implementations of OpenTracing.
 
-The APIcast gateway used in this section of the lab includes a couple of additional libraries:
+The API gateway that you will switch to in this section of the lab includes a couple of additional _Opentracing_ and _Jaeger_ related libraries:
 
-. /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
-. /opt/app-root/lib/libjaegertracing.so.0
+. *ngx_http_opentracing_module_so*
++
+Located at the following path in the API gateway: /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
 
-These library provides support for the _OpenTracing_ specification using _Jaeger_.
+. *libjaegertracing.so.0*
++
+Located at the following path in the API gateway: /opt/app-root/lib/libjaegertracing.so.0
+
+These libraries provide support for the _OpenTracing_ specification using _Jaeger_.
 
 image::images/jaeger_architecture.png[]
 
-You'll configure the Opentracing client libraries in your apicast to forward traces via UDP to the _jaeger-agent_.
+You'll configure the Opentracing client libraries in your API gateway to forward traces via UDP to the _jaeger-agent_.
 
 === Procedure
 
-. You'll be making quite a few changes to your Istio enabled apicast gateway.  Subsequently, put it in a paused state while those changes are being made:
+. You'll be making quite a few changes to your Istio enabled API gateway.  Subsequently, put it in a paused state while those changes are being made:
 +
 -----
 $ oc rollout pause deploy $OCP_USERNAME-prod-apicast-istio
@@ -713,7 +765,7 @@ jaeger-agent   ClusterIP   None         <none>        5775/UDP,6831/UDP,6832/UDP
 The _jaeger-agent_ receives tracing information submitted by jaeger client libraries embedded in apps and forwards in batch to the Jaeger collector.
 
 
-. Create a json config file that will instruct the opentracing and jaeger related client libraries in the apicast gateway how to push traces to the `jaeger-agent`:
+. Create a json config file that will instruct the opentracing and jaeger related client libraries in the API gateway how to push traces to the `jaeger-agent`:
 +
 -----
 $   cat <<EOF > $HOME/lab/jaeger_config.json
@@ -747,7 +799,7 @@ EOF
 
 .. Pay special attention to the value of _localAgentHostPort_ .
 +
-Thi is the URL that your apicast will push traces (via UDP) to the _jaeger-agent_ service host and port.
+Thi is the URL that your API gateway will push traces (via UDP) to the _jaeger-agent_ service host and port.
 
 
 . Create a configmap from the opentracing json file:
@@ -762,7 +814,7 @@ $ oc create configmap jaeger-config --from-file=$HOME/lab/jaeger_config.json -n 
 $ oc volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ --configmap-name jaeger-config -n $MSA_PROJECT
 -----
 
-. Set environment variables that indicate to the apicast where to read opentracing related configurations:
+. Set environment variables that indicate to the API gateway where to read opentracing related configurations:
 +
 -----
 $ oc env deploy/$OCP_USERNAME-prod-apicast-istio \
@@ -771,22 +823,25 @@ $ oc env deploy/$OCP_USERNAME-prod-apicast-istio \
          -n $MSA_PROJECT
 -----
 
-. Update the APIcast _deployment_ to use the Opentracing and Jaeger enabled image:
+. Update the API gateway _deployment_ to use the Opentracing and Jaeger enabled image:
 +
 -----
 $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
    --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-prod-apicast-istio", "image": "quay.io/3scale/apicast:master" }]}}}}'
 -----
++
+Notice the use of a community version of the API gateway container image available in a public _quay.io_ organization.
+This is the container image that includes the _opentracing_ and _jaeger_ client libraries.
 
-. Resume your Istio and opentracing enabled apicast gateway.
+. Resume your Istio and opentracing enabled API gateway.
 +
 -----
 $ oc rollout resume deploy $OCP_USERNAME-prod-apicast-istio
 -----
 
-. Verify the existence of the opentracing library for NGinx in the APIcast gateway.
+. Verify the existence of the opentracing library for NGinx in the API gateway.
 +
-Once your apicast is back up and running, execute the following command :
+Once your API gateway is back up and running, execute the following command :
 +
 -----
 $ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
@@ -794,7 +849,7 @@ $ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /usr/local
 -rwxr-xr-x. 1 root root 1457848 Jun 11 06:29 /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
 -----
 
-. Verify the existence of the jaeger client library in the apicast gateway:
+. Verify the existence of the jaeger client library in the API gateway:
 +
 -----
 $ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /opt/app-root/lib/libjaegertracing.so.0
@@ -806,7 +861,7 @@ lrwxrwxrwx. 1 root root 25 Jun 11 06:38 /opt/app-root/lib/libjaegertracing.so.0 
 == Jaeger UI
 
 
-Now that you are using the Opentracing enabled apicast, let's familiarize ourselves the Jaeger user interface to visualize those traces.
+Now that you are using the Opentracing enabled apicast, let's familiarize ourselves the Jaeger user interface to visualize traces that originate from it.
 
 === Overview
 
@@ -820,7 +875,7 @@ Jaeger defines span as: “a logical unit of work in the system that has an oper
 An RPC call is an example of a span.”
 
 Another important term to understand is _trace_
-+
+
 Jaeger defines _trace_ as “adata/execution path through the system, and can be thought of as a directed acyclic graph of spans"
 
 === Procedure
@@ -843,7 +898,7 @@ You should see an overview with timeline of all of your traces:
 +
 image::images/trace_overview.png[]
 
-Traces pertaining to your Istio enabled APIcast gateway are now available .
+Traces pertaining to your Istio enabled API gateway are now available .
 However, what is missing is tracing that includes the backend _catalog_ service.
 
 In the next section, you'll enable your _catalog_ service to provide tracing data .
@@ -853,17 +908,39 @@ In the next section, you'll enable your _catalog_ service to provide tracing dat
 image::images/deployment_catalog-istio.png[]
 
 In the above diagram, notice the introduction of a new pod: _catalog-service-istio_.
+
 Ingress requests through the _catalog-service_ are now directed to this new Istio enabled _catalog_ pod (instead of the original _catalog_ pod that is not Istio enabled).
 
-=== OpenTracing libraries included in _catalog_service
+The new catalog service is enabled with _opentracing_ and _jaeger_ libraries so that it can also participate in distributed tracing .
+
+=== OpenTracing libraries included in catalog_service
+
+The _catalog service_ is link:https://github.com/gpe-mw-training/appmod_vertx_experienced/tree/rhte_opentracing/lab-04[written in Java] (specifically using the _reactive_ programming framework link:https://vertx.io/[vert.x]).
+
+As such, the new catalog service used in the remainder of this course is embedded with the opentracing and jaeger Java client libraries.
+
+Recall that when configuring the NGinx and C++ opentracing/jaeger client libraries in the API gateway, a configuration file (via a config map) was loaded.
+The opentracing and jaeger client libraries for Java are a bit easier to work with.
+The Java client libraries allow for configuration via environment variables.
+
+The Dockerfile with environment variables (and their default values) utilized in building the new opentracing catalog image is as follows:
 
 -----
-ENV JAEGER_SERVICE_NAME=customer\
-  JAEGER_ENDPOINT=http://jaeger-collector.istio-system.svc:14268/api/traces\
+FROM fabric8/java-jboss-openjdk8-jdk:1.3.1
+ENV JAVA_APP_DIR=/deployments
+ENV AB_OFF=true
+ENV JAEGER_SERVICE_NAME=catalog\
   JAEGER_PROPAGATION=b3\
   JAEGER_SAMPLER_TYPE=const\
-  JAEGER_SAMPLER_PARAM=1
+  JAEGER_SAMPLER_PARAM=1 \
+  JAEGER_AGENT_HOST=jaeger-agent \
+  JAEGER_AGENT_PORT=6831
+EXPOSE 8080 8778 9779
+COPY target/catalog-service-tracing-1.0.7.jar /deployments/
 -----
+
+These environment variables can be over-written at deployment time.
+For the purpose of this lab, the _JAEGER_AGENT_HOST_ will need to be over-written so that the Java Jaeger client libraries pushes traces to the service endpoint at:  `jaeger-agent.istio-system.svc.cluster.local`
 
 === Inject Envoy into _catalog_ service
 
@@ -876,7 +953,7 @@ $ oc get deploy catalog-service -n $MSA_PROJECT -o yaml > $HOME/lab/catalog-serv
 . Differentiate your Istio enabled catalog service from your existing catalog service:
 +
 -----
-$ sed -i "s/ catalog-service/ $OCP_USERNAME-catalog-service/" $HOME/lab/catalog-service.yml
+$ sed -i "s/ catalog-service/ $OCP_USERNAME-cat-service-istio/" $HOME/lab/catalog-service.yml
 -----
 
 . Place the deployment in a paused state:
@@ -901,12 +978,17 @@ $ istioctl kube-inject \
 $ cat $HOME/lab/catalog-service-istio.yml | more
 -----
 
-. Deploy a new Istio enabled apicast production gateway:
+. Deploy a new Istio enabled API gateway production gateway that correctly points to the Jaeger agent in your _istio-system_ namespace:
 +
 -----
 $ oc create \
      -f $HOME/lab/catalog-service-istio.yml \
      -n $MSA_PROJECT
+
+
+
+$ oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_AGENT_HOST=jaeger-agent.istio-system.svc.cluster.local
+$ oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_SERVICE_NAME=$OCP_USERNAME-cat-service-istio
 -----
 
 . Inject required resource limits and requests into Istio related containers :
@@ -915,25 +997,31 @@ There is a clusterquota assigned to your OCP user.
 This clusterquota requires that all containers (including the _istio-proxy_ and _istio-init_ ) specify _limits_ and _requests_.
 +
 -----
-$ oc patch deploy/$OCP_USERNAME-catalog-service \
+$ oc patch deploy/$OCP_USERNAME-cat-service-istio \
    --patch '{"spec":{"template":{"spec":{"containers":[{"name":"istio-proxy", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
 
-$ oc patch deploy/$OCP_USERNAME-catalog-service \
+$ oc patch deploy/$OCP_USERNAME-cat-service-istio \
    --patch '{"spec":{"template":{"spec":{"initContainers":[{"name":"istio-init", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
 -----
 
+. Update the new catalog service deployment to use the Opentracing and Jaeger enabled image:
++
+-----
+$ oc patch deploy/$OCP_USERNAME-cat-service-istio \
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-cat-service-istio", "image": "docker.io/rhtgptetraining/catalog-service-tracing:1.0.9" }]}}}}'
+-----
 
 . Resume the paused deployment:
 +
 -----
-$ oc rollout resume deploy/$OCP_USERNAME-catalog-service
+$ oc rollout resume deploy/$OCP_USERNAME-cat-service-istio
 -----
 
 . Modify the _service_ to route to new Istio enabled _apicast_
 +
 -----
 $ oc patch service/catalog-service \
-   --patch '{"spec":{"selector":{"deployment":"'$OCP_USERNAME'-catalog-service"}}}'
+   --patch '{"spec":{"selector":{"deployment":"'$OCP_USERNAME'-cat-service-istio"}}}'
 -----
 
 . Make sure that your `$CATALOG_USER_KEY` environment variable is set:
@@ -950,6 +1038,9 @@ d59904ad4515522ecccb8b81c761a283
 $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
+. Return back to the Jaeger UI and locate your traces.
++
+Drill into them and notice the _spans_.
 
 == Istio Ingress gateway
 
@@ -958,7 +1049,7 @@ https://istio.io/docs/tasks/traffic-management/ingress/
 
 == 3scale Analytics
 
-Return back to your 3scale AMP as the domain admin and navigate to the _Analytics_ tab at the top.
+Return back to your API Manager as the domain admin and navigate to the _Analytics_ tab at the top.
 
 image::images/3scale_analytics.png[]
 
@@ -981,7 +1072,7 @@ This Istio _mixer_ will allow 3scale API Management policies to be applied direc
 == Conclusions
 
 As you know, Openresty is Nginx + luaJIT, and right now, we only get OpenTracing information for the "Nginx" part of it, there aren't any OpenTracing libraries for lua.
-We are working on being able to use the OpenTracing C++ libraries from LUA, so we can create spans directly from it, and gain even more visibility into APIcast internals.
+We are working on being able to use the OpenTracing C++ libraries from LUA, so we can create spans directly from it, and gain even more visibility into API gateway internals.
 For example, this could help debug if that custom policy you just installed is making things slower.
 
 
@@ -989,7 +1080,7 @@ For example, this could help debug if that custom policy you just installed is m
 
 
 
-. Which of the following libraries is embedded in community apicast to support distributed tracing?
+. Which of the following libraries is embedded in community API gateway to support distributed tracing?
 +
 -----
 a) ngx_http_opentracing_module.so
@@ -1038,7 +1129,7 @@ endif::showscript[]
 
 
 [[configuretestapi]]
-=== Configure and Test API Mgmt
+=== Configure and Test Basic API Mgmt
 
 In this section, you define a service that manages access to the Coolstore Catalog service that has already been provisioned for you.
 
@@ -1046,10 +1137,10 @@ The activities in this section are also found in the pre-req courses but is addi
 
 ==== Define Catalog Service
 
-. From the 3scale AMP Admin Portal home page, navigate to the *API* tab.
+. From the API Manager Admin Portal home page, navigate to the *API* tab.
 . On the far right, click image:images/create_service_icon.png[].
 . Enter `catalog_service` for the *Name* and *System Name*.
-. Select *NGINX APIcast self-managed* *Gateway* type and not a plugin:
+. Select *NGINX API gateway self-managed* *Gateway* type and not a plugin:
 +
 image::images/apicast_gw.png[]
 
@@ -1076,7 +1167,7 @@ image::images/create_app_plan.png[]
 
 In this section, you associate an application to an API consumer account.
 This generates a _user key_ to the application based on the details previously defined in the application plan.
-The user key is used as a query parameter to the HTTP request to invoke your business services via your on-premise APIcast gateway.
+The user key is used as a query parameter to the HTTP request to invoke your business services via your on-premise API gateway.
 
 . Navigate to the *Developers* tab.
 . Select the `Developer` account.
@@ -1112,7 +1203,7 @@ $ export CATALOG_USER_KEY=<the catalog app user key>
 
 In this section, you define an _API proxy_ to manage your _catalog_ RESTful business service.
 
-. In the 3scale AMP Admin Portal, navigate to the *APIs* tab.
+. In the API Manager Admin Portal, navigate to the *APIs* tab.
 . From your `catalog_service` service, select *Application Plans*.
 . For the  `catalog_app_plan` and click the *Publish* link:
 +
@@ -1120,7 +1211,7 @@ image::images/publish_app_plan.png[]
 . From your `catalog_service` service, select *Integration*.
 . Click *Add the base URL of your API and save the configuration*.
 +
-* This takes you to a page that allows you to associate the apicast staging and production URLs with your new 3scale proxy service.
+* This takes you to a page that allows you to associate the API gateway staging and production URLs with your new 3scale proxy service.
 
 . Populate the *Configuration: configure & test immediately in the staging environment* form as follows:
 .. *Private Base URL*:
@@ -1151,7 +1242,7 @@ image::images/apikey_shows_up.png[]
 +
 .. If not, go back through the steps to create an Application Plan and corresponding Application.
 +
-NOTE: When there are multiple developer accounts, Red Hat 3scale API Management uses the default developer account that is created with every new API provider account to determine which user key to use. When creating new services, the 3scale AMP sets the first application from the first account subscribed to the new service as the default.
+NOTE: When there are multiple developer accounts, Red Hat 3scale API Management uses the default developer account that is created with every new API provider account to determine which user key to use. When creating new services, the API Manager sets the first application from the first account subscribed to the new service as the default.
 
 . Click *Update & test in Staging Environment*
 .. In doing so, the `apicast-stage` pod invokes your backend _catalog_ business service as per the `Private Base URL`.
@@ -1165,13 +1256,13 @@ image::images/stage_success.png[]
 image::images/stage_and_prod.png[]
 
 Your 3scale by Red Hat service is configured.
-Next, the configuration details of your service need to be propagated to your on-premise APIcast gateway.
+Next, the configuration details of your service need to be propagated to your on-premise API gateway.
 
-==== Refresh APIcast at boot
-Every time a configuration change is made to an api proxy or application plan, the production APIcast gateways need to be refreshed with the latest changes.
+==== Refresh API gateway at boot
+Every time a configuration change is made to an api proxy or application plan, the production API gateways need to be refreshed with the latest changes.
 
-The APIcast gateways are configured to refresh the latest configuration information from the API management platform every 5 minutes.
-When this internal NGINX timer is triggered, you see log statements in your APIcast gateway similar to the following:
+The API gateways are configured to refresh the latest configuration information from the API management platform every 5 minutes.
+When this internal NGINX timer is triggered, you see log statements in your API gateway similar to the following:
 
 .Sample Output
 -----
@@ -1182,9 +1273,9 @@ When this internal NGINX timer is triggered, you see log statements in your APIc
 [info] 36#36: *3574 [lua] configuration_loader.lua:160: auto updating configuration finished successfuly, context: ngx.timer
 -----
 
-For the purpose of this lab, instead of potentially waiting for 5 minutes, you can simply bounce your apicast pods .
+For the purpose of this lab, instead of potentially waiting for 5 minutes, you can simply bounce your API gateway pods .
 
-. Bounce apicast related pods:
+. Bounce API gateway related pods:
 +
 -----
 $ for i in `oc get pod -n $MSA_PROJECT | grep "apicast" | awk '{print $1}'`; do oc delete pod $i; done
@@ -1192,9 +1283,9 @@ $ for i in `oc get pod -n $MSA_PROJECT | grep "apicast" | awk '{print $1}'`; do 
 +
 Kubernetes will detect the absence of these pods and start new ones.
 +
-Because the value of the _APICAST_CONFIGURATION_LOADER_ environment variable in the pod is set to `boot`, the service proxy configuration from the 3scale AMP will automatically be pulled upon restart.
+Because the value of the _APICAST_CONFIGURATION_LOADER_ environment variable in the pod is set to `boot`, the service proxy configuration from the API Manager will automatically be pulled upon restart.
 
-. Tail the log of the new apicast production pod.
+. Tail the log of the new API gateway production pod.
 
 * A debug-level log statement similar to the following appears:
 +
@@ -1205,7 +1296,7 @@ Because the value of the _APICAST_CONFIGURATION_LOADER_ environment variable in 
 
 ==== Test Catalog Business Service
 
-In this section, you invoke your Catalog business service via your production APIcast gateway.
+In this section, you invoke your Catalog business service via your production API gateway.
 
 . Make sure that your `$CATALOG_USER_KEY` environment variable is still set:
 +
@@ -1253,32 +1344,32 @@ echo -en "\n\ncurl -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json\n\n"
 oc rsh `oc get pod | grep "prod-apicast-istio" | awk '{print $1}'` curl localhost:8090/status/live                  :   test liveness probe of istio enabled apicast
 oc rsh `oc get pod | grep "prod-apicast-istio" | awk '{print $1}'` curl localhost:8090/status/ready                 :   test readiness probe of istio enabled apicast
 
-oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'`                                                       :   ssh into istio enabled apicast gw
+oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'`                                                       :   ssh into istio enabled API gateway gw
 
 oc logs -f  `oc get pod | grep "apicast-istio" \
             | grep "Running" \
-            | awk '{print $1}'` -c $OCP_USERNAME-prod-apicast-istio                                                 :   log of istio enabled apicast gw
+            | awk '{print $1}'` -c $OCP_USERNAME-prod-apicast-istio                                                 :   log of istio enabled API gateway gw
 
-for i in `oc get pod | grep "apicast-istio" | awk '{print $1}'`; do oc delete pod $i; done                          :   Re-dploy Istio enabled Apicast gateway
+for i in `oc get pod | grep "apicast-istio" | awk '{print $1}'`; do oc delete pod $i; done                          :   Re-dploy Istio enabled API gateway
 
 
 TO-DO
-  1)  Is a liveness probe necessary for apicast ?  Apicast appears to error out on its own during boot problems.
-  2)  With liveness and readiness probes removed, apicast boot error behaves differently depending on whether it is injected with istio
-        - istio injected :   apicast boot errors cause fail-over the first 2 or 3 times.  Then no longer any errors.
-        - no istio       :   apicast continues to fail upon boot errors
+  1)  Is a liveness probe necessary for API gateway ?  API gateway appears to error out on its own during boot problems.
+  2)  With liveness and readiness probes removed, API gateway boot error behaves differently depending on whether it is injected with istio
+        - istio injected :   API gateway boot errors cause fail-over the first 2 or 3 times.  Then no longer any errors.
+        - no istio       :   API gateway continues to fail upon boot errors
 
       Turns out envoy proxy is blocking outbound calls at boot for about 1 minute or so
-      All outbound calls from primary pods (ie:  apicast invocation to THREESCALE_PORTAL_ENDPOINT and vert.x / fabric8 invocation to kubernetes API to query for configmap) during that time are blocked.
+      All outbound calls from primary pods (ie:  API gateway invocation to THREESCALE_PORTAL_ENDPOINT and vert.x / fabric8 invocation to kubernetes API to query for configmap) during that time are blocked.
 
       https://github.com/istio/istio/issues/3533        :   startup time of istio-proxy causes comm issues for up to 30 seconds
 
 
   3) investigate istio-ingress
-        OCP ha-proxy -> istio-ingress -> apicast gw -> catalog service
+        OCP ha-proxy -> istio-ingress -> API gateway gw -> catalog service
 
-  4) when apicast is in info log level, why does it stop rebooting itself when a THREESCALE_PORTAL_ENDPOINT related problem is encountered ?
-     when apicast is in debug log level, it continues to cycle when it encounters a THREESCALE_PORTAL_ENDPOINT problem .
+  4) when API gateway is in info log level, why does it stop rebooting itself when a THREESCALE_PORTAL_ENDPOINT related problem is encountered ?
+     when API gateway is in debug log level, it continues to cycle when it encounters a THREESCALE_PORTAL_ENDPOINT problem .
 
   5) with istio injected apicast, boot doesn't start however a curl within the same pod on THREESCALE_PORTAL_ENDPOINT does work
 
@@ -1292,14 +1383,20 @@ TO-DO
 
 
 
+        .. [red]#TODO Investigate why liveness and readiness probes are failing#
+        +
+        -----
+        Readiness probe failed: Get http://10.1.3.121:8090/status/ready: dial tcp 10.1.3.121:8090: getsockopt: connection refused
+        Liveness probe failed: Get http://10.1.3.121:8090/status/live: dial tcp 10.1.3.121:8090: getsockopt: connection refused
+
+        -----
 
 
 
-
-The _info_ log level in APIcast gateway actually provides more useful connection error details than does the _debug_ log level.
+The _info_ log level in API gateway actually provides more useful connection error details than does the _debug_ log level.
 +
 This will become important because we are about to encounter a connection related error now that Istio is introduced .
-The connection problem will be in the apicast gateway at boot when it attempts to pull (using the value set in its THREESCALE_PORTAL_ENDPOINT env variable) _proxy-config_ information from the _system-provider_ of 3scale AMP.
+The connection problem will be in the API gateway at boot when it attempts to pull (using the value set in its THREESCALE_PORTAL_ENDPOINT env variable) _proxy-config_ information from the _system-provider_ of the API Manager.
 
 . Investigate _apicast_ provisioning problem
 +
@@ -1322,9 +1419,9 @@ stack traceback:
 
 -----
 
-.. From the log file, notice that initial warning indicates a failure "to get list services" from the 3scale AMP _system-provider_ service.
+.. From the log file, notice that initial warning indicates a failure "to get list services" from the API Manager _system-provider_ service.
 +
-Why would you expect that the _curl_ utility to be able to pull the _service-proxy_ data when rsh'd into the apicast gateway but the apicast gateway itself fails to do so ?
+Why would you expect that the _curl_ utility to be able to pull the _service-proxy_ data when rsh'd into the API gateway but the API gateway itself fails to do so ?
 
 
 

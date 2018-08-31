@@ -1,0 +1,273 @@
+:noaudio:
+:scrollbar:
+:data-uri:
+:toc2:
+:linkattrs:
+
+= Lab Setup
+
+:numbered:
+
+== Overview
+
+This first lab of the course orients you with the lab assets provided to you.
+
+Your lab environment consists of the following:
+
+. *Remote Virtual Machine*
++
+Accessible via the ssh protocol.
+It is pre-installed with OpenShift Container Platform and Istio.
+
+. *Red Hat 3scale API Manager*
++
+Pre-provisioned with a API _domain_ dedicated to you for the duration of this lab.
+
+== Order
+
+. Point your browser to the following URL:   `https://spp.opentlc.com/service/explorer`
+. Authenticate using your OPENTLC credentials
+. Navigate to the following to order a lab environment: `Services -> Catalogs -> All Services -> RHTE -> RHTE_RHTE_OCP_3SCALE_ISTIO`
+. In the right hand side panel, click `Order`
+. In the following page, accept the defaults and click `Submit`.
+
+
+== SSH Access
+
+-----
+$ ssh lab-user@bastion.$OCP_REGION.rhte.opentlc.com      # ssh password = r3dh4t1!
+-----
+
+== Environment Variables
+
+Once you ssh'd into your remote terminal window, you'll want to set the following environment variables:
+
+-----
+######  Instructor will provide the values to these environment variables #######
+
+$ echo "export OCP_REGION=<provided by your instructor>" >> ~/.bashrc
+
+$ echo "export API_REGION=<provided by your instructor>" >> ~/.bashrc
+$ echo "export API_USERNAME=<provided by your instructor>" >> ~/.bashrc
+$ echo "export API_ADMIN_ACCESS_TOKEN=<provided by your instructor>" >> ~/.bashrc
+
+
+
+#  Using above variables, copy & paste the following in the same terminal #
+
+echo "export GUID=1" >> ~/.bashrc
+
+echo "export OCP_USERNAME=user$GUID" >> ~/.bashrc
+echo "export OCP_PASSWD=r3dh4t1!" >> ~/.bashrc
+echo "export OCP_DOMAIN=$OCP_REGION.rhte.opentlc.com" >> ~/.bashrc
+echo "export OCP_WILDCARD_DOMAIN=apps.$OCP_DOMAIN" >> ~/.bashrc
+
+echo "export API_DOMAIN=$API_REGION.openshift.opentlc.com" >> ~/.bashrc
+echo "export API_WILDCARD_DOMAIN=apps.$API_DOMAIN" >> ~/.bashrc
+echo "export TENANT_NAME=$API_USERNAME-3scale-mt" >> ~/.bashrc
+echo "export THREESCALE_PORTAL_ENDPOINT=https://${API_ADMIN_ACCESS_TOKEN}@$TENANT_NAME-admin.$API_WILDCARD_DOMAIN" >> ~/.bashrc
+
+echo "export MSA_PROJECT=rhte-mw-api-mesh-$GUID" >> ~/.bashrc
+
+
+source ~/.bashrc
+
+-----
+
+== Client Utilities
+
+== OpenShift Container Platform
+
+Your lab environment is built on Red Hat's OpenShift Container Platform.
+
+Access to your OCP resources can be gained via both the `oc` utility as well as the OCP web console.
+
+. Using the `oc` utility, log into OpenShift
++
+-----
+$ oc login https://master.$OCP_REGION.openshift.opentlc.com -u $OCP_USERNAME -p $OCP_PASSWD
+-----
+
+. Ensure that your `oc` client is the same minor release version as the server:
++
+-----
+$ oc version
+
+oc v3.10.14
+kubernetes v1.10.0+b81c8f8
+features: Basic-Auth GSSAPI Kerberos SPNEGO
+
+Server https://master.8091.openshift.opentlc.com:443
+openshift v3.10.14
+kubernetes v1.10.0+b81c8f8
+-----
+
+.. In the above example, notice that version of the `oc` client is of the same release as the remote OCP master API.
+.. There a known subtle problems with using a version of the `oc` client that is different from your target OpenShift server.
+
+. View existing projects:
++
+-----
+$ oc get projects
+
+...
+
+istio-system                                      Active
+rhte-mw-api-mesh-1       rhte-mw-api-mesh-1       Active
+-----
+
+.. *istio-system*
++
+Your OCP user has been provided with _view_ and _edit_ access to the central _istio-system_ namespace with all _control plane_ Istio functionality.
++
+Later in this lab, you'll use a utility called _istioctl_ .
+This utility will need both view and edit privileges to the _istio-system_ namespace.
+
+.. *rhte-mw-api-mesh-**
++
+The namespace _rhte-mw-api-mesh-*_ is where you will be working throughout the duration of this lab.
+
+. Switch to your  OpenShift project
++
+-----
+$ oc project $MSA_PROJECT
+-----
+
+. Log into OpenShift Web Console
+.. Many OpenShift related tasks found in this lab can be completed in the Web Console (as an alternative to using the `oc` utility.
+.. To access the OCP web console, point to your browser to the output of the following:
++
+-----
+$ echo -en "\n\nhttps://master.$OCP_REGION.openshift.opentlc.com\n\n"
+-----
+
+.. Authenticate using the values of $OCP_USERNAME and $OCP_PASSWD
+
+== Lab Assets
+
+
+
+== Catalog Service
+
+[[dvsdc]]
+=== Deployment vs DeploymentConfig
+
+Your lab assets consist of a mix of OpenShift _Deployment_ and _DeploymentConfig_ resources.
+
+The _Deployment_ construct is a more recent Kubernetes equivalent of what has always been in OpenShift:  _DeploymentConfig_.
+
+The _istioctl_ utility (introduced later in this lab) of Istio requires the use of the Kubernetes _Deployment_ resource.
+Subsequently, for the purpose of this lab, we'll use the Kubernetes _Deployment_ type (instead of DeploymentConfig) for most of the functionality.
+One exception to this is the MongoDB.
+
+The CoolStore catalog service included in your lab environment connects to a MongoDB database.
+This MongoDB database is managed by Kubernetes using an OpenShift DeploymentConfig instead of a Kubernetes Deployment.
+The reason for this is that the OpenShift _DeploymentConfig_ provides more features than a Kubernetes _Deployment_.
+In particular, the MongoDB that supports this lab makes use of _life-cycle_ hooks that are only available in a DeploymentConfig.
+The life-cycle hooks are used to pre-seed the data in the MongoDB.
+This _post deployment_ life-cycle hook is simply ignored if added to a Kubernetes Deployment.
+
+
+If you interested in learning more about the differences between Kubernetes _Deployments_ and OCP _DeploymentConfigurations_, please see
+link:https://docs.openshift.com/container-platform/3.10/dev_guide/deployments/kubernetes_deployments.html#kubernetes-deployments-vs-deployment-configurations[this documentation].
+
+==== OpenShift objects
+
+. Review DeploymentConfig
++
+-----
+$ oc get dc -n $MSA_PROJECT
+
+...
+
+NAME              REVISION   DESIRED   CURRENT   TRIGGERED BY
+catalog-mongodb   1          1         1         config,image(mongodb:3.4)
+-----
+
+. Review Deployment
++
+-----
+$ oc get deploy -n $MSA_PROJECT
+
+...
+
+NAME              DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+catalog-service   1         1         1            1           4m
+-----
+
+. Review running pods
++
+-----
+$ oc get pods -n $MSA_PROJECT
+
+...
+
+NAME                          READY     STATUS      RESTARTS   AGE
+catalog-mongodb-1-clsz4       1/1       Running     0          11m
+catalog-service-1-dqb28       1/1       Running     0          11m
+
+...
+-----
+
+. Retrieve the URL of the unsecured _catalog_ route:
++
+[source,text]
+----
+$ export NAKED_CATALOG_ROUTE=http://$(oc get route catalog-unsecured -o template --template='{{.spec.host}}' -n $MSA_PROJECT)
+----
+
+. Via the catalog route, retrieve the pre-seeded data in the Mongo database:
++
+-----
+$ curl -X GET "$NAKED_CATALOG_ROUTE/products"
+-----
++
+.Sample Output
+-----
+...
+
+{
+  "itemId" : "444435",
+  "name" : "Oculus Rift",
+  "desc" : "The world of gaming has also undergone some very unique and compelling tech advances in recent years. Virtual reality, the concept of complete immersion into a digital universe through a special headset, has been the white whale of gaming and digital technology ever since Nintendo marketed its Virtual Boy gaming system in 1995.",
+  "price" : 106.0
+}
+-----
+
+==== Invoke _Open API Specification_ docs
+
+The link:https://swagger.io/docs/specification/about/[OpenAPI Specification^] (formerly "Swagger Specification") is an API description format for REST APIs. link:https://swagger.io/[Swagger^] is a set of open-source tools built around the OpenAPI specification that can help you design, build, document, and consume REST APIs.
+
+Swagger documentation is available for the REST endpoints of the catalog microservice.
+
+. Display the URL for your project:
++
+----
+$ echo $NAKED_CATALOG_ROUTE
+----
+
+. Copy and paste the URL into a web browser.
+* Expect to see the Swagger docs for the REST endpoints:
++
+image::images/swagger-ui-coolstore-catalog.png[]
+
+. Click *GET /products Get a list of products* to expand the item.
+. Click the *Try it out* button, click *Execute* and view the response.
+
+=== API Manager
+
+Your lab environment includes access to a multi-tenant API Manager installation.
+
+For the purpose of this lab, you will serve as the administrator of your own 3scale _tenant_ (aka: _domain_)
+
+. Log into the admin portal of your API Manager environment using the information provided to you by your instructor
+
+. To access the admin portal of your 3scale environment, point to your browser to the output of the following:
++
+-----
+$ echo -en "\n\nhttps://$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\n\n"
+-----
+
+. Authenticate using the values of $API_USERNAME and $API_PASSWD   (Your 3scale credentials are the same as your OCP credentials).
++
+image::images/3scale_login.png[]

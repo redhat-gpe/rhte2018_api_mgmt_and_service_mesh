@@ -15,11 +15,6 @@
 * Skills
 ** Completion of the _APIs as a Business_ lab
 ** Completion of the _MSA and Service Mesh_ lab
-* Tools
-** `curl` utility
-** `sed` utility
-** `istioctl` utility
-** `oc` version 3.9 utility
 
 :numbered:
 

@@ -6,36 +6,63 @@
 
 = Lab Setup
 
+.Prerequisites
+.. `ssh` utility installed on your laptop
+.. broadband internet connectivity
+.. `OPENTLC`
+
 :numbered:
 
 == Overview
 
-This first lab of the course orients you with the lab assets provided to you.
+This first lab orients you with the course lab assets provided to you.
+
 
 Your lab environment consists of the following:
 
 . *Remote Virtual Machine*
 +
 Accessible via the ssh protocol.
-It is pre-installed with OpenShift Container Platform and Istio.
+It is pre-installed with _OpenShift Container Platform_ and _Istio_.
 
 . *Red Hat 3scale API Manager*
 +
 Pre-provisioned with a API _domain_ dedicated to you for the duration of this lab.
 
-== Order
+== Order VM via `GUID Grabber`
 
-. Point your browser to the following URL:   `https://spp.opentlc.com/service/explorer`
-. Authenticate using your OPENTLC credentials
-. Navigate to the following to order a lab environment: `Services -> Catalogs -> All Services -> RHTE -> RHTE_RHTE_OCP_3SCALE_ISTIO`
-. In the right hand side panel, click `Order`
-. In the following page, accept the defaults and click `Submit`.
+This section of the lab explains how to access the Red Hat Tech Exchange _GuidGrabber_ in order to obtain a GUID.
+This GUID will be used to access the lab environment.
 
+. Begin by going to http://bit.ly/rhte-guidgrabber
++
+image::images/gg1.png[GuidGrabber Landing Page]
+
+. From this page select the *Lab Code* :  _A1004_
+
+. Enter the *Activation Key* provided by the lab proctor.
+
+. Click *Next*.
+
+. The resulting page will display your lab's GUID and other useful information about your lab environment.
++
+image::images/ggdedicated.png[Information Page]
+
+. When you are completely done with your lab environment, please click *Reset Workstation* so that you can move on to the next lab.
+If you fail to do this, you will be locked into the GUID from the previous lab.
++
+[NOTE]
+Clicking *Reset Workstation* will not stop or delete the lab environment.
 
 == SSH Access
 
+Your remote virtual machine is accessible via the `ssh` protocol.
+
+Using your local `ssh` utility, you can access your remote VM using a command as follows:
+
 -----
-$ ssh lab-user@bastion.$OCP_REGION.rhte.opentlc.com      # ssh password = r3dh4t1!
+$ export OCP_REGION=<provided to you by your instructor>
+$ ssh lab-user@bastion.$OCP_REGION.rhte.opentlc.com      # ssh password = `r3dh4t1!`
 -----
 
 == Environment Variables
@@ -53,7 +80,7 @@ $ echo "export API_ADMIN_ACCESS_TOKEN=<provided by your instructor>" >> ~/.bashr
 
 
 
-#  Using above variables, copy & paste the following in the same terminal #
+#  Using the above variables, copy & paste the following in the same terminal #
 
 echo "export GUID=1" >> ~/.bashrc
 
@@ -76,6 +103,13 @@ source ~/.bashrc
 
 == Client Utilities
 
+Validate that the following exists in the $PATH of the remote virtual machine:
+
+. _curl_
+. _sed_
+. _istioctl_
+. _oc_
+
 == OpenShift Container Platform
 
 Your lab environment is built on Red Hat's OpenShift Container Platform.
@@ -85,7 +119,7 @@ Access to your OCP resources can be gained via both the `oc` utility as well as 
 . Using the `oc` utility, log into OpenShift
 +
 -----
-$ oc login https://master.$OCP_REGION.openshift.opentlc.com -u $OCP_USERNAME -p $OCP_PASSWD
+$ oc login https://master.$OCP_DOMAIN:8443 -u $OCP_USERNAME -p $OCP_PASSWD
 -----
 
 . Ensure that your `oc` client is the same minor release version as the server:
@@ -138,13 +172,10 @@ $ oc project $MSA_PROJECT
 .. To access the OCP web console, point to your browser to the output of the following:
 +
 -----
-$ echo -en "\n\nhttps://master.$OCP_REGION.openshift.opentlc.com\n\n"
+$ echo -en "\n\nhttps://master.$OCP_DOMAIN:8443\n\n"
 -----
 
 .. Authenticate using the values of $OCP_USERNAME and $OCP_PASSWD
-
-== Lab Assets
-
 
 
 == Catalog Service
@@ -254,7 +285,7 @@ image::images/swagger-ui-coolstore-catalog.png[]
 . Click *GET /products Get a list of products* to expand the item.
 . Click the *Try it out* button, click *Execute* and view the response.
 
-=== API Manager
+== API Manager
 
 Your lab environment includes access to a multi-tenant API Manager installation.
 

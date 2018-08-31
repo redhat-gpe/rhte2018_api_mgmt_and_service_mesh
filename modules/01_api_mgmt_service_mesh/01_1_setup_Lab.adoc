@@ -9,7 +9,6 @@
 .Prerequisites
 .. `ssh` utility installed on your laptop
 .. broadband internet connectivity
-.. `OPENTLC`
 
 :numbered:
 

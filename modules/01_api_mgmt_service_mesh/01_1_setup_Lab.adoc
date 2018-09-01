@@ -74,6 +74,7 @@ Once you've ssh'd into your remote terminal window, you'll want to set the follo
 
 $ echo "export API_REGION=<provided by your instructor>" >> ~/.bashrc
 $ echo "export API_USERNAME=<provided by your instructor>" >> ~/.bashrc
+$ echo "export API_PASSWD=<provided by your instructor>" >> ~/.bashrc
 $ echo "export API_ADMIN_ACCESS_TOKEN=<provided by your instructor>" >> ~/.bashrc
 
 
@@ -88,10 +89,10 @@ echo "export OCP_DOMAIN=clientvm.\$OCP_REGION.rhte.opentlc.com" >> ~/.bashrc
 echo "export OCP_WILDCARD_DOMAIN=apps.\$OCP_DOMAIN" >> ~/.bashrc
 echo "export MSA_PROJECT=rhte-mw-api-mesh-\$LAB_CODE" >> ~/.bashrc
 
-echo "export API_DOMAIN=$API_REGION.openshift.opentlc.com" >> ~/.bashrc
-echo "export API_WILDCARD_DOMAIN=apps.$API_DOMAIN" >> ~/.bashrc
-echo "export TENANT_NAME=$API_USERNAME-3scale-mt" >> ~/.bashrc
-echo "export THREESCALE_PORTAL_ENDPOINT=https://${API_ADMIN_ACCESS_TOKEN}@$TENANT_NAME-admin.$API_WILDCARD_DOMAIN" >> ~/.bashrc
+echo "export API_DOMAIN=\$API_REGION.openshift.opentlc.com" >> ~/.bashrc
+echo "export API_WILDCARD_DOMAIN=apps.\$API_DOMAIN" >> ~/.bashrc
+echo "export TENANT_NAME=\$API_USERNAME-3scale-mt" >> ~/.bashrc
+echo "export THREESCALE_PORTAL_ENDPOINT=https://\${API_ADMIN_ACCESS_TOKEN}@$TENANT_NAME-admin.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
 
 
 source ~/.bashrc
@@ -310,7 +311,7 @@ Your lab environment includes access to a multi-tenant API Manager installation.
 
 For the purpose of this lab, you will serve as the administrator of your own 3scale _tenant_ (aka: _domain_)
 
-. Log into the admin portal of your API Manager environment using the information provided to you by your instructor
+Log into the admin portal of your API Manager environment as follows:
 
 . To access the admin portal of your 3scale environment, point to your browser to the output of the following:
 +

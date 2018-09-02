@@ -235,7 +235,7 @@ Your API gateway will continue to pull _service proxy_ configurations from the p
 . Retrieve yaml representation of current API gateway production deployment:
 +
 -----
-$ oc get deploy prod-apicast -n $MSA_PROJECT -o yaml > $HOME/lab/prod-apicast.yml
+$ oc get deploy prod-apicast -n $GW_PROJECT -o yaml > $HOME/lab/prod-apicast.yml
 -----
 
 . Differentiate your Istio enabled API gateway from your existing API gateway:
@@ -284,7 +284,7 @@ $ cat $HOME/lab/prod-apicast-istio.yml | more
 -----
 $ oc create \
      -f $HOME/lab/prod-apicast-istio.yml \
-     -n $MSA_PROJECT
+     -n $GW_PROJECT
 -----
 
 . Inject required resource limits and requests into Istio related containers :
@@ -293,24 +293,44 @@ There is a clusterquota assigned to your OCP user.
 This clusterquota requires that all containers (including the _istio-proxy_ and _istio-init_ ) specify _limits_ and _requests_.
 +
 -----
-$ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
+$ oc patch deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT\
    --patch '{"spec":{"template":{"spec":{"containers":[{"name":"istio-proxy", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
 
-$ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
+$ oc patch deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT \
    --patch '{"spec":{"template":{"spec":{"initContainers":[{"name":"istio-init", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
 -----
 
 . Change _APICAST_LOG_LEVEL_ environment variable to _info_:
 +
 -----
-$ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
+$ oc patch deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT\
    --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-prod-apicast-istio", "env": [{"name":"APICAST_LOG_LEVEL","value":"info" }]}]}}}}'
 -----
+
+. Allow pods in the $GW_PROJECT to run using any user (including root) that they desire:
++
+-----
+$ oc adm policy add-scc-to-user privileged -z default -n $GW_PROJECT --as=system:admin
+-----
+
+.. In order for your new istio enabled API gateway pod to start, it needs the _anyuid_ SCC.
++
+The reason for this is that the _envoy_ side car containers from Istio currently run as a specific userId.
+Unlike most middleware containers that can run using any arbitrary userId that is assigned to them at runtime by OCP, the _envoy_ side car containers would immediately fail upon start-up without the _anyuid_ SCC.
+You'd see an error similiar to the following:
++
+-----
+Error creating: pods "user50-prod-apicast-istio-6456c879c8" is forbidden: unable to validate against any security context constraint: [spec.initContainers[0].securityContext.privileged: Invalid value: true: Privileged containers are not allowed capabilities.add: Invalid value: "NET_ADMIN": capability may not be added spec.initContainers[0].securityContext.privileged: Invalid value: true: Privileged containers are not allowed capabilities.add: Invalid value: "NET_ADMIN":
+-----
++
+.. For the purpose of this lab, the cluster-admin of your OCP environment has provided you with the ability to _impersonate_ cluster admin.
+Doing so provides you with the ability to apply the _anyuid_ SCC to your project.
+This is considered a significant security risk.
 
 . Resume the paused deployment:
 +
 -----
-$ oc rollout resume deploy/$OCP_USERNAME-prod-apicast-istio
+$ oc rollout resume deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT
 -----
 
 .. Notice the presence of an additional container in your new pod.  This additional container is the istio proxy sidecar.
@@ -318,8 +338,6 @@ $ oc rollout resume deploy/$OCP_USERNAME-prod-apicast-istio
 +
 -----
 NAME                                         READY     STATUS    RESTARTS   AGE
-catalog-mongodb-1-hfwqw                      1/1       Running   0          57m
-catalog-service-5558855cfd-wwrth             1/1       Running   0          56m
 prod-apicast-57db66b8b7-fm268                1/1       Running   0          28m
 stage-apicast-7f9d46f6dc-vtkrr               1/1       Running   0          43m
 
@@ -335,26 +353,14 @@ As an initial troubleshooting step, remove the _liveness_ and _readiness_ probes
 After doing so, do both containers start ?
 Talk to your instructor about additional steps to troubleshoot the likely Istio related problem(s).
 
-.. In order for your new istio enabled API gateway pod to start, it needs the _anyuid_ SCC.
-+
-The reason for this is that the _envoy_ side car containers from Istio currently run as a specific userId.
-Unlike most middleware containers that can run using any arbitrary userId that is assigned to them at runtime by OCP, the _envoy_ side car containers would immediately fail upon start-up without the _anyuid_ SCC.
-You'd see an error similiar to the following:
-+
------
-Error creating: pods "catalog-7dcd544ff9-" is forbidden: unable to validate against any security context constraint: [spec.initContainers[0].securityContext.privileged: Invalid value: true: Privileged containers are not allowed capabilities.add: Invalid value: "NET_ADMIN": capability may not be added spec.initContainers[0].securityContext.privileged: Invalid value: true: Privileged containers are not allowed capabilities.add: Invalid value: "NET_ADMIN":
------
-+
-However, for the purpose of this lab, the cluster-admin of your OCP environment previously set the _default_ service account for your OCP project with the _anyuid_ SCC.
-This is considered a significant security risk.
-A future version of the Red Hat supported Istio will eliminate the need for this _anyuid_ SCC.
+
 
 
 
 . Modify the _prod-apicast_ service to route to new Istio enabled _apicast_
 +
 -----
-$ oc patch service/prod-apicast \
+$ oc patch service/prod-apicast -n $GW_PROJECT \
    --patch '{"spec":{"selector":{"app":"'$OCP_USERNAME'-prod-apicast-istio"}}}'
 -----
 
@@ -369,8 +375,9 @@ d59904ad4515522ecccb8b81c761a283
 . From the terminal, execute the following:
 +
 -----
-$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -n $MSA_PROJECT -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
+
 .. The response should actually be a HTTP 404.
 .. Why would this be the case ?
 ... Inspect the API gateway log file for any clues.
@@ -387,7 +394,7 @@ In the next section, you'll define an _egress route_ to allow your API gateway t
 Use a command such as the following:
 +
 -----
-$ oc rsh `oc get pod -n $MSA_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
+$ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
           curl -v -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json
 
 
@@ -420,7 +427,7 @@ metadata:
   name: $OCP_USERNAME-catalog-apicast-egress-rule
 spec:
   hosts:
-  - $TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
+  - $TENANT_NAME-admin.$API_WILDCARD_DOMAIN
   location: MESH_EXTERNAL
   ports:
   - name: https-443
@@ -437,7 +444,7 @@ spec:
 . Load the new egress rule:
 +
 -----
-$ oc create -f $HOME/lab/catalog-apicast-egressrule.yml -n $MSA_PROJECT --as=system:admin
+$ oc create -f $HOME/lab/catalog-apicast-egressrule.yml -n $GW_PROJECT --as=system:admin
 -----
 +
 WARNING:  Your OCP user has been provided with the ability to _impersonate_ the _system:admin_ user so as to execute this command.
@@ -457,7 +464,7 @@ WARNING:  This command also requires _cluster admin_ capabilities to execute.
 Use a command like the following to verify that your Istio enabled API gateway can now poll the API Manager for proxy service configuration information::
 +
 -----
-$ oc rsh `oc get pod -n $MSA_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
+$ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
      curl -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json \
      | python -m json.tool | more
 
@@ -485,13 +492,72 @@ $ oc rsh `oc get pod -n $MSA_PROJECT | grep "apicast-istio" | awk '{print $1}'` 
 . Using the curl utility, re-attempt the request to retrieve catalog data via your istio enabled API gateway .
 +
 -----
-$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 +
 This time, you should see the catalog data in the response.
 This request now flows through your istio enabled API gateway .
 
 [blue]#Although at this point nothing has changed from a functional perspective in your lab, you are now well on your way toward accomplishing a non-functional objective of this lab: apply a service mesh to your API managed application.#
+
+
+== Istio Ingress gateway
+
+https://istio.io/docs/tasks/traffic-management/ingress/
+
+-----
+$ CATALOG_API_GW_HOST=`oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}}`
+-----
+
+-----
+echo \
+    "apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: catalog-istio-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    hosts:
+    - "$CATALOG_API_GW_HOST"" \
+ > $HOME/lab/catalog-istio-gateway.yml
+-----
+
+-----
+$ oc create -f $HOME/lab/catalog-istio-gateway.yml --as=system:admin
+-----
+
+-----
+echo \
+    "apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: catalog-istio-gateway-vs
+spec:
+  hosts:
+  - "$CATALOG_API_GW_HOST"
+  gateways:
+  - catalog-istio-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /products
+    route:
+    - destination:
+        port:
+          number: 8080
+        host: apicast-production.3scale-mt-adm0" \
+> $HOME/lab/catalog-istio-gateway-vs.yml
+-----
+
+-----
+$ oc create -f $HOME/lab/catalog-istio-gateway-vs.yml --as=system:admin
+-----
 
 
 == APIcast: OpenTracing enabled
@@ -816,63 +882,7 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 +
 Drill into them and notice the _spans_.
 
-== Istio Ingress gateway
 
-https://istio.io/docs/tasks/traffic-management/ingress/
-
------
-$ CATALOG_API_GW_HOST=`oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}}`
------
-
------
-echo \
-    "apiVersion: networking.istio.io/v1alpha3
-kind: Gateway
-metadata:
-  name: catalog-istio-gateway
-spec:
-  selector:
-    istio: ingressgateway
-  servers:
-  - port:
-      number: 443
-      name: https
-      protocol: HTTPS
-    hosts:
-    - "$CATALOG_API_GW_HOST"" \
- > $HOME/lab/catalog-istio-gateway.yml
------
-
------
-$ oc create -f $HOME/lab/catalog-istio-gateway.yml --as=system:admin
------
-
------
-echo \
-    "apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: catalog-istio-gateway-vs
-spec:
-  hosts:
-  - "$CATALOG_API_GW_HOST"
-  gateways:
-  - catalog-istio-gateway
-  http:
-  - match:
-    - uri:
-        prefix: /products
-    route:
-    - destination:
-        port:
-          number: 8080
-        host: apicast-production.3scale-mt-adm0" \
-> $HOME/lab/catalog-istio-gateway-vs.yml
------
-
------
-$ oc create -f $HOME/lab/catalog-istio-gateway-vs.yml --as=system:admin
------
 
 
 == 3scale Analytics

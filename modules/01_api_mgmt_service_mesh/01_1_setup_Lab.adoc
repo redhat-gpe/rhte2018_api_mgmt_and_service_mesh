@@ -92,7 +92,8 @@ echo "export MSA_PROJECT=rhte-mw-api-mesh-\$LAB_CODE" >> ~/.bashrc
 echo "export API_DOMAIN=\$API_REGION.openshift.opentlc.com" >> ~/.bashrc
 echo "export API_WILDCARD_DOMAIN=apps.\$API_DOMAIN" >> ~/.bashrc
 echo "export TENANT_NAME=\$API_USERNAME-3scale-mt" >> ~/.bashrc
-echo "export THREESCALE_PORTAL_ENDPOINT=https://\${API_ADMIN_ACCESS_TOKEN}@$TENANT_NAME-admin.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
+echo "export THREESCALE_PORTAL_ENDPOINT=https://\${API_ADMIN_ACCESS_TOKEN}@\$TENANT_NAME-admin.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
+echo "export BACKEND_ENDPOINT_OVERRIDE=https://backend-3scale-mt-adm0.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
 
 
 source ~/.bashrc

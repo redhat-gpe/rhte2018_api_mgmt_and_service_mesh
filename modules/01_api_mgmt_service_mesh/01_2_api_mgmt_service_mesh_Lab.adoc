@@ -106,6 +106,17 @@ In a later section of this lab, you will switch to the use of a community varian
 
 === Deploy Apicast
 
+. In your course virtual machine, ensure you are the same non-root user in which you previously set lab related environment variables.
+. Using the `oc` utility, ensure you are authenticated and then create a new project where your API gateways will reside:
++
+-----
+$ echo "export GW_PROJECT=\$API_USERNAME-gw" >> $HOME/.bashrc
+$ source ~/.bashrc
+
+
+$ oc new-project $GW_PROJECT --description=$GW_PROJECT
+-----
+
 . Create a directory to store files related to this lab:
 +
 -----
@@ -131,12 +142,13 @@ $ cat $HOME/lab/3scale-apicast.yml | more
 $ oc new-app \
      -f $HOME/lab/3scale-apicast.yml \
      --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
+     --param BACKEND_ENDPOINT_OVERRIDE=$BACKEND_ENDPOINT_OVERRIDE \
      --param APP_NAME=stage-apicast \
      --param ROUTE_NAME=catalog-stage-apicast-$OCP_USERNAME \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
      --param THREESCALE_DEPLOYMENT_ENV=sandbox \
      --param APICAST_CONFIGURATION_LOADER=lazy \
-     -n $MSA_PROJECT > $HOME/lab/stage-apicast_details.txt
+     -n $GW_PROJECT > $HOME/lab/stage-apicast_details.txt
 -----
 
 . Create API gateway production related resources in OpenShift:
@@ -145,18 +157,19 @@ $ oc new-app \
 $ oc new-app \
      -f $HOME/lab/3scale-apicast.yml \
      --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
+     --param BACKEND_ENDPOINT_OVERRIDE=$BACKEND_ENDPOINT_OVERRIDE \
      --param APP_NAME=prod-apicast \
      --param ROUTE_NAME=catalog-prod-apicast-$OCP_USERNAME \
      --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
      --param THREESCALE_DEPLOYMENT_ENV=production \
      --param APICAST_CONFIGURATION_LOADER=lazy \
-     -n $MSA_PROJECT > $HOME/lab/prod-apicast_details.txt
+     -n $GW_PROJECT > $HOME/lab/prod-apicast_details.txt
 -----
 
 . Resume the paused deploy objects:
 +
 -----
-$ oc rollout resume deploy stage-apicast prod-apicast -n $MSA_PROJECT
+$ oc rollout resume deploy stage-apicast prod-apicast -n $GW_PROJECT
 -----
 
 === Configure and Test API Mgmt
@@ -185,7 +198,7 @@ You'll likely want to use the curl utility in a manner similar to the following:
 $ curl -v -k \
        `echo "https://"$(\
         oc get route/catalog-prod-apicast-$OCP_USERNAME \
-        -n $MSA_PROJECT \
+        -n $GW_PROJECT \
         -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 +
@@ -1040,13 +1053,13 @@ $ echo -en "\n\nhttp://catalog-service.$MSA_PROJECT.svc.cluster.local:8080\n\n"
 .. *Staging Public Base URL*: Populate this field with the output from the following command:
 +
 -----
-$ echo -en "\n`oc get route catalog-stage-apicast-$OCP_USERNAME -n $MSA_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
+$ echo -en "\n`oc get route catalog-stage-apicast-$OCP_USERNAME -n $GW_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
 -----
 
 .. *Production Public Base URL*: Populate this field with the output from the following command:
 +
 -----
-$ echo -en "\n`oc get route catalog-prod-apicast-$OCP_USERNAME -n $MSA_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
+$ echo -en "\n`oc get route catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
 -----
 
 .. *API test GET request*: Enter `/products`.

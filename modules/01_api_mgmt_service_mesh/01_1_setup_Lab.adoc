@@ -323,3 +323,26 @@ $ echo -en "\n\nhttps://$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\n\n"
 . Authenticate using the values of $API_USERNAME and $API_PASSWD   (Your 3scale credentials are the same as your OCP credentials).
 +
 image::images/3scale_login.png[]
+
+== Appendix
+
+=== Administrative Access
+
+. On your client VM, access to the `root` operating system can be achieved by executing: `sudo -i`
+. As the `root` operating system user, `cluster admin` to your OCP environment can be achieved by executing :
++
+-----
+# oc login -u system:admin
+-----
+
+. You can check the status of the OCP system service by executing:
++
+-----
+# systemctl status oc-cluster.service
+-----
+
+. The OCP environment can be restarted as follows:
++
+-----
+# systemctl restart oc-cluster.service
+-----

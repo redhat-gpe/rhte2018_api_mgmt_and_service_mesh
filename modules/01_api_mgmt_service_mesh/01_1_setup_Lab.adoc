@@ -39,13 +39,17 @@ image::images/gg1.png[GuidGrabber Landing Page]
 
 . From this page select the *Lab Code* :  _A1004_
 
-. Enter the *Activation Key* provided by the lab proctor.
+. Enter the *Activation Key* provided by the lab instructor.
 
 . Click *Next*.
 
 . The resulting page will display your lab's GUID and other useful information about your lab environment.
 +
-image::images/ggdedicated.png[Information Page]
+image::images/guid_grabber_response.png[Guid Grabber Information Page]
+
+. Your remote virtual machine is accessible via the `ssh` protocol.
++
+Follow the directions exactly as indicated to ssh into your remote lab VM.
 
 . When you are completely done with your lab environment, please click *Reset Workstation* so that you can move on to the next lab.
 If you fail to do this, you will be locked into the GUID from the previous lab.
@@ -53,17 +57,9 @@ If you fail to do this, you will be locked into the GUID from the previous lab.
 [NOTE]
 Clicking *Reset Workstation* will not stop or delete the lab environment.
 
-== SSH Access
-
-Your remote virtual machine is accessible via the `ssh` protocol.
 
 Using your local `ssh` utility, you can access your remote VM using a command as follows:
 
------
-$ export OCP_REGION=<provided to you by `GUID Grabber`>
-
-$ ssh lab-user@bastion.$OCP_REGION.rhte.opentlc.com      # ssh password = `r3dh4t1!`
------
 
 == Environment Variables
 

@@ -1,5 +1,7 @@
 = Reference
 
+. https://gist.github.com/jmprusi/8e7369376e42ffe1cd5278e919b50cd4#file-istio-adapter-md
+
 . https://docs.google.com/presentation/d/1PaE3RqyKoadllKHlPg0-kHcUrTuCeIdAe81CMk12iWw/
 +
 3scale Next.Gen and Istio

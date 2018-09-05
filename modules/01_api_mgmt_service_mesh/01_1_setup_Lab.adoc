@@ -8,6 +8,7 @@
 
 .Prerequisites
 .. `ssh` utility installed on your laptop
+.. Web browser installed on your laptop
 .. broadband internet connectivity
 
 :numbered:
@@ -28,7 +29,7 @@ It is pre-installed with _OpenShift Container Platform_ and _Istio_.
 +
 Pre-provisioned with a API _domain_ dedicated to you for the duration of this lab.
 
-== Order VM via `GUID Grabber`
+== Access Course VM via `GUID Grabber`
 
 This section of the lab explains how to access the Red Hat Tech Exchange _GuidGrabber_ in order to obtain a GUID.
 This GUID will be used to access the lab environment.
@@ -49,16 +50,14 @@ image::images/guid_grabber_response.png[Guid Grabber Information Page]
 
 . Your remote virtual machine is accessible via the `ssh` protocol.
 +
-Follow the directions exactly as indicated to ssh into your remote lab VM.
+Follow the directions exactly as indicated in the Guid Grabber Information Page to ssh into your remote lab VM.
 
-. When you are completely done with your lab environment, please click *Reset Workstation* so that you can move on to the next lab.
+. When you are completely done with your lab environment at the end of this course, please click *Reset Workstation* so that you can move on to the next lab.
 If you fail to do this, you will be locked into the GUID from the previous lab.
 +
 [NOTE]
 Clicking *Reset Workstation* will not stop or delete the lab environment.
 
-
-Using your local `ssh` utility, you can access your remote VM using a command as follows:
 
 
 == Environment Variables
@@ -96,14 +95,32 @@ source ~/.bashrc
 
 -----
 
-== Client Utilities
+== Utilities and resources
 
-Validate that the following exists in the $PATH of the remote virtual machine:
+. Validate that the following exists in the $PATH of the remote virtual machine:
 
+. _git_
 . _curl_
 . _sed_
 . _istioctl_
 . _oc_
+
+. Validate that your virtual machine consists of 16GB RAM and 4 CPUs.
+.. Execute:
++
+-----
+$ cat /proc/meminfo | grep MemTotal
+
+MemTotal:        16016680 kB
+-----
+
+.. Execute:
++
+-----
+$ cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l
+
+4
+-----
 
 == OpenShift Container Platform
 
@@ -324,8 +341,8 @@ image::images/3scale_login.png[]
 
 === Administrative Access
 
-. On your client VM, access to the `root` operating system can be achieved by executing: `sudo -i`
-. As the `root` operating system user, `cluster admin` to your OCP environment can be achieved by executing :
+. On your client VM, access to the `root` operating system user can be achieved by executing: `sudo -i`
+. As the `root` operating system user, `cluster admin` access to your OCP environment can be achieved by executing :
 +
 -----
 # oc login -u system:admin

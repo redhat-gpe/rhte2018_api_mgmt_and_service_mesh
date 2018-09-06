@@ -1,4 +1,4 @@
-:noaudio:
+hnoaudio:
 :scrollbar:
 :data-uri:
 :toc2:
@@ -952,11 +952,71 @@ The analytics provided by 3scale compliment the distributed tracing capabilities
 
 == 3scale mixer adapter
 
-[red]#TO_DO#
-
 The Red Hat 3scale engineering team is actively working on an Istio _mixer_.
 This Istio _mixer_ will allow 3scale API Management policies to be applied directly to the _service mesh_ .
 
+-----
+$ git clone \
+      https://github.com/3scale/istio-integration.git \
+      $HOME/lab/istio-integration
+-----
+
+-----
+$ oc create -f $HOME/lab/istio-integration/3scaleAdapter/openshift -n istio-system --as=system:admin
+-----
+
+. Verify that the 3scale Istio Mixer Adapter pod has started:
++
+-----
+$ oc get pods -n istio-system | grep 3scale-istio-adapter
+
+3scale-istio-adapter-1-t9kj2                2/2       Running     0          47s
+-----
+
+. In the details of your _catalog_ service the API Manager admin console, locate the `ID for API calls ... `: 
++
+image::images/service_id.png[]
+
+. Set an environment variable that captures this catalog service Id:
++
+-----
+$ export CATALOG_SERVICE_ID=<your catalog service Id>
+-----
+
+. Review the `threescale-adapter-config.yaml` file :
++
+-----
+$ cat $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml | more
+-----
+
+. Modify the `threescale-adapter-config.yaml` file with id of your _catalog_ service:
++
+-----
+$ sed -i "s/service_id: .*/service_id: \"$CATALOG_SERVICE_ID\"/" \
+      $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml
+-----
+
+. Modify the `threescale-adapter-config.yaml` file with the URL to your API Manager tenant:
++
+-----
+$ sed -i "s/system_url: .*/system_url: \"https:\/\/$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\"/" \
+      $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml
+-----
+
+. Modify the `threescale-adapter-config.yaml` file with the admin access token of your API Manager admin account:
++
+-----
+$ sed -i "s/access_token: .*/access_token: \"$API_ADMIN_ACCESS_TOKEN\"/" \
+      $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml
+-----
+
+. Create the Istio Handler :
++
+-----
+$ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml --as=system:admin
+-----
+
+[red]#TO_DO#
 
 == Conclusions
 

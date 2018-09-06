@@ -67,10 +67,10 @@ Once you've ssh'd into your remote terminal window, you'll want to set the follo
 -----
 ######  Instructor will provide the values to these environment variables #######
 
-$ echo "export API_REGION=<provided by your instructor>" >> ~/.bashrc
-$ echo "export API_USERNAME=<provided by your instructor>" >> ~/.bashrc
-$ echo "export API_PASSWD=<provided by your instructor>" >> ~/.bashrc
-$ echo "export API_ADMIN_ACCESS_TOKEN=<provided by your instructor>" >> ~/.bashrc
+$ echo "export API_REGION=<provided by instructor>" >> ~/.bashrc                # Column D
+$ echo "export API_USERNAME=<provided by instructor>" >> ~/.bashrc              # Column F
+$ echo "export API_PASSWD=<provided by instructor>" >> ~/.bashrc                # Column G
+$ echo "export API_ADMIN_ACCESS_TOKEN=<provided by instructor>" >> ~/.bashrc    # Column H
 
 
 

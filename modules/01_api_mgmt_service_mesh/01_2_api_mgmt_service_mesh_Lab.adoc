@@ -312,6 +312,11 @@ $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT\
 -----
 $ oc adm policy add-scc-to-user privileged -z default -n $GW_PROJECT --as=system:admin
 -----
++
+WARNING:  Your OCP user has been provided with the ability to _impersonate_ the _system:admin_ user so as to execute this command.
+Please use this capability with caution.
+In a real-world setting, you would have coordinated with a team-member who does have _cluster admin_ rights to execute this command for you.
+
 
 .. In order for your new istio enabled API gateway pod to start, it needs the _anyuid_ SCC.
 +
@@ -447,9 +452,7 @@ spec:
 $ oc create -f $HOME/lab/catalog-apicast-egressrule.yml -n $GW_PROJECT --as=system:admin
 -----
 +
-WARNING:  Your OCP user has been provided with the ability to _impersonate_ the _system:admin_ user so as to execute this command.
-Please use this capability with caution.
-In a real-world setting, you would have coordinated with a team-member who does with _cluster admin_ rights to execute this command for you.
+WARNING:  This command also requires _cluster admin_ capabilities to execute.
 
 . View new ServiceEntry
 +

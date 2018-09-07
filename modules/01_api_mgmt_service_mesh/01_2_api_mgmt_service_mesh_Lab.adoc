@@ -511,13 +511,6 @@ Istio includes an _ingress_ gateway that implements these additional features.
 In this section of the lab, you will substitute use of the HAProxy based OCP router with the Istio _ingress_ service to direct traffic to your API gateway.
 
 
-. Set environment variables that reflect the host and port of the Istio Ingress Gateway resource:
-+
------
-$ export INGRESS_HOST=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-
-$ export INGRESS_PORT=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].port}')
------
 
 . Create an environment variable that reflects the _Production Public Base URL_ of the _catalog-service_ configured in the API Manager:
 +
@@ -589,6 +582,15 @@ spec:
 $ oc create -f $HOME/lab/catalog-istio-gateway-vs.yml -n $GW_PROJECT --as=system:admin
 -----
 
+
+. Set environment variables that reflect the host and port of the Istio Ingress Gateway resource:
++
+-----
+$ export INGRESS_HOST=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+$ export INGRESS_PORT=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].port}')
+-----
+
 . Smoke test a request for catalog data via the newly configured Istio Ingress Gateway:
 +
 -----
@@ -602,10 +604,21 @@ Notice the use of the HTTP _Host_ header.
 .. Why is it needed ?
 .. What happens if this _HOST_ header is not included in the request ?
 .. What happens if this _HOST_ header is included in the request but its value (along with the _host_ attributes in the gateway and virtual service) do not match the _Production Public Base Url_ of the _catalog-service_ in the API Manager ?
-.. The `istio-system` namespace provides a route called: `istio-ingressgateway`.
+
+. The previous smoke test utilized an $INGREGRESS_HOST and $INGRESS_PORT that are made available on a local network.
+Usage of this local $INGRESS_HOST only worked because your curl client happens to be co-located on the same machine as openshift.
++
+The `istio-system` namespace provides a route called: `istio-ingressgateway`.
+Like all OCP routes, it is exposed to external clients.
 +
 Try invoking the API gateway via this `istio-ingressgateway` route instead of using the internal _service-mesh_ related $INGRESS_HOST and $INGRESS_PORT.
-The results should be the same.
+The results should be the same.  The curl command to use is as follows:
++
+-----
+$  curl -v -k \
+       -HHost:$CATALOG_API_GW_HOST \
+      `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+-----
 
 . The original route to the product API Gateway specific to the _catalog_ service can optionally be deleted.
 Going forward all incoming traffic will flow through the Istio Ingress Gateway.
@@ -1038,14 +1051,14 @@ $ echo $NAKED_CATALOG_ROUTE
 catalog-unsecured-rhte-mw-api-mesh-a1001.apps.clientvm.b902.rhte.opentlc.com
 -----
 
-. gateway:
+. gateway & vs:
 +
 -----
 $ echo \
     "apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: catalog-direct-gateway
+  name: catalog-direct-gw
 spec:
   selector:
     istio: ingressgateway
@@ -1055,29 +1068,17 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - "$NAKED_CATALOG_ROUTE"" \
- > $HOME/lab/catalog-direct-gateway.yml
------
-
-. Create gateway:
-+
------
-$ oc create -f ~/lab/catalog-direct-gateway.yml -n $MSA_PROJECT --as=system:admin
------
-
-. Virtual Service:
-+
------
-$ echo \
-  "apiVersion: networking.istio.io/v1alpha3
+    - \"*\"
+---
+apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: catalog-direct
+  name: catalog-direct-vs
 spec:
   hosts:
-  - "$NAKED_CATALOG_ROUTE"
+  - \"*\"
   gateways:
-  - catalog-direct-gateway
+  - catalog-direct-gw
   http:
   - match:
     - uri:
@@ -1087,18 +1088,20 @@ spec:
         host: catalog-service
         port:
           number: 8080" \
-> $HOME/lab/catalog-direct-vs.yml
+ > $HOME/lab/catalog-direct-gw-vs.yml
 -----
 
-. Create Virtual Service:
+. Create gateway and virtual service :
 +
 -----
-$ oc create -f ~/lab/catalog-direct-vs.yml -n $MSA_PROJECT --as=system:admin
+$ oc create -f ~/lab/catalog-direct-gw-vs.yml -n $MSA_PROJECT --as=system:admin
 -----
 
 . From the terminal, execute the following to invoke your catalog service directly via the Istio ingress:
 +
 -----
+$ curl -v `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products"`
+
 $ curl -v  -HHost:$NAKED_CATALOG_ROUTE \
        `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products"`
 -----
@@ -1174,11 +1177,83 @@ $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapte
 . Verify that the Istio Handler was created in the istio-system namespace:
 +
 -----
-$ oc get handler -n istio-system --as=system:admin
+$ oc get handler -n istio-system --as=system:admin -o yaml
 
-....
+apiVersion: v1
+items:
+- apiVersion: config.istio.io/v1alpha2
+  kind: handler
 
-threescalehandler   1d
+  ....
+
+  spec:
+    adapter: threescale
+    connection:
+      address: threescaleistioadapter:3333
+    params:
+      access_token: ca16cd9ebd664d07c7bd5511be4b78ecf6d58c30daa940ff711515ca7de1191a
+      service_id: "103"
+      system_url: https://user50-3scale-mt-admin.apps.4a64.openshift.opentlc.com
+
+-----
+
+
+. gateway:
++
+-----
+$ echo \
+    "apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: catalog-mixer-gw
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - \"*\"" \
+ > $HOME/lab/catalog-mixer-gw.yml
+-----
+
+. Create gateway:
++
+-----
+$ oc create -f ~/lab/catalog-mixer-gw.yml -n istio-system --as=system:admin
+-----
+
+. Virtual Service:
++
+-----
+$ echo \
+  "apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: catalog-mixer-vs
+spec:
+  hosts:
+  - \"*\"
+  gateways:
+  - catalog-mixer-gw
+  http:
+  - match:
+    - uri:
+        prefix: /products
+    route:
+    - destination:
+        host: "threescaleistioadapter"
+        port:
+          number: 3333" \
+> $HOME/lab/catalog-mixer-vs.yml
+-----
+
+. Create Gateway & Virtual Service:
++
+-----
+$ oc create -f ~/lab/catalog-mixer-vs.yml -n istio-system --as=system:admin
 -----
 
 . From the terminal, execute the following to invoke your catalog service directly via the Istio ingress:

@@ -788,23 +788,40 @@ Jaeger defines _trace_ as “adata/execution path through the system, and can be
 -----
 $ echo -en "\n\nhttp://"$(oc get route/tracing -o template --template {{.spec.host}} -n istio-system)"\n\n"
 -----
-+
-Using your browser, navigate to this URL.
+
+.. Using your browser, navigate to this URL.
+.. In this version of Istio, the `Jaeger UI` is currently not secured.
 
 . In the _Find Traces_ panel, scroll down to locate the traces associated with your OCP user name:
 +
 image::images/trace_dropdown_selection.png[]
 
-. Click `Find Traces`.
+.. In the drop down for `Service`, select the option for the API gateway associated with your username.  ie:  $OCP_USERNAME-prod-apicast-istio.
+.. In the drop down for `Operation`, select the charachter: '/'
+
+. Return back to the terminal window of your lab, and use the `curl` utility to invoke your catalog service (via:  istio ingress gateway -> API gateway) a few times.
+
+. In the `Jaeger UI`, click `Find Traces`.
 +
-You should see an overview with timeline of all of your traces:
+You should see an overview with timelines of all of your traces:
 +
 image::images/trace_overview.png[]
+
+. Click on any one of the bubbles that appear.
+Each one corresponds to an invocation to your catalog service.
++
+image::images/individual_trace.png[]
+
+. Click the span pertaining to _@upstream_
++
+image::images/upstream_span.png[]
++
+Notice that this span pertains to the invocation of the `products` endpoint of your catalog service.
 
 Traces pertaining to your Istio enabled API gateway are now available .
 However, what is missing is tracing that includes the backend _catalog_ service.
 
-In the next section, you'll enable your _catalog_ service to provide tracing data .
+In the next section, you'll enable your _catalog_ service to participate in this end-to-end distributed tracing .
 
 == Catalog Service: OpenTracing and Istio enabled
 

@@ -279,7 +279,7 @@ catalog-service-1-dqb28       1/1       Running     0          11m
 . Retrieve the URL of the unsecured _catalog_ route:
 +
 ----
-$ echo "export NAKED_CATALOG_ROUTE=http://$(oc get route catalog-unsecured -o template --template='{{.spec.host}}' -n $MSA_PROJECT)" >> ~/.bashrc
+$ echo "export NAKED_CATALOG_ROUTE=$(oc get route catalog-unsecured -o template --template='{{.spec.host}}' -n $MSA_PROJECT)" >> ~/.bashrc
 
 $ source ~/.bashrc
 ----
@@ -289,7 +289,7 @@ NOTE:  You'll use $NAKED_CATALOG_ROUTE environment variable a various stages in 
 . Via the catalog route, retrieve the pre-seeded data in the Mongo database:
 +
 -----
-$ curl -X GET "$NAKED_CATALOG_ROUTE/products"
+$ curl -X GET "http://$NAKED_CATALOG_ROUTE/products"
 -----
 +
 .Sample Output
@@ -313,7 +313,7 @@ Swagger documentation is available for the REST endpoints of the catalog microse
 . Display the URL for your project:
 +
 ----
-$ echo $NAKED_CATALOG_ROUTE
+$ echo "http://$NAKED_CATALOG_ROUTE"
 ----
 
 . Copy and paste the URL into a web browser.

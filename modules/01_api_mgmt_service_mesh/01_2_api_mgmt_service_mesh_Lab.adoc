@@ -963,7 +963,8 @@ catalog-prod-apicast-developer.apps.clientvm.b902.rhte.opentlc.com
 . From the terminal, execute the following to invoke your catalog service via the Istio ingress and API gateways:
 +
 -----
-$ curl -v -k  -HHost:$CATALOG_API_GW_HOST `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+$ curl -v  -HHost:$CATALOG_API_GW_HOST \
+       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
 . Return back to the Jaeger UI and locate your traces.
@@ -1029,12 +1030,12 @@ $ oc delete gateway catalog-istio-gateway -n $GW_PROJECT --as=system:admin
 
 === New Virtual Service to catalog Service
 
-. Ensure the $CATALOG_API_GW_HOST environment variable still remains in your shell:
+. Ensure the $NAKED_CATALOG_ROUTE environment variable still remains in your shell:
 +
 -----
-$ echo $CATALOG_API_GW_HOST
+$ echo $NAKED_CATALOG_ROUTE
 
-catalog-prod-apicast-developer.apps.clientvm.b902.rhte.opentlc.com
+catalog-unsecured-rhte-mw-api-mesh-a1001.apps.clientvm.b902.rhte.opentlc.com
 -----
 
 . gateway:
@@ -1054,7 +1055,7 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - "$CATALOG_API_GW_HOST"" \
+    - "$NAKED_CATALOG_ROUTE"" \
  > $HOME/lab/catalog-direct-gateway.yml
 -----
 
@@ -1074,7 +1075,7 @@ metadata:
   name: catalog-direct
 spec:
   hosts:
-  - "$CATALOG_API_GW_HOST"
+  - "$NAKED_CATALOG_ROUTE"
   gateways:
   - catalog-direct-gateway
   http:
@@ -1093,6 +1094,13 @@ spec:
 +
 -----
 $ oc create -f ~/lab/catalog-direct-vs.yml -n $MSA_PROJECT --as=system:admin
+-----
+
+. From the terminal, execute the following to invoke your catalog service directly via the Istio ingress:
++
+-----
+$ curl -v  -HHost:$NAKED_CATALOG_ROUTE \
+       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products"`
 -----
 
 === 3scale Istio Mixer
@@ -1171,6 +1179,13 @@ $ oc get handler -n istio-system --as=system:admin
 ....
 
 threescalehandler   1d
+-----
+
+. From the terminal, execute the following to invoke your catalog service directly via the Istio ingress:
++
+-----
+$ curl -v  -HHost:$NAKED_CATALOG_ROUTE \
+       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
 [red]#TO_DO#

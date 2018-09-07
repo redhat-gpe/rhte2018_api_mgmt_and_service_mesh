@@ -278,7 +278,6 @@ catalog-service-1-dqb28       1/1       Running     0          11m
 
 . Retrieve the URL of the unsecured _catalog_ route:
 +
-[source,text]
 ----
 $ export NAKED_CATALOG_ROUTE=http://$(oc get route catalog-unsecured -o template --template='{{.spec.host}}' -n $MSA_PROJECT)
 ----

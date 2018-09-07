@@ -79,7 +79,7 @@ $ echo "export API_ADMIN_ACCESS_TOKEN=<provided by instructor>" >> ~/.bashrc    
 
 #  Using the above variables, copy & paste the following in the same terminal #
 
-echo "export LAB_CODE=a1004" >> ~/.bashrc
+echo "export LAB_CODE=a1001" >> ~/.bashrc
 
 echo "export OCP_REGION=`echo $HOSTNAME | cut -d'.' -f2`" >> ~/.bashrc
 echo "export OCP_DOMAIN=clientvm.\$OCP_REGION.rhte.opentlc.com" >> ~/.bashrc

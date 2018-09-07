@@ -67,8 +67,8 @@ Once you've ssh'd into your remote terminal window, you'll want to set the follo
 -----
 ######  Instructor will provide the values to these environment variables #######
 
-$ echo "export OCP_USERNAME=developer" >> ~/.bashrc                             # Column B
-$ echo 'export OCP_PASSWD=r3dh4t1\!' >> ~/.bashrc                               # Column C
+$ echo "export OCP_USERNAME=<provided by instructor" >> ~/.bashrc               # Column B
+$ echo 'export OCP_PASSWD=<provided by instructor' >> ~/.bashrc                 # Column C
 
 $ echo "export API_REGION=<provided by instructor>" >> ~/.bashrc                # Column D
 $ echo "export API_USERNAME=<provided by instructor>" >> ~/.bashrc              # Column F

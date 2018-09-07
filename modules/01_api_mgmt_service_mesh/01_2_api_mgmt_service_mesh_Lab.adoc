@@ -999,6 +999,34 @@ If by 10 Sept, i can't get it to go .... I will comment this entire section out.
 The Red Hat 3scale engineering team is actively working on an Istio _mixer_.
 This Istio _mixer_ will allow 3scale API Management policies to be applied directly to the _service mesh_ .
 
+=== Disable existing API gateways
+These API gateways will no longer be needed.
+Inbound traffic will flow through the Istio Ingress gateway directly to the 3scale Istio Mixer and out to the remote 3scale API Manager.
+
+. Scale down the non-istio enabled API gateway:
++
+-----
+$ oc scale deploy/prod-apicast --replicas=0 -n $GW_PROJECT
+-----
+
+. Scale down the Istio enabled API gateway:
++
+-----
+$ oc scale deploy/$OCP_USERNAME-prod-apicast-istio --replicas=0 -n $GW_PROJECT
+-----
+
+. Remove virtual Service:
++
+-----
+$ oc delete virtualservice catalog-istio-gateway-vs -n $GW_PROJECT --as=system:admin
+-----
+
+. Remove gateway:
++
+-----
+$ oc delete gateway catalog-istio-gateway -n $GW_PROJECT --as=system:admin
+-----
+
 === New Virtual Service to catalog Service
 
 . Ensure the $CATALOG_API_GW_HOST environment variable still remains in your shell:
@@ -1009,6 +1037,8 @@ $ echo $CATALOG_API_GW_HOST
 catalog-prod-apicast-developer.apps.clientvm.b902.rhte.opentlc.com
 -----
 
+. gateway:
++
 -----
 $ echo \
     "apiVersion: networking.istio.io/v1alpha3
@@ -1028,6 +1058,14 @@ spec:
  > $HOME/lab/catalog-direct-gateway.yml
 -----
 
+. Create gateway:
++
+-----
+$ oc create -f ~/lab/catalog-direct-gateway.yml -n $MSA_PROJECT --as=system:admin
+-----
+
+. Virtual Service:
++
 -----
 $ echo \
   "apiVersion: networking.istio.io/v1alpha3
@@ -1036,19 +1074,25 @@ metadata:
   name: catalog-direct
 spec:
   hosts:
-  - "*"
+  - "$CATALOG_API_GW_HOST"
   gateways:
-  - bookinfo-gateway
+  - catalog-direct-gateway
   http:
   - match:
     - uri:
-        exact: /products
+        prefix: /products
     route:
     - destination:
         host: catalog-service
         port:
           number: 8080" \
 > $HOME/lab/catalog-direct-vs.yml
+-----
+
+. Create Virtual Service:
++
+-----
+$ oc create -f ~/lab/catalog-direct-vs.yml -n $MSA_PROJECT --as=system:admin
 -----
 
 === 3scale Istio Mixer
@@ -1404,6 +1448,7 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 
 [red]#TO_DO#
 
+. https://bani.com.br/2018/08/istio-mtls-debugging-a-503-error/
 
 ifdef::showscript[]
 

@@ -279,8 +279,12 @@ catalog-service-1-dqb28       1/1       Running     0          11m
 . Retrieve the URL of the unsecured _catalog_ route:
 +
 ----
-$ export NAKED_CATALOG_ROUTE=http://$(oc get route catalog-unsecured -o template --template='{{.spec.host}}' -n $MSA_PROJECT)
+$ echo "export NAKED_CATALOG_ROUTE=http://$(oc get route catalog-unsecured -o template --template='{{.spec.host}}' -n $MSA_PROJECT)" >> ~/.bashrc
+
+$ source ~/.bashrc
 ----
++
+NOTE:  You'll use $NAKED_CATALOG_ROUTE environment variable a various stages in the lab.
 
 . Via the catalog route, retrieve the pre-seeded data in the Mongo database:
 +

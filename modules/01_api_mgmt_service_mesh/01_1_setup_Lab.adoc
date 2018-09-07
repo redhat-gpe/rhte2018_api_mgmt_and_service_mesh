@@ -101,13 +101,13 @@ source ~/.bashrc
 
 . Validate that the following exists in the $PATH of the remote virtual machine:
 
-. _git_
-. _curl_
-. _sed_
-. _istioctl_
-. _oc_
+.. _git_
+.. _curl_
+.. _sed_
+.. _istioctl_
+.. _oc_
 
-. Validate that your virtual machine consists of 16GB RAM and 4 CPUs.
+. Validate that your virtual machine consists of at least 16GB RAM and 4 CPUs.
 .. Execute:
 +
 -----

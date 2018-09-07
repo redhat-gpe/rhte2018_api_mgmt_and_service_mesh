@@ -835,7 +835,7 @@ The new catalog service is enabled with _opentracing_ and _jaeger_ libraries so 
 
 === OpenTracing libraries included in catalog_service
 
-The _catalog service_ is link:https://github.com/gpe-mw-training/appmod_vertx_experienced/tree/rhte_opentracing/lab-04[written in Java] (specifically using the _reactive_ programming framework link:https://vertx.io/[vert.x]).
+The _catalog service_ is link:https://github.com/gpe-mw-training/appmod_vertx_experienced/tree/rhte_opentracing/lab-04[written in Java] (specifically using the _reactive_ programming framework: link:https://vertx.io/[vert.x]).
 
 As such, the new catalog service used in the remainder of this course is embedded with the opentracing and jaeger Java client libraries.
 
@@ -907,8 +907,8 @@ $ oc create \
 
 
 
-$ oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_AGENT_HOST=jaeger-agent.istio-system.svc.cluster.local
-$ oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_SERVICE_NAME=$OCP_USERNAME-cat-service-istio
+$ oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_AGENT_HOST=jaeger-agent.istio-system.svc.cluster.local -n $MSA_PROJECT
+$ oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_SERVICE_NAME=$OCP_USERNAME-cat-service-istio -n $MSA_PROJECT
 -----
 
 . Inject required resource limits and requests into Istio related containers :
@@ -918,44 +918,54 @@ This clusterquota requires that all containers (including the _istio-proxy_ and 
 +
 -----
 $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"istio-proxy", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"istio-proxy", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}' \
+   -n $MSA_PROJECT
 
 $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
-   --patch '{"spec":{"template":{"spec":{"initContainers":[{"name":"istio-init", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
+   --patch '{"spec":{"template":{"spec":{"initContainers":[{"name":"istio-init", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}' \
+   -n $MSA_PROJECT
 -----
 
 . Update the new catalog service deployment to use the Opentracing and Jaeger enabled image:
 +
 -----
 $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-cat-service-istio", "image": "docker.io/rhtgptetraining/catalog-service-tracing:1.0.9" }]}}}}'
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-cat-service-istio", "image": "docker.io/rhtgptetraining/catalog-service-tracing:1.0.9" }]}}}}' \
+   -n $MSA_PROJECT
 -----
 
 . Resume the paused deployment:
 +
 -----
-$ oc rollout resume deploy/$OCP_USERNAME-cat-service-istio
+$ oc rollout resume deploy/$OCP_USERNAME-cat-service-istio -n $MSA_PROJECT
 -----
 
-. Modify the _service_ to route to new Istio enabled _apicast_
+. Modify the _service_ to route to new Istio enabled _catalog_ service:
 +
 -----
 $ oc patch service/catalog-service \
-   --patch '{"spec":{"selector":{"deployment":"'$OCP_USERNAME'-cat-service-istio"}}}'
+   --patch '{"spec":{"selector":{"deployment":"'$OCP_USERNAME'-cat-service-istio"}}}' \
+   -n $MSA_PROJECT
 -----
 
-. Make sure that your `$CATALOG_USER_KEY` environment variable is set:
+. Make sure that your `$CATALOG_USER_KEY` and $CATALOG_API_GW_HOST environment variables remains set:
 +
 -----
 $ echo $CATALOG_USER_KEY
 
 d59904ad4515522ecccb8b81c761a283
+
+
+
+$ echo $CATALOG_API_GW_HOST
+
+catalog-prod-apicast-developer.apps.clientvm.b902.rhte.opentlc.com
 -----
 
-. From the terminal, execute the following:
+. From the terminal, execute the following to invoke your catalog service via the Istio ingress and API gateways:
 +
 -----
-$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+$ curl -v -k  -HHost:$CATALOG_API_GW_HOST `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
 . Return back to the Jaeger UI and locate your traces.
@@ -965,7 +975,7 @@ Drill into them and notice the _spans_.
 
 
 
-== 3scale Analytics
+== 3scale API Manager Analytics
 
 Return back to your API Manager as the domain admin and navigate to the _Analytics_ tab at the top.
 
@@ -977,7 +987,11 @@ Notice that the _hits_ metric for your _catalog_service_ API is automatically de
 Your API analytics are currently course grained in that the _hits_ are the sum of invocations on all methods of your catalog service.
 Defining of fine grained _methods_ and _mappings_ for your catalog API will subsequently provide for more fine grained analytics at the method level.
 
-The analytics provided by 3scale compliment the distributed tracing capabilities of Jaeger.
+The analytics provided by the 3scale API Manager compliment the distributed tracing capabilities of Jaeger.
+
+Prometheus is an analytics tool that comes out of the box with Istio and is also being tightly integrated with OpenShift.
+The analytics and observability provided by Prometheus are conceptually similar to the analytics provided by the 3scale API Manager.
+It is possible that a future version of the 3scale API Manager provides support for Prometheus for API data analytics.
 
 == 3scale mixer adapter
 

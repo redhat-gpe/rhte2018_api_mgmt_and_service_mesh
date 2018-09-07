@@ -1,4 +1,4 @@
-hnoaudio:
+:noaudio:
 :scrollbar:
 :data-uri:
 :toc2:
@@ -312,11 +312,6 @@ $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT\
 -----
 $ oc adm policy add-scc-to-user privileged -z default -n $GW_PROJECT --as=system:admin
 -----
-+
-WARNING:  Your OCP user has been provided with the ability to _impersonate_ the _system:admin_ user so as to execute this command.
-Please use this capability with caution.
-In a real-world setting, you would have coordinated with a team-member who does have _cluster admin_ rights to execute this command for you.
-
 
 .. In order for your new istio enabled API gateway pod to start, it needs the _anyuid_ SCC.
 +
@@ -331,6 +326,7 @@ Error creating: pods "user50-prod-apicast-istio-6456c879c8" is forbidden: unable
 .. For the purpose of this lab, the cluster-admin of your OCP environment has provided you with the ability to _impersonate_ cluster admin.
 Doing so provides you with the ability to apply the _anyuid_ SCC to your project.
 This is considered a significant security risk.
+In a real-world setting, you would have coordinated with a team-member who does have _cluster admin_ rights to execute this command for you.
 
 . Resume the paused deployment:
 +
@@ -395,8 +391,8 @@ By default, Istio blocks all outbound requests to the internet.
 In the next section, you'll define an _egress route_ to allow your API gateway to communicate with the API Manager.
 
 .  Isolate the problem with your new Istio enabled API gateway by testing the call to the _system-provider_ from within the API gateway.
-+
-Use a command such as the following:
+
+.. Use a command such as the following:
 +
 -----
 $ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
@@ -418,9 +414,12 @@ curl: (35) Encountered end of file
 command terminated with exit code 35
 -----
 
+.. If you received an error response similar to above, you've isolated the problem to an inability for your API gateway pod to make an external call out of the service mesh.
+
+
 === Apply custom _Egress Route_
 
-In this section, you create a custom Istio _ServiceEntry_ that allows your API gateway to connect to the _backend-listener_ of the multi-tenant API Manager.
+In this section, you create a custom Istio _ServiceEntry_ that allows your API gateway to connect to the _system-provider_ of the multi-tenant API Manager.
 
 . Create a custom Istio _Egress Route_ for API gateway config file:
 +
@@ -501,7 +500,7 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 This time, you should see the catalog data in the response.
 This request now flows through your istio enabled API gateway .
 
-[blue]#Although at this point nothing has changed from a functional perspective in your lab, you are now well on your way toward accomplishing a non-functional objective of this lab: apply a service mesh to your API managed application.#
+[blue]#Although at this point nothing has changed from a functional perspective, you are now well on your way toward accomplishing a non-functional objective of this lab: apply a service mesh to your API managed application.#
 
 
 == Istio Ingress gateway
@@ -976,7 +975,7 @@ $ oc get pods -n istio-system | grep 3scale-istio-adapter
 3scale-istio-adapter-1-t9kj2                2/2       Running     0          47s
 -----
 
-. In the details of your _catalog_ service the API Manager admin console, locate the `ID for API calls ... `: 
+. In the details of your _catalog_ service the API Manager admin console, locate the `ID for API calls ... `:
 +
 image::images/service_id.png[]
 

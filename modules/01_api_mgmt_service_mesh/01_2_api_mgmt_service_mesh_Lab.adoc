@@ -352,9 +352,7 @@ It's likely that _liveness_ and/or _readiness_ probes on the API gateway are fai
 It's possible that this is due to a mis-configuration of Istio.
 As an initial troubleshooting step, remove the _liveness_ and _readiness_ probes defined in the deployment.
 After doing so, do both containers start ?
-Talk to your instructor about additional steps to troubleshoot the likely Istio related problem(s).
-
-
+Please refer to the <<istio_troubleshooting>> in the Appendix of this lab for more tips.
 
 
 
@@ -993,17 +991,23 @@ Prometheus is an analytics tool that comes out of the box with Istio and is also
 The analytics and observability provided by Prometheus are conceptually similar to the analytics provided by the 3scale API Manager.
 It is possible that a future version of the 3scale API Manager provides support for Prometheus for API data analytics.
 
-== 3scale mixer adapter
+== 3scale Mixer Adapter
 
 The Red Hat 3scale engineering team is actively working on an Istio _mixer_.
 This Istio _mixer_ will allow 3scale API Management policies to be applied directly to the _service mesh_ .
 
+
+=== 3scale Istio Mixer
+. Begin by cloning the source code to the 3scale Istio Mixer :
++
 -----
 $ git clone \
       https://github.com/3scale/istio-integration.git \
       $HOME/lab/istio-integration
 -----
 
+. Load the Istio Mixer Adapter into the istio-system namesapce:
++
 -----
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/openshift -n istio-system --as=system:admin
 -----
@@ -1016,7 +1020,8 @@ $ oc get pods -n istio-system | grep 3scale-istio-adapter
 3scale-istio-adapter-1-t9kj2                2/2       Running     0          47s
 -----
 
-. In the details of your _catalog_ service the API Manager admin console, locate the `ID for API calls ... `:
+=== 3scale Istio Handler
+. In the details of your _catalog_ service in the API Manager admin console, locate the `ID for API calls ... `:
 +
 image::images/service_id.png[]
 
@@ -1057,6 +1062,16 @@ $ sed -i "s/access_token: .*/access_token: \"$API_ADMIN_ACCESS_TOKEN\"/" \
 +
 -----
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml --as=system:admin
+-----
+
+. Verify that the Istio Handler was created in the istio-system namespace:
++
+-----
+$ oc get handler -n istio-system --as=system:admin
+
+....
+
+threescalehandler   1d
 -----
 
 [red]#TO_DO#
@@ -1329,7 +1344,10 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 
 -----
 
+[[istio_troubleshooting]]
+== Istio troubleshooting
 
+[red]#TO_DO#
 
 
 ifdef::showscript[]

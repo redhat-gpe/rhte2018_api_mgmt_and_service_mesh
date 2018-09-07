@@ -507,8 +507,8 @@ This request now flows through your istio enabled API gateway .
 
 Up until now, incoming traffic into the production API gateway has been via the out-of-the-box _HAProxy_ based Kubernetes / OCP _router_.
 
-This is worked fine however what is missing is the ability to apply more sophisticated route rules as well as integration with service mesh _observability_ tools such as Jaeger and Promtheus.
-Istio includes an _ingress_ gateway that implements this additional features.
+This has worked fine however what is missing is the ability to apply more sophisticated route rules as well as integration with service mesh _observability_ tools such as Jaeger and Promtheus.
+Istio includes an _ingress_ gateway that implements these additional features.
 
 In this section of the lab, you will substitute use of the HAProxy based OCP router with the Istio _ingress_ service to direct traffic to your API gateway.
 
@@ -528,12 +528,12 @@ $ export CATALOG_API_GW_HOST=`oc get route/catalog-prod-apicast-$OCP_USERNAME -n
 -----
 +
 The value of $CATALOG_API_GW_HOST will be specified in the request to the Istio ingress gateway as a HTTP _HOST_ header.
-It should match what's been configured in the _catalog-service_ in the API Manager.
+It should match what's been configured in the _catalog-service_ in your API Manager.
 +
 image::images/recall_prod_base.png[]
 
 
-. Create a file that defines a ingress gateway:
+. Create a file that defines an _ingress_ gateway:
 +
 -----
 echo \
@@ -604,6 +604,10 @@ Notice the use of the HTTP _Host_ header.
 .. Why is it needed ?
 .. What happens if this _HOST_ header is not included in the request ?
 .. What happens if this _HOST_ header is included in the request but its value (along with the _host_ attributes in the gateway and virtual service) do not match the _Production Public Base Url_ of the _catalog-service_ in the API Manager ?
+.. The `istio-system` namespace provides a route called: `istio-ingressgateway`.
++
+Try invoking the API gateway via this `istio-ingressgateway` route instead of using the internal _service-mesh_ related $INGRESS_HOST and $INGRESS_PORT.
+The results should be the same.
 
 . The original route to the product API Gateway specific to the _catalog_ service can optionally be deleted.
 Going forward all incoming traffic will flow through the Istio Ingress Gateway.
@@ -611,7 +615,6 @@ Going forward all incoming traffic will flow through the Istio Ingress Gateway.
 -----
 $ oc delete route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT
 -----
-
 
 == APIcast: OpenTracing enabled
 

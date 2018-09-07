@@ -1067,6 +1067,9 @@ As you know, Openresty is Nginx + luaJIT, and right now, we only get OpenTracing
 We are working on being able to use the OpenTracing C++ libraries from LUA, so we can create spans directly from it, and gain even more visibility into API gateway internals.
 For example, this could help debug if that custom policy you just installed is making things slower.
 
+[red]#Elaborate#
+
+
 
 == Questions
 

@@ -44,6 +44,8 @@ In addition, Red Hat is actively working to productize Istio as a supported prod
 
 The following table provides an overview of a feature comparison between API Management and a Service Mesh.
 
+[red]#TODO#
+
 === Reference
 
 . Istio / Service Mesh
@@ -172,45 +174,225 @@ $ oc new-app \
 $ oc rollout resume deploy stage-apicast prod-apicast -n $GW_PROJECT
 -----
 
-=== Configure and Test API Mgmt
+== Configure and Test API Mgmt
 
-In this section of the lab, you can optionally smoke test the management of your _catalog_ RESTful services using your API Manager and API gateways.
+In this section of the lab, you smoke test the management of your _catalog_ RESTful services using your API Manager and API gateways.
 
 Guidance is provided for both experienced and inexperienced 3scale users.
-Choose one only.
+Choose only one.
 Afterwards, continue with the section: <<apicast_istio>>
 
-==== Configure & Test: Experienced 3scale users
+=== Configure & Test: Experienced 3scale users
 
-If you are already proficient with 3scale, then configure and test the management of your _catalog_ RESTful API as per the following :
+If you are proficient with API Management using 3scale by Red Hat, then skip to the section: <<configuretestapi>> .
 
-. Ensure your API gateways started correctly and the value of the _THREESCALE_ENDPOINT_ makes sense.
-. Create an API proxy service called _catalog_service_ and configure it to use the API gateway and an API key for security.
-. Create an application plan called: _catalog_app_plan_
-. Using the existing _Developer_ account and the _catalog_app_plan_, create an application called: _catalog_app_
-. Capture the API key for the application and set its value as the following environment variable in your shell terminal:  _CATALOG_USER_KEY_ .
-. Configure the _Integration_ section of your _catalog_service_ and publish the service to production.
-. Test the _/products_ endpoint of your _catalog_ RESTful service via both your staging and production API gateways.
+Once complete, continue on with the section: <<apicast_istio>>
+
+
+=== Configure & Test:  Step-by-Step
+
+In this section, you define a service that manages access to the Coolstore Catalog service that has already been provisioned for you.
+
+The activities in this section are also found in the pre-req courses but is additionally provided here as a refresher for your convenience.
+
+==== Define Catalog Service
+
+. From the API Manager Admin Portal home page, navigate to the *API* tab.
+. On the far right, click image:images/create_service_icon.png[].
+. Enter `catalog_service` for the *Name* and *System Name*.
+. Select *NGINX API gateway self-managed* *Gateway* type and not a plugin:
 +
-You'll likely want to use the curl utility in a manner similar to the following:
+image::images/apicast_gw.png[]
+
+. Scroll down the page and for the *Authentication* type, select *API Key (user_key)*:
++
+image::images/select_api_key.png[]
+
+. Click *Create Service*.
+
+==== Create Application Plan
+
+Application plans define access policies for your API.
+
+. From the *Overview* page of your new `catalog_service`, scroll to the *Published Application Plans* section.
+. Click image:images/create_app_plan_icon.png[]:
++
+image::images/create_app_plan.png[]
+
+. Enter `catalog_app_plan` for the *Name* and *System name*:
+
+. Click *Create Application Plan*.
+
+==== Create Application
+
+In this section, you associate an application to an API consumer account.
+This generates a _user key_ to the application based on the details previously defined in the application plan.
+The user key is used as a query parameter to the HTTP request to invoke your business services via your on-premise API gateway.
+
+. Navigate to the *Developers* tab.
+. Select the `Developer` account.
+. Create Application
+.. Click the *0 Applications* link at the top:
++
+NOTE: A default application may have already been created (in which case the link will indicate 1 Application, not 0).
+If so, this default application is typically associated with the out-of-the-box `API` service (which is not what you want).
+If it exists, feel free to click on default application to identify which service it is associated with and then delete it.
+
+.. Click image:images/create_app_icon.png[].
+.. Fill in the *New Application* form as follows:
+... *Application plan*: `catalog_app_plan`
+... *Service Plan*: `Default`
+... *Name*: `catalog_app`
+... *Description*: `catalog_app`
++
+image::images/create_catalog_app.png[]
+
+.. Click *Create Application*.
+
+. On the details page for your new application (or the default application automatically created), find the API *User Key*:
++
+image::images/new_catalog_user_key.png[]
+
+. Create an environment variable set to this user key:
 +
 -----
-$ curl -v -k \
-       `echo "https://"$(\
-        oc get route/catalog-prod-apicast-$OCP_USERNAME \
-        -n $GW_PROJECT \
-        -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+$ export CATALOG_USER_KEY=<the catalog app user key>
+-----
+
+==== Stage Service Integration
+
+In this section, you define an _API proxy_ to manage your _catalog_ RESTful business service.
+
+. In the API Manager Admin Portal, navigate to the *APIs* tab.
+. From your `catalog_service` service, select *Application Plans*.
+. For the  `catalog_app_plan` and click the *Publish* link:
++
+image::images/publish_app_plan.png[]
+. From your `catalog_service` service, select *Integration*.
+. Click *Add the base URL of your API and save the configuration*.
++
+* This takes you to a page that allows you to associate the API gateway staging and production URLs with your new 3scale proxy service.
+
+. Populate the *Configuration: configure & test immediately in the staging environment* form as follows:
+.. *Private Base URL*:
+... Enter the internal DNS resolvable URL to your Catalog business service.
+... The internal URL will be the output of the following:
++
+-----
+$ echo -en "\n\nhttp://catalog-service.$MSA_PROJECT.svc.cluster.local:8080\n\n"
+-----
+
+.. *Staging Public Base URL*: Populate this field with the output from the following command:
++
+-----
+$ echo -en "\n`oc get route catalog-stage-apicast-$OCP_USERNAME -n $GW_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
+-----
+
+.. *Production Public Base URL*: Populate this field with the output from the following command:
++
+-----
+$ echo -en "\n`oc get route catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
+-----
+
+.. *API test GET request*: Enter `/products`.
+
+** Expect to see a test cURL command populated with the API key assigned to you for the `catalog_app_plan`:
++
+image::images/apikey_shows_up.png[]
++
+.. If not, go back through the steps to create an Application Plan and corresponding Application.
++
+NOTE: When there are multiple developer accounts, Red Hat 3scale API Management uses the default developer account that is created with every new API provider account to determine which user key to use. When creating new services, the API Manager sets the first application from the first account subscribed to the new service as the default.
+
+. Click *Update & test in Staging Environment*
+.. In doing so, the `apicast-stage` pod invokes your backend _catalog_ business service as per the `Private Base URL`.
+.. The page should turn green with a message indicating success.
++
+image::images/stage_success.png[]
+
+. Click *Back to Integration & Configuration*:
+. Click *Promote v. 1 to Production*:
++
+image::images/stage_and_prod.png[]
+
+Your 3scale by Red Hat service is configured.
+Next, the configuration details of your service need to be propagated to your on-premise API gateway.
+
+==== Refresh API gateway at boot
+Every time a configuration change is made to an api proxy or application plan, the production API gateways need to be refreshed with the latest changes.
+
+The API gateways are configured to refresh the latest configuration information from the API management platform every 5 minutes.
+When this internal NGINX timer is triggered, you see log statements in your API gateway similar to the following:
+
+.Sample Output
+-----
+[debug] 36#36: *3574 [lua] configuration_loader.lua:132: updated configuration via timer:
+
+....
+
+[info] 36#36: *3574 [lua] configuration_loader.lua:160: auto updating configuration finished successfuly, context: ngx.timer
+-----
+
+For the purpose of this lab, instead of potentially waiting for 5 minutes, you can simply bounce your API gateway pods .
+
+. Bounce API gateway related pods:
++
+-----
+$ for i in `oc get pod -n $MSA_PROJECT | grep "apicast" | awk '{print $1}'`; do oc delete pod $i; done
 -----
 +
-WARNING: [red]#Don't proceed beyond this section until this smoke test of your non istio enabled environment passes and the response from your production API gateway is a listing of catalog data#
+Kubernetes will detect the absence of these pods and start new ones.
++
+Because the value of the _APICAST_CONFIGURATION_LOADER_ environment variable in the pod is set to `boot`, the service proxy configuration from the API Manager will automatically be pulled upon restart.
 
-Once you've smoke tested your API managed environment, proceed to the section: <<apicast_istio>>
+. Tail the log of the new API gateway production pod.
 
-==== Configure & Test:  Inexperienced 3scale users
+* A debug-level log statement similar to the following appears:
++
+.Sample Output
+-----
+[lua] configuration_store.lua:103: configure(): added service 2555417742084 configuration with hosts: prod-apicast-user1.apps.7777.thinkpadratwater.com, catalog-stage-apicast-user1.apps.7777.thinkpadratwater.com ttl: 300
+-----
 
-If you are new to API management using 3scale, then follow the instructions found in the <<configuretestapi>> section of the appendix of this lab.
+==== Test Catalog Business Service
 
-Upon completion, proceed with next section: <<apicast_istio>>.
+In this section, you invoke your Catalog business service via your production API gateway.
+
+. Make sure that your `$CATALOG_USER_KEY` environment variable is still set:
++
+-----
+$ echo $CATALOG_USER_KEY
+-----
+
+. From the terminal, execute the following:
++
+-----
+$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+-----
++
+.Sample Output
+-----
+...
+
+{
+  "itemId" : "444435",
+  "name" : "Oculus Rift",
+  "desc" : "The world of gaming has also undergone some very unique and compelling tech advances in recent years. Virtual reality, the concept of complete immersion into a digital universe through a special headset, has been the white whale of gaming and digital technology ever since Nintendo marketed its Virtual Boy gaming system in 1995.",
+  "price" : 106.0
+}
+-----
+
+. If you are still tailing the log of your `apicast` pod, expect to see statements similar to this:
++
+.Sample Output
+-----
+...
+
+2018/08/06 19:07:46 [info] 24#24: *19 [lua] backend_client.lua:108: authrep(): backend client uri: http://backend-listener.3scale-mt-adm0:3000/transactions/authrep.xml?service_token=a4e0949f1b677611870dab3fb7c142df50871d1eca3d1c9f1615dd514c937df4&service_id=103&usage%5Bhits%5D=1&user_key=ccc4cbae7a44b363a6cd5907a54ff2f9 ok: true status: 200 body:  while sending to client, client: 172.17.0.1, server: _, request: "GET /products?user_key=ccc4cbae7a44b363a6cd5907a54ff2f9 HTTP/1.1", host: "catalog-service.rhte-mw-api-mesh-user1.svc.cluster.local"
+
+...
+
+-----
 
 [[apicast_istio]]
 == Apicast: Istio enabled
@@ -583,18 +765,21 @@ $ oc create -f $HOME/lab/catalog-istio-gateway-vs.yml -n $GW_PROJECT --as=system
 -----
 
 
-. Set environment variables that reflect the host and port of the Istio Ingress Gateway resource:
+. Set environment variables that reflect the host and port of the Istio Ingress gateway service:
 +
 -----
 $ export INGRESS_HOST=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
 $ export INGRESS_PORT=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].port}')
 -----
++
+NOTE:  This $INGRESS_HOST:$INGRESS_PORT socket is local to the openshift subnet.
+It only becomes available when there is an Istio gateway and virtual service present and even then it might take up to about 5 minutes to become available.
 
 . Smoke test a request for catalog data via the newly configured Istio Ingress Gateway:
 +
 -----
-$ curl -v -k \
+$ curl -v \
        -HHost:$CATALOG_API_GW_HOST \
        http://$INGRESS_HOST:$INGRESS_PORT/products?user_key=$CATALOG_USER_KEY
 -----
@@ -615,7 +800,7 @@ Try invoking the API gateway via this `istio-ingressgateway` route instead of us
 The results should be the same.  The curl command to use is as follows:
 +
 -----
-$  curl -v -k \
+$  curl -v \
        -HHost:$CATALOG_API_GW_HOST \
       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
@@ -628,7 +813,6 @@ $ oc delete route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT
 -----
 
 == APIcast: OpenTracing enabled
-
 
 === Overview
 
@@ -1326,212 +1510,33 @@ endif::showscript[]
 
 == Appendix
 
-
 [[configuretestapi]]
-=== Configure and Test Basic API Mgmt
+=== Configure and Test API Mgmt : Experienced
 
-In this section, you define a service that manages access to the Coolstore Catalog service that has already been provisioned for you.
+If you are already proficient with 3scale, then configure and test the management of your _catalog_ RESTful API as per the following :
 
-The activities in this section are also found in the pre-req courses but is additionally provided here as a refresher for your conveniance.
-
-==== Define Catalog Service
-
-. From the API Manager Admin Portal home page, navigate to the *API* tab.
-. On the far right, click image:images/create_service_icon.png[].
-. Enter `catalog_service` for the *Name* and *System Name*.
-. Select *NGINX API gateway self-managed* *Gateway* type and not a plugin:
+. Ensure your API gateways started correctly and the value of the _THREESCALE_ENDPOINT_ makes sense.
+. Create an API proxy service called _catalog_service_ and configure it to use the API gateway and an API key for security.
+. Create an application plan called: _catalog_app_plan_
+. Using the existing _Developer_ account and the _catalog_app_plan_, create an application called: _catalog_app_
+. Capture the API key for the application and set its value as the following environment variable in your shell terminal:  _CATALOG_USER_KEY_ .
+. Configure the _Integration_ section of your _catalog_service_ and publish the service to production.
+. Test the _/products_ endpoint of your _catalog_ RESTful service via both your staging and production API gateways.
 +
-image::images/apicast_gw.png[]
-
-. Scroll down the page and for the *Authentication* type, select *API Key (user_key)*:
-+
-image::images/select_api_key.png[]
-
-. Click *Create Service*.
-
-==== Create Application Plan
-
-Application plans define access policies for your API.
-
-. From the *Overview* page of your new `catalog_service`, scroll to the *Published Application Plans* section.
-. Click image:images/create_app_plan_icon.png[]:
-+
-image::images/create_app_plan.png[]
-
-. Enter `catalog_app_plan` for the *Name* and *System name*:
-
-. Click *Create Application Plan*.
-
-==== Create Application
-
-In this section, you associate an application to an API consumer account.
-This generates a _user key_ to the application based on the details previously defined in the application plan.
-The user key is used as a query parameter to the HTTP request to invoke your business services via your on-premise API gateway.
-
-. Navigate to the *Developers* tab.
-. Select the `Developer` account.
-. Create Application
-.. Click the *0 Applications* link at the top:
-+
-NOTE: A default application may have already been created (in which case the link will indicate 1 Application, not 0).
-If so, this default application is typically associated with the out-of-the-box `API` service (which is not what you want).
-If it exists, feel free to click on default application to identify which service it is associated with and then delete it.
-
-.. Click image:images/create_app_icon.png[].
-.. Fill in the *New Application* form as follows:
-... *Application plan*: `catalog_app_plan`
-... *Service Plan*: `Default`
-... *Name*: `catalog_app`
-... *Description*: `catalog_app`
-+
-image::images/create_catalog_app.png[]
-
-.. Click *Create Application*.
-
-. On the details page for your new application (or the default application automatically created), find the API *User Key*:
-+
-image::images/new_catalog_user_key.png[]
-
-. Create an environment variable set to this user key:
+You'll likely want to use the curl utility in a manner similar to the following:
 +
 -----
-$ export CATALOG_USER_KEY=<the catalog app user key>
------
-
-==== Stage Service Integration
-
-In this section, you define an _API proxy_ to manage your _catalog_ RESTful business service.
-
-. In the API Manager Admin Portal, navigate to the *APIs* tab.
-. From your `catalog_service` service, select *Application Plans*.
-. For the  `catalog_app_plan` and click the *Publish* link:
-+
-image::images/publish_app_plan.png[]
-. From your `catalog_service` service, select *Integration*.
-. Click *Add the base URL of your API and save the configuration*.
-+
-* This takes you to a page that allows you to associate the API gateway staging and production URLs with your new 3scale proxy service.
-
-. Populate the *Configuration: configure & test immediately in the staging environment* form as follows:
-.. *Private Base URL*:
-... Enter the internal DNS resolvable URL to your Catalog business service.
-... The internal URL will be the output of the following:
-+
------
-$ echo -en "\n\nhttp://catalog-service.$MSA_PROJECT.svc.cluster.local:8080\n\n"
------
-
-.. *Staging Public Base URL*: Populate this field with the output from the following command:
-+
------
-$ echo -en "\n`oc get route catalog-stage-apicast-$OCP_USERNAME -n $GW_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
------
-
-.. *Production Public Base URL*: Populate this field with the output from the following command:
-+
------
-$ echo -en "\n`oc get route catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
------
-
-.. *API test GET request*: Enter `/products`.
-
-** Expect to see a test cURL command populated with the API key assigned to you for the `catalog_app_plan`:
-+
-image::images/apikey_shows_up.png[]
-+
-.. If not, go back through the steps to create an Application Plan and corresponding Application.
-+
-NOTE: When there are multiple developer accounts, Red Hat 3scale API Management uses the default developer account that is created with every new API provider account to determine which user key to use. When creating new services, the API Manager sets the first application from the first account subscribed to the new service as the default.
-
-. Click *Update & test in Staging Environment*
-.. In doing so, the `apicast-stage` pod invokes your backend _catalog_ business service as per the `Private Base URL`.
-.. The page should turn green with a message indicating success.
-+
-image::images/stage_success.png[]
-
-. Click *Back to Integration & Configuration*:
-. Click *Promote v. 1 to Production*:
-+
-image::images/stage_and_prod.png[]
-
-Your 3scale by Red Hat service is configured.
-Next, the configuration details of your service need to be propagated to your on-premise API gateway.
-
-==== Refresh API gateway at boot
-Every time a configuration change is made to an api proxy or application plan, the production API gateways need to be refreshed with the latest changes.
-
-The API gateways are configured to refresh the latest configuration information from the API management platform every 5 minutes.
-When this internal NGINX timer is triggered, you see log statements in your API gateway similar to the following:
-
-.Sample Output
------
-[debug] 36#36: *3574 [lua] configuration_loader.lua:132: updated configuration via timer:
-
-....
-
-[info] 36#36: *3574 [lua] configuration_loader.lua:160: auto updating configuration finished successfuly, context: ngx.timer
------
-
-For the purpose of this lab, instead of potentially waiting for 5 minutes, you can simply bounce your API gateway pods .
-
-. Bounce API gateway related pods:
-+
------
-$ for i in `oc get pod -n $MSA_PROJECT | grep "apicast" | awk '{print $1}'`; do oc delete pod $i; done
+$ curl -v -k \
+       `echo "https://"$(\
+        oc get route/catalog-prod-apicast-$OCP_USERNAME \
+        -n $GW_PROJECT \
+        -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 +
-Kubernetes will detect the absence of these pods and start new ones.
-+
-Because the value of the _APICAST_CONFIGURATION_LOADER_ environment variable in the pod is set to `boot`, the service proxy configuration from the API Manager will automatically be pulled upon restart.
+WARNING: [red]#Don't proceed beyond this section until this smoke test of your non istio enabled environment passes and the response from your production API gateway is a listing of catalog data#
 
-. Tail the log of the new API gateway production pod.
+Once you've smoke tested your API managed environment, proceed to the section: <<apicast_istio>>
 
-* A debug-level log statement similar to the following appears:
-+
-.Sample Output
------
-[lua] configuration_store.lua:103: configure(): added service 2555417742084 configuration with hosts: prod-apicast-user1.apps.7777.thinkpadratwater.com, catalog-stage-apicast-user1.apps.7777.thinkpadratwater.com ttl: 300
------
-
-==== Test Catalog Business Service
-
-In this section, you invoke your Catalog business service via your production API gateway.
-
-. Make sure that your `$CATALOG_USER_KEY` environment variable is still set:
-+
------
-$ echo $CATALOG_USER_KEY
------
-
-. From the terminal, execute the following:
-+
------
-$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
------
-+
-.Sample Output
------
-...
-
-{
-  "itemId" : "444435",
-  "name" : "Oculus Rift",
-  "desc" : "The world of gaming has also undergone some very unique and compelling tech advances in recent years. Virtual reality, the concept of complete immersion into a digital universe through a special headset, has been the white whale of gaming and digital technology ever since Nintendo marketed its Virtual Boy gaming system in 1995.",
-  "price" : 106.0
-}
------
-
-. If you are still tailing the log of your `apicast` pod, expect to see statements similar to this:
-+
-.Sample Output
------
-...
-
-2018/08/06 19:07:46 [info] 24#24: *19 [lua] backend_client.lua:108: authrep(): backend client uri: http://backend-listener.3scale-mt-adm0:3000/transactions/authrep.xml?service_token=a4e0949f1b677611870dab3fb7c142df50871d1eca3d1c9f1615dd514c937df4&service_id=103&usage%5Bhits%5D=1&user_key=ccc4cbae7a44b363a6cd5907a54ff2f9 ok: true status: 200 body:  while sending to client, client: 172.17.0.1, server: _, request: "GET /products?user_key=ccc4cbae7a44b363a6cd5907a54ff2f9 HTTP/1.1", host: "catalog-service.rhte-mw-api-mesh-user1.svc.cluster.local"
-
-...
-
------
 
 [[istio_troubleshooting]]
 == Istio troubleshooting

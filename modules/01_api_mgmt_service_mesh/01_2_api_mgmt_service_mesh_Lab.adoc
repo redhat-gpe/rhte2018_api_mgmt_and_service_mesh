@@ -701,13 +701,13 @@ Thi is the URL that your API gateway will push traces (via UDP) to the _jaeger-a
 . Create a configmap from the opentracing json file:
 +
 -----
-$ oc create configmap jaeger-config --from-file=$HOME/lab/jaeger_config.json -n $MSA_PROJECT
+$ oc create configmap jaeger-config --from-file=$HOME/lab/jaeger_config.json -n $GW_PROJECT
 -----
 
 . Mount the configmap to your opentracing enabled apicast:
 +
 -----
-$ oc volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ --configmap-name jaeger-config -n $MSA_PROJECT
+$ oc volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ --configmap-name jaeger-config -n $GW_PROJECT
 -----
 
 . Set environment variables that indicate to the API gateway where to read opentracing related configurations:
@@ -716,7 +716,7 @@ $ oc volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ --conf
 $ oc env deploy/$OCP_USERNAME-prod-apicast-istio \
          OPENTRACING_TRACER=jaeger \
          OPENTRACING_CONFIG=/tmp/jaeger/jaeger_config.json \
-         -n $MSA_PROJECT
+         -n $GW_PROJECT
 -----
 
 . Update the API gateway _deployment_ to use the Opentracing and Jaeger enabled image:
@@ -742,6 +742,9 @@ Once your API gateway is back up and running, execute the following command :
 -----
 $ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
 
+...
+
+
 -rwxr-xr-x. 1 root root 1457848 Jun 11 06:29 /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
 -----
 
@@ -750,27 +753,31 @@ $ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /usr/local
 -----
 $ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /opt/app-root/lib/libjaegertracing.so.0
 
+...
+
+
 lrwxrwxrwx. 1 root root 25 Jun 11 06:38 /opt/app-root/lib/libjaegertracing.so.0 -> libjaegertracing.so.0.3.0
 -----
 
 
 == Jaeger UI
 
+Often the first thing to understand about your microservice architecture is specifically which microservices are involved in an end-user transaction.
 
-Now that you are using the Opentracing enabled apicast, let's familiarize ourselves the Jaeger user interface to visualize traces that originate from it.
+The _observability_ tooling (specifically either Zipkin or Jaeger) built into Istio can provide this information.
 
-=== Overview
+In this section of the lab, you are exposed to the `Jaeger UI`.
 
-Often the first thing to understand about your microservices architecture is specifically which microservices are involved in an end-user transaction.
+The Jaeger UI provides a visual depiction of traces through the services that make up your application.
 
-Istio supports both Zipkin and Jaeger.
-For the purpose of this lab, the focus is on Jaeger.
 
-One important term to understand is _span_.
-Jaeger defines span as: “a logical unit of work in the system that has an operation name, the start time of the operation, and the duration. Spans can be nested and ordered to model causal relationships.
+=== Terminology
+
+In the world of _distributed tracing_, one important term to understand is: _span_.
+Jaeger defines _span_ as: “a logical unit of work in the system that has an operation name, the start time of the operation, and the duration. Spans can be nested and ordered to model causal relationships.
 An RPC call is an example of a span.”
 
-Another important term to understand is _trace_
+Another important term to understand is: _trace_
 
 Jaeger defines _trace_ as “adata/execution path through the system, and can be thought of as a directed acyclic graph of spans"
 

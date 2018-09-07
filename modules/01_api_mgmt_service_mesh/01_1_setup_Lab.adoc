@@ -341,7 +341,7 @@ image::images/3scale_login.png[]
 
 == Appendix
 
-=== Administrative Access
+=== Optional:  Administrative Access
 
 . On your client VM, access to the `root` operating system user can be achieved by executing: `sudo -i`
 . As the `root` operating system user, `cluster admin` access to your OCP environment can be achieved by executing :

@@ -805,12 +805,18 @@ $  curl -v \
       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
+ifdef::showscript[]
+
+Deletion of the route causes the curl command (using the HOST) to no longer work.  not sure why.
+
 . The original route to the product API Gateway specific to the _catalog_ service can optionally be deleted.
 Going forward all incoming traffic will flow through the Istio Ingress Gateway.
 +
 -----
 $ oc delete route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT
 -----
+
+endif::showscript[]
 
 == APIcast: OpenTracing enabled
 

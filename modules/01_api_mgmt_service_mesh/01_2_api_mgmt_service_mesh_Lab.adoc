@@ -42,13 +42,38 @@ With MSAs, the need for a _service mesh_ becomes critical.
 As such, Red Hat is contributing to the Istio community project.
 In addition, Red Hat is actively working to productize Istio as a supported product on Red Hat's OpenShift Container Platform (OCP).
 
-The following table provides an overview of a feature comparison between API Management and a Service Mesh.
+The following table provides an overview of a feature comparison between API Management and a Service Mesh:
 
-[red]#TODO#
+[width="100%",cols="1,1",,options="header,footer"]
+|========================
+|Service Mesh | API Mgmt
+|Service Discovery|Relationship Mgmt between API Producer and Consumer (who often don't know eachother)
+|Automatic retries|API Consumer Portal
+|Timeouts|API Consumer Portal CMS
+|Load Balancing|API domain Administration
+|Rating and Limiting|API documentation
+|Circuit Breaker|API testing and request sampling
+|Bulk Heading|billing
+|Authorization and Authentication|API methods and metrics
+|Routing (DMZ, Surgical, Dynamic for Blue-green / Canary, Mirroring, Shadow traffic)|Usage limits
+|Fault Injection|Sign-up and subscriptions
+|App level & end-to-end monitoring|Analytics that provide insight into API utilization
+|logging|
+|metrics|
+|Distributed tracing|
+|========================
+
+Notice that the focus of Istio and Service mesh management is mainly about assigning identity, for the benefit of traffic control into and within the cluster/mesh.
+
+Also notice that the focus of API Management is about fostering business relationships between API consumers and producers.
 
 === Reference
 
 . Istio / Service Mesh
+.. link:https://docs.google.com/presentation/d/1PaE3RqyKoadllKHlPg0-kHcUrTuCeIdAe81CMk12iWw/edit#slide=id.g17a49862ec_0_0[3scale Next.Gen and Istio]
+.. link:https://istio.io/docs/concepts/what-is-istio/[Community Istio Documentation]
+.. link:https://github.com/Maistra/istio-operator[Red Hat community Istio (Maistra) operator]
+.. link:https://deploy-preview-14--maistra.netlify.com/istiodocs/install/#_installation_custom_resource[Red Hat community Istio (Maistra) documentation]
 
 . Distributed Tracing:
 .. link:https://github.com/opentracing[Github organization for OpenTracing]
@@ -256,7 +281,9 @@ image::images/new_catalog_user_key.png[]
 . Create an environment variable set to this user key:
 +
 -----
-$ export CATALOG_USER_KEY=<the catalog app user key>
+$ echo "export CATALOG_USER_KEY=<the catalog app user key>" >> ~/.bashrc
+
+$ source ~/.bashrc
 -----
 
 ==== Stage Service Integration
@@ -1024,7 +1051,7 @@ However, what is missing is tracing that includes the backend _catalog_ service.
 
 In the next section, you'll enable your _catalog_ service to participate in this end-to-end distributed tracing .
 
-== Catalog Service: OpenTracing and Istio enabled
+== Catalog Service: Istio enabled
 
 image::images/deployment_catalog-istio.png[]
 
@@ -1200,8 +1227,12 @@ It is possible that a future version of the 3scale API Manager provides support 
 WARNING:  This section pertains to a stretch goal for this lab and remains a work in progress.
 If by 10 Sept, i can't get it to go .... I will comment this entire section out.
 
-The Red Hat 3scale engineering team is actively working on an Istio _mixer_.
-This Istio _mixer_ will allow 3scale API Management policies to be applied directly to the _service mesh_ .
+=== Overview
+
+The Red Hat 3scale engineering team is actively working on an Istio _mixer_ adapter.
+This Istio _mixer_ adapter will allow 3scale API Management policies to be applied directly to the _service mesh_ .
+
+image::images/3scale_mixer_adapter.png[]
 
 === Disable existing API gateways
 These API gateways will no longer be needed.
@@ -1231,7 +1262,7 @@ $ oc delete virtualservice catalog-istio-gateway-vs -n $GW_PROJECT --as=system:a
 $ oc delete gateway catalog-istio-gateway -n $GW_PROJECT --as=system:admin
 -----
 
-=== New Virtual Service to catalog Service
+=== New Virtual Service to catalog service
 
 . Ensure the $NAKED_CATALOG_ROUTE environment variable still remains in your shell:
 +
@@ -1287,13 +1318,10 @@ spec:
 $ oc create -f ~/lab/catalog-direct-gw-vs.yml -n $MSA_PROJECT --as=system:admin
 -----
 
-. From the terminal, execute the following to invoke your catalog service directly via the Istio ingress:
+. From the terminal, execute the following to invoke your catalog service directly via the Istio ingress gateway:
 +
 -----
 $ curl -v `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products"`
-
-$ curl -v  -HHost:$NAKED_CATALOG_ROUTE \
-       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products"`
 -----
 
 === 3scale Istio Mixer
@@ -1387,69 +1415,10 @@ items:
 
 -----
 
-
-. gateway:
-+
------
-$ echo \
-    "apiVersion: networking.istio.io/v1alpha3
-kind: Gateway
-metadata:
-  name: catalog-mixer-gw
-spec:
-  selector:
-    istio: ingressgateway
-  servers:
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    - \"*\"" \
- > $HOME/lab/catalog-mixer-gw.yml
------
-
-. Create gateway:
-+
------
-$ oc create -f ~/lab/catalog-mixer-gw.yml -n istio-system --as=system:admin
------
-
-. Virtual Service:
-+
------
-$ echo \
-  "apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: catalog-mixer-vs
-spec:
-  hosts:
-  - \"*\"
-  gateways:
-  - catalog-mixer-gw
-  http:
-  - match:
-    - uri:
-        prefix: /products
-    route:
-    - destination:
-        host: "threescaleistioadapter"
-        port:
-          number: 3333" \
-> $HOME/lab/catalog-mixer-vs.yml
------
-
-. Create Gateway & Virtual Service:
-+
------
-$ oc create -f ~/lab/catalog-mixer-vs.yml -n istio-system --as=system:admin
------
-
 . From the terminal, execute the following to invoke your catalog service directly via the Istio ingress:
 +
 -----
-$ curl -v  -HHost:$NAKED_CATALOG_ROUTE \
+$ curl -v \
        `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
@@ -1545,7 +1514,7 @@ Once you've smoke tested your API managed environment, proceed to the section: <
 
 
 [[istio_troubleshooting]]
-== Istio troubleshooting
+=== Istio troubleshooting
 
 [red]#TO_DO#
 

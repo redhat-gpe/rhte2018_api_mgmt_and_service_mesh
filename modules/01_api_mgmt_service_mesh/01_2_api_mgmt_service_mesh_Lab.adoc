@@ -547,6 +547,9 @@ $ oc rollout resume deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT
 .. Both containers in the new pod should have started and the pod should be in a _Running_ state:
 +
 -----
+$ oc get pods
+
+
 NAME                                         READY     STATUS    RESTARTS   AGE
 prod-apicast-57db66b8b7-fm268                1/1       Running   0          28m
 stage-apicast-7f9d46f6dc-vtkrr               1/1       Running   0          43m
@@ -1318,14 +1321,18 @@ spec:
 $ oc create -f ~/lab/catalog-direct-gw-vs.yml -n $MSA_PROJECT --as=system:admin
 -----
 
-. From the terminal, execute the following to invoke your catalog service directly via the Istio ingress gateway:
+. From the terminal, conduct a smoke test to validate traffic to the catalog service directly via the Istio ingress gateway:
 +
 -----
 $ curl -v `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products"`
 -----
 
+
+
+
+
 === 3scale Istio Mixer
-. Begin by cloning the source code to the 3scale Istio Mixer :
+. Clone the source code to the 3scale Istio Mixer :
 +
 -----
 $ git clone \
@@ -1347,7 +1354,12 @@ $ oc get pods -n istio-system | grep 3scale-istio-adapter
 3scale-istio-adapter-1-t9kj2                2/2       Running     0          47s
 -----
 
-=== 3scale Istio Handler
+
+
+
+
+
+=== 3scale mixer adapter configs
 
 . In the details of your _catalog_ service in the API Manager admin console, locate the `ID for API calls ... `:
 +
@@ -1415,6 +1427,18 @@ items:
 
 -----
 
+. Create _authorization_ handler:
++
+-----
+$ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/authorization-template.yaml --as=system:admin
+-----
+
+. Define 3scale _adapter_:
++
+-----
+$ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter.yaml --as=system:admin
+-----
+
 . From the terminal, execute the following to invoke your catalog service directly via the Istio ingress:
 +
 -----
@@ -1422,7 +1446,6 @@ $ curl -v \
        `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
-[red]#TO_DO#
 
 == Conclusions
 

@@ -15,7 +15,7 @@
 
 == Overview
 
-This first lab orients you with the course lab assets provided to you.
+This first lab orientates you with the course lab assets provided to you.
 
 
 Your lab environment consists of the following:
@@ -34,9 +34,7 @@ Pre-provisioned with a API _domain_ dedicated to you for the duration of this la
 This section of the lab explains how to access the Red Hat Tech Exchange _GuidGrabber_ in order to obtain a GUID.
 This GUID will be used to access the lab environment.
 
-. Begin by going to http://bit.ly/rhte-guidgrabber
-+
-image::images/gg1.png[GuidGrabber Landing Page]
+. Begin by navigating to: http://bit.ly/rhte-guidgrabber
 
 . From this page select the *Lab Code* :  _A1004_
 
@@ -62,8 +60,10 @@ Clicking *Reset Workstation* will not stop or delete the lab environment.
 
 == Environment Variables
 
-Once you've ssh'd into your remote terminal window, you'll want to set the following environment variables:
+. As per the previous section, ensure you've ssh'd into your remote lab environment.
 
+. Once you've ssh'd into your remote terminal window, you'll want to set the following environment variables:
++
 -----
 ######  Instructor will provide the values to these environment variables #######
 
@@ -93,8 +93,12 @@ echo "export THREESCALE_PORTAL_ENDPOINT=https://\${API_ADMIN_ACCESS_TOKEN}@\$TEN
 echo "export BACKEND_ENDPOINT_OVERRIDE=https://backend-3scale-mt-adm0.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
 
 
-source ~/.bashrc
+-----
 
+. Source the modified ~/.bashrc so that the environment variables are set in your current shell session:
++
+-----
+$ source ~/.bashrc
 -----
 
 == Utilities and resources

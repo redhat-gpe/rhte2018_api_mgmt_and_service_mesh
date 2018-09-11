@@ -130,14 +130,13 @@ Your API gateway will retrive _proxy service_ configurations from the pre-existi
 image::images/deployment_apicast.png[]
 
 The management of this API gateway occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_.
-The reason for this is discussed previously in the section: <<dvsdc>>.
 
 In a later section of this lab, you will switch to the use of a community variant of API gateway that is enabled with _OpenTracing_ and _Jaeger_ client libraries to participate in distributed tracing.
 
 
 === Deploy Apicast
 
-. In your course virtual machine, ensure you are the same non-root user in which you previously set lab related environment variables.
+. In your course lab environment, ensure you are the same non-root user in which you previously set lab related environment variables.
 . Using the `oc` utility, ensure you are authenticated and then create a new project where your API gateways will reside:
 +
 -----

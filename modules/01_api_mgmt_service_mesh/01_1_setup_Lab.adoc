@@ -3,7 +3,7 @@
 :data-uri:
 :toc2:
 :linkattrs:
-:lab_spreadsheet: link:[APAC RHTE: Student lab info spreadsheet]
+:lab_spreadsheet: link:https://docs.google.com/a/redhat.com/spreadsheets/d/e/2PACX-1vTcNkVOAYQJSN0c47zcf7i1ZKZDFUidcY_rdHWWlJquGOAn7Jr-UIMGAaYyKN9jLbe3NP1YGliDsIGW/pubhtml[APAC RHTE: Student lab info spreadsheet]
 
 = Lab Setup
 
@@ -86,8 +86,9 @@ $ echo "export OCP_USERNAME=<provided by instructor" >> ~/.bashrc               
 $ echo 'export OCP_PASSWD=<provided by instructor' >> ~/.bashrc                 # Column C
 
 $ echo "export API_REGION=<provided by instructor>" >> ~/.bashrc                # Column D
+$ echo "export API_TENANT_SUFFIX=<provided by instructor>" >> ~/.bashrc         # Column E
 $ echo "export API_USERNAME=<provided by instructor>" >> ~/.bashrc              # Column F
-$ echo "export API_PASSWD=<provided by instructor>" >> ~/.bashrc                # Column G
+$ echo 'export API_PASSWD=<provided by instructor>' >> ~/.bashrc                # Column G
 $ echo "export API_ADMIN_ACCESS_TOKEN=<provided by instructor>" >> ~/.bashrc    # Column H
 
 
@@ -103,10 +104,9 @@ echo "export MSA_PROJECT=rhte-mw-api-mesh-\$LAB_CODE" >> ~/.bashrc
 
 echo "export API_DOMAIN=\$API_REGION.openshift.opentlc.com" >> ~/.bashrc
 echo "export API_WILDCARD_DOMAIN=apps.\$API_DOMAIN" >> ~/.bashrc
-echo "export TENANT_NAME=\$API_USERNAME-3scale-mt" >> ~/.bashrc
+echo "export TENANT_NAME=\$API_USERNAME-\$API_TENANT_SUFFIX" >> ~/.bashrc
 echo "export THREESCALE_PORTAL_ENDPOINT=https://\${API_ADMIN_ACCESS_TOKEN}@\$TENANT_NAME-admin.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
-echo "export BACKEND_ENDPOINT_OVERRIDE=https://backend-3scale-mt-adm0.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
-
+echo "export BACKEND_ENDPOINT_OVERRIDE=https://backend-\$API_TENANT_SUFFIX.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
 
 -----
 

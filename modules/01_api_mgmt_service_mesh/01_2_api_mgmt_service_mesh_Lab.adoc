@@ -42,7 +42,7 @@ With MSAs, the need for a _service mesh_ becomes critical.
 As such, Red Hat is contributing to the Istio community project.
 In addition, Red Hat is actively working to productize Istio as a supported product on Red Hat's OpenShift Container Platform (OCP).
 
-The following table provides an overview of a feature comparison between API Management and a Service Mesh:
+The following table provides a feature comparison between API Management and a Service Mesh:
 
 [width="100%",cols="1,1",,options="header,footer"]
 |========================
@@ -122,9 +122,9 @@ The NGinx side-car acts as a service proxy to an Istio service-mesh (conceptuall
 Because the API Gateway of 3scale is also built on Nginx, the 3scale API gateway could also be potentially extended to serve as a side car to a service running in a service mesh.
 
 
-== Apicast: Plain
+== API Gateway: Plain
 
-In this section of the lab, you will provision a supported version of 3scale _apicast_ gateway to manage your CoolStore _catalog_ service.
+In this section of the lab, you will provision a supported version of 3scale _API Gateway_ gateway to manage your CoolStore _catalog_ service.
 Your API gateway will retrive _proxy service_ configurations from the pre-existing 3scale multi-tenant environment.
 
 image::images/deployment_apicast.png[]
@@ -134,7 +134,7 @@ The management of this API gateway occurs via a Kubernetes _deployment_ as oppos
 In a later section of this lab, you will switch to the use of a community variant of API gateway that is enabled with _OpenTracing_ and _Jaeger_ client libraries to participate in distributed tracing.
 
 
-=== Deploy Apicast
+=== Deploy API Gateway
 
 . In your course lab environment, ensure you are the same non-root user in which you previously set lab related environment variables.
 . Using the `oc` utility, ensure you are authenticated and then create a new project where your API gateways will reside:
@@ -425,7 +425,7 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 -----
 
 [[apicast_istio]]
-== Apicast: Istio enabled
+== API Gateway: Istio enabled
 
 === Overview
 
@@ -444,7 +444,7 @@ Your API gateway will continue to pull _service proxy_ configurations from the p
 
 === Inject Istio
 
-. Retrieve yaml representation of current API gateway production deployment:
+. Retrieve the yaml representation of current API gateway production deployment:
 +
 -----
 $ oc get deploy prod-apicast -n $GW_PROJECT -o yaml > $HOME/lab/prod-apicast.yml
@@ -851,7 +851,7 @@ $ oc delete route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT
 
 endif::showscript[]
 
-== APIcast: OpenTracing enabled
+== API Gateway: OpenTracing enabled
 
 === Overview
 
@@ -938,7 +938,7 @@ Thi is the URL that your API gateway will push traces (via UDP) to the _jaeger-a
 $ oc create configmap jaeger-config --from-file=$HOME/lab/jaeger_config.json -n $GW_PROJECT
 -----
 
-. Mount the configmap to your opentracing enabled apicast:
+. Mount the configmap to your opentracing enabled API Gateway:
 +
 -----
 $ oc volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ --configmap-name jaeger-config -n $GW_PROJECT
@@ -1228,10 +1228,12 @@ Prometheus is an analytics tool that comes out of the box with Istio and is also
 The analytics and observability provided by Prometheus are conceptually similar to the analytics provided by the 3scale API Manager.
 It is possible that a future version of the 3scale API Manager provides support for Prometheus for API data analytics.
 
-== 3scale Mixer Adapter (Preview Only)
+== 3scale Mixer Adapter (Preview)
 
-WARNING:  As of 11 Sept, 2018, this section of the lab is not complete.
+WARNING:  As of 12 Sept, 2018, this section of the lab is not complete.
 It is currently offered as a preview of future functionality.
+Feel free to execute the steps in this section but expect to encounter an error towards the end.
+Return back to this same lab in coming days / weeks for a version of this section that completely works.
 
 === Overview
 
@@ -1549,6 +1551,7 @@ WARNING: [red]#Don't proceed beyond this section until this smoke test of your n
 
 Once you've smoke tested your API managed environment, proceed to the section: <<apicast_istio>>
 
+ifdef::showscript[]
 
 [[istio_troubleshooting]]
 === Istio troubleshooting
@@ -1557,7 +1560,7 @@ Once you've smoke tested your API managed environment, proceed to the section: <
 
 . https://bani.com.br/2018/08/istio-mtls-debugging-a-503-error/
 
-ifdef::showscript[]
+
 
 echo -en "\n\ncurl -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json\n\n"                                    :   test retrival of proxy service info from system-provider
 

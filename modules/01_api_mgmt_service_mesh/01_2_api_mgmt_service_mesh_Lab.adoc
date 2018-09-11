@@ -93,30 +93,34 @@ In regards to API Management and a MSA service mesh, the following are related c
 
 ==== Standalone community Jaeger
 
-Of related interest is that the upstream community API gateway from Red Hat's 3scale product bundles _OpenTracing_ client library using _Jaeger_.
-Subsequently, this allows community API gateway to participate in distributed tracing.
+_Jaeger_ is a tool that provides distributed tracing.
 
-Also available in the open-source community is the _all-in-one_ community Jaeger that includes a jaeger-agent, jaeger-collector and jaeger-collector.
-link:https://medium.com/@jmprusi_49013/adding-opentracing-support-to-apicast-api-gateway-a8e0a38347d2[This tutorial] very nicely details the use of opentracing enabled API gateway with the _all-in-one_ community Jaeger.
+Available in the open-source community is the _all-in-one_ community Jaeger that includes a jaeger-agent, jaeger-collector and jaeger-collector.
+link:https://medium.com/@jmprusi_49013/adding-opentracing-support-to-apicast-api-gateway-a8e0a38347d2[This tutorial] very nicely details the use of an opentracing enabled API gateway with the _all-in-one_ community Jaeger.
 
 
-As an alternative to the _all-in-one_ standalone Jaeger, Istio also now comes included with Jaeger.
+As an alternative to the _all-in-one_ standalone Jaeger, Istio also comes included with Jaeger.
 In this lab, this Jaeger based tracing functionality provided by Istio is utilized instead of a standalone Jaeger installation.
-
-
-
 
 ==== Istio API Management Working Group
 
 Istio activity is organized into _working groups_.
 
-One of this Istio working groups is on link:https://github.com/istio/community/blob/master/WORKING-GROUPS.md#api-management[API Management].
+One of these Istio working groups is focused on link:https://github.com/istio/community/blob/master/WORKING-GROUPS.md#api-management[API Management].
 
 Members of the  Red Hat engineering team are currently participating in this Istio API Management working group.
 
 Outcomes of this working group may potentially guide the development and roadmap of future releases of the Red Hat 3scale API Management product.
 
 In the future, this lab may demonstrate initiatives that may come out of this Istio API Management Working Group.
+
+==== API Gateway Side car
+
+link:https://github.com/nginxinc/nginmesh[nginMesh] is a community initiative that injects the NGinx server as a side-car to your services.
+The NGinx side-car acts as a service proxy to an Istio service-mesh (conceptually similar to the _Envoy_ proxy that you will be exposed to in this lab).
+
+Because the API Gateway of 3scale is also built on Nginx, the 3scale API gateway could also be potentially extended to serve as a side car to a service running in a service mesh.
+
 
 == Apicast: Plain
 
@@ -1225,10 +1229,10 @@ Prometheus is an analytics tool that comes out of the box with Istio and is also
 The analytics and observability provided by Prometheus are conceptually similar to the analytics provided by the 3scale API Manager.
 It is possible that a future version of the 3scale API Manager provides support for Prometheus for API data analytics.
 
-== 3scale Mixer Adapter
+== 3scale Mixer Adapter (Preview Only)
 
-WARNING:  This section pertains to a stretch goal for this lab and remains a work in progress.
-If by 10 Sept, i can't get it to go .... I will comment this entire section out.
+WARNING:  As of 11 Sept, 2018, this section of the lab is not complete.
+It is currently offered as a preview of future functionality.
 
 === Overview
 
@@ -1275,7 +1279,7 @@ $ echo $NAKED_CATALOG_ROUTE
 catalog-unsecured-rhte-mw-api-mesh-a1001.apps.clientvm.b902.rhte.opentlc.com
 -----
 
-. gateway & vs:
+. Define a gateway and virtual service that routes inbound traffic (with a web context of _/path_) directly to your backend _catalog_ service.
 +
 -----
 $ echo \
@@ -1315,24 +1319,29 @@ spec:
  > $HOME/lab/catalog-direct-gw-vs.yml
 -----
 
-. Create gateway and virtual service :
+. Create the gateway and virtual service in your $MSA_PROJECT :
 +
 -----
 $ oc create -f ~/lab/catalog-direct-gw-vs.yml -n $MSA_PROJECT --as=system:admin
 -----
 
-. From the terminal, conduct a smoke test to validate traffic to the catalog service directly via the Istio ingress gateway:
+. From the terminal, conduct a smoke test to validate traffic to the catalog service directly from the Istio ingress gateway:
 +
 -----
 $ curl -v `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products"`
 -----
 
 
-
-
-
 === 3scale Istio Mixer
-. Clone the source code to the 3scale Istio Mixer :
+The Istio Mixer that will be utilized will originate from the following community image in quay:
+
+-----
+quay.io/3scale/apicast:3scale-http-plugin
+-----
+
+In this section of the lab, you create the 3scale mixer handler deployment resource:
+
+. Clone the source code to the 3scale Istio Mixer to your lab environment:
 +
 -----
 $ git clone \
@@ -1340,26 +1349,42 @@ $ git clone \
       $HOME/lab/istio-integration
 -----
 
-. Load the Istio Mixer Adapter into the istio-system namesapce:
+. Load the Istio Mixer Adapter deployment (found in the 3scale istio integration project you just cloned ) into the istio-system namesapce:
 +
 -----
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/openshift -n istio-system --as=system:admin
 -----
 
-. Verify that the 3scale Istio Mixer Adapter pod has started:
+. Verify that the 3scale Istio Mixer Adapter pod has started with 2 containers:
 +
 -----
 $ oc get pods -n istio-system | grep 3scale-istio-adapter
 
 3scale-istio-adapter-1-t9kj2                2/2       Running     0          47s
 -----
++
+image::images/mixer_architecture.png[]
++
+As per the diagram above, the two containers are as follows:
 
+.. *3scale-istio-adapter*
++
+-----
+Accepts gRPC invocations from Istio Ingress and routes to the other side car in the pod:  _3scale-istio-httpclient_
+-----
 
-
+.. *3scale-istio-httpclient*
++
+-----
+Accepts invocations from _3scale-istio-adapter_ and invokes the _system-provider_ and _backend-listener_ endpoints of the remote 3scale API Manager.
+-----
 
 
 
 === 3scale mixer adapter configs
+
+Now that the 3scale Istio mixer adapter is running, various configurations need to be added to the service mesh.
+
 
 . In the details of your _catalog_ service in the API Manager admin console, locate the `ID for API calls ... `:
 +
@@ -1427,13 +1452,13 @@ items:
 
 -----
 
-. Create _authorization_ handler:
+. Create the _authorization_ handler:
 +
 -----
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/authorization-template.yaml --as=system:admin
 -----
 
-. Define 3scale _adapter_:
+. Define the 3scale _adapter_:
 +
 -----
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter.yaml --as=system:admin
@@ -1445,16 +1470,6 @@ $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapte
 $ curl -v \
        `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
-
-
-== Conclusions
-
-As you know, Openresty is Nginx + luaJIT, and right now, we only get OpenTracing information for the "Nginx" part of it, there aren't any OpenTracing libraries for lua.
-We are working on being able to use the OpenTracing C++ libraries from LUA, so we can create spans directly from it, and gain even more visibility into API gateway internals.
-For example, this could help debug if that custom policy you just installed is making things slower.
-
-[red]#Elaborate#
-
 
 
 == Questions

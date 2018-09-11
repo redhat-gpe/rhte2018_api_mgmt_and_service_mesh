@@ -3,6 +3,7 @@
 :data-uri:
 :toc2:
 :linkattrs:
+:lab_spreadsheet: link:[APAC RHTE: Student lab info spreadsheet]
 
 = Lab Setup
 
@@ -32,13 +33,13 @@ Pre-provisioned with a API _domain_ dedicated to you for the duration of this la
 == Access Course VM via `GUID Grabber`
 
 This section of the lab explains how to access the Red Hat Tech Exchange _GuidGrabber_ in order to obtain a GUID.
-This GUID will be used to access the lab environment.
+This GUID will be used to access a virtual machine that you will use in this course.
 
 . Begin by navigating to: http://bit.ly/rhte-guidgrabber
 
-. From this page select the *Lab Code* :  _A1004_
+. From this page select the *Lab Code* :  _A1004 - API Management with 3scale + Istio Microservices_
 
-. Enter the *Activation Key* provided by the lab instructor.
+. Enter the *Activation Key* provided to you by your instructor.
 
 . Click *Next*.
 
@@ -57,12 +58,26 @@ If you fail to do this, you will be locked into the GUID from the previous lab.
 Clicking *Reset Workstation* will not stop or delete the lab environment.
 
 
+== Lab Information spreadsheet
+
+The virtual machine that you gained access to in the previous section of this lab is one of two components that comprises your lab environment.
+
+The other component of your lab environment is a 3scale _tenant_ that has been pre-provisioned and dedicated to you.
+
+You will be assigned a dedicated 3scale _tenant_ as well as more information about your lab environments as follows:
+
+. The lab instructor will assign each student a sequential number between 1 and 100 .
++
+WARNING: Please make note of this sequential number assigned to you.
+If you have not been assigned a number then ask for one from your lab instructor.
+
+. Using that assigned number, you will reference needed lab information in the following spreadsheet: {lab_spreadsheet}
 
 == Environment Variables
 
-. As per the previous section, ensure you've ssh'd into your remote lab environment.
+. Ensure you've ssh'd into your remote lab environment.
 
-. Once you've ssh'd into your remote terminal window, you'll want to set the following environment variables:
+. Once you've ssh'd into your remote terminal window, you'll want to set the following environment variables using the values assigned to you in: {lab_spreadsheet}:
 +
 -----
 ######  Instructor will provide the values to these environment variables #######

@@ -90,11 +90,6 @@ $ echo "export API_ADMIN_ACCESS_TOKEN=<column B of spreadsheet>" >> ~/.bashrc
 +
 -----
 
-
-
-
-#  Using the above variables, l #
-
 echo "export API_TENANT_SUFFIX=3scale-mt-adm1" >> ~/.bashrc
 echo "export OCP_USERNAME=developer" >> ~/.bashrc
 echo "export API_REGION=4a64" >> ~/.bashrc

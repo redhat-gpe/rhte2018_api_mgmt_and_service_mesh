@@ -367,7 +367,7 @@ For the purpose of this lab, instead of potentially waiting for 5 minutes, you c
 . Bounce API gateway related pods:
 +
 -----
-$ for i in `oc get pod -n $MSA_PROJECT | grep "apicast" | awk '{print $1}'`; do oc delete pod $i; done
+$ for i in `oc get pod -n $GW_PROJECT | grep "apicast" | awk '{print $1}'`; do oc delete pod $i; done
 -----
 +
 Kubernetes will detect the absence of these pods and start new ones.
@@ -509,13 +509,6 @@ $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT\
 
 $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT \
    --patch '{"spec":{"template":{"spec":{"initContainers":[{"name":"istio-init", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
------
-
-. Change _APICAST_LOG_LEVEL_ environment variable to _info_:
-+
------
-$ oc patch deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT\
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-prod-apicast-istio", "env": [{"name":"APICAST_LOG_LEVEL","value":"info" }]}]}}}}'
 -----
 
 . Allow pods in the $GW_PROJECT to run using any user (including root) that they desire:

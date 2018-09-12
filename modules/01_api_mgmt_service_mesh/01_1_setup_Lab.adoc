@@ -83,6 +83,8 @@ If you have not been assigned a number then ask for one from your lab instructor
 -----
 $ echo "export API_USERNAME=<column A of spreadsheet>" >> ~/.bashrc
 $ echo "export API_ADMIN_ACCESS_TOKEN=<column B of spreadsheet>" >> ~/.bashrc
+$ echo 'export API_PASSWD=<column C of spreadsheet>' >> ~/.bashrc
+$ echo 'export OCP_PASSWD=<column D of spreadsheet>' >> ~/.bashrc
 -----
 
 
@@ -94,8 +96,7 @@ echo "export API_TENANT_SUFFIX=3scale-mt-adm1" >> ~/.bashrc
 echo "export OCP_USERNAME=developer" >> ~/.bashrc
 echo "export API_REGION=4a64" >> ~/.bashrc
 echo "export LAB_CODE=a1001" >> ~/.bashrc
-echo 'export API_PASSWD=r3dh4t1!' >> ~/.bashrc
-echo 'export OCP_PASSWD=r3dh4t1!' >> ~/.bashrc
+
 echo "export OCP_REGION=`echo $HOSTNAME | cut -d'.' -f2`" >> ~/.bashrc
 echo "export OCP_DOMAIN=clientvm.\$OCP_REGION.rhte.opentlc.com" >> ~/.bashrc
 echo "export OCP_WILDCARD_DOMAIN=apps.\$OCP_DOMAIN" >> ~/.bashrc

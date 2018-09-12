@@ -124,15 +124,14 @@ Because the API Gateway of 3scale is also built on Nginx, the 3scale API gateway
 
 == API Gateway: Plain
 
-In this section of the lab, you will provision a supported version of 3scale _API Gateway_ gateway to manage your CoolStore _catalog_ service.
-Your API gateway will retrive _proxy service_ configurations from the pre-existing 3scale multi-tenant environment.
+In this section of the lab, you will provision a supported version of 3scale _API Gateway_ to manage your CoolStore _catalog_ service.
+Your API gateway will retrieve _proxy service_ configurations from the pre-existing 3scale multi-tenant environment.
 
 image::images/deployment_apicast.png[]
 
 The management of this API gateway occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_.
 
 In a later section of this lab, you will switch to the use of a community variant of API gateway that is enabled with _OpenTracing_ and _Jaeger_ client libraries to participate in distributed tracing.
-
 
 === Deploy API Gateway
 
@@ -294,11 +293,11 @@ $ source ~/.bashrc
 In this section, you define an _API proxy_ to manage your _catalog_ RESTful business service.
 
 . In the API Manager Admin Portal, navigate to the *APIs* tab.
-. From your `catalog_service` service, select *Application Plans*.
+. From your `catalog_service`, select *Application Plans*.
 . For the  `catalog_app_plan` and click the *Publish* link:
 +
 image::images/publish_app_plan.png[]
-. From your `catalog_service` service, select *Integration*.
+. From your `catalog_service`, select *Integration*.
 . Click *Add the base URL of your API and save the configuration*.
 +
 * This takes you to a page that allows you to associate the API gateway staging and production URLs with your new 3scale proxy service.
@@ -537,8 +536,6 @@ Error creating: pods "user50-prod-apicast-istio-6456c879c8" is forbidden: unable
 +
 .. For the purpose of this lab, the cluster-admin of your OCP environment has provided you with the ability to _impersonate_ cluster admin.
 Doing so provides you with the ability to apply the _anyuid_ SCC to your project.
-This is considered a significant security risk.
-In a real-world setting, you would have coordinated with a team-member who does have _cluster admin_ rights to execute this command for you.
 
 . Resume the paused deployment:
 +
@@ -567,9 +564,6 @@ It's likely that _liveness_ and/or _readiness_ probes on the API gateway are fai
 It's possible that this is due to a mis-configuration of Istio.
 As an initial troubleshooting step, remove the _liveness_ and _readiness_ probes defined in the deployment.
 After doing so, do both containers start ?
-Please refer to the <<istio_troubleshooting>> in the Appendix of this lab for more tips.
-
-
 
 . Modify the _prod-apicast_ service to route to new Istio enabled _apicast_
 +
@@ -603,9 +597,9 @@ The reason your API gateway can not make a connection to the 3scale API Manager 
 By default, Istio blocks all outbound requests to the internet.
 In the next section, you'll define an _egress route_ to allow your API gateway to communicate with the API Manager.
 
-.  Isolate the problem with your new Istio enabled API gateway by testing the call to the _system-provider_ from within the API gateway.
+.  Isolate the problem with your new Istio enabled API gateway by testing the call to the _system-provider_ of the API Manager from within the API gateway.
 
-.. Use a command such as the following:
+.. Use the following:
 +
 -----
 $ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
@@ -1550,6 +1544,17 @@ $ curl -v -k \
 WARNING: [red]#Don't proceed beyond this section until this smoke test of your non istio enabled environment passes and the response from your production API gateway is a listing of catalog data#
 
 Once you've smoke tested your API managed environment, proceed to the section: <<apicast_istio>>
+
+== Conclusion
+
+In this lab you where exposed to the following:
+
+* Injection Istio Envoy proxy configs into an API gateway
+* Configuration of an Istio Egress Route to allow the API gateway to communicate to the remote API Manager
+* Invocation of your backend service via the Istio Ingress gateway and 3scale API gateway
+* End-to-end distributed tracing of a MSA application using Jaeger implementation of the _OpenTracing_ specification
+* Review of the analytics dashboard provided by 3Scale
+* Introduction to the 3scale Mixer Adapter
 
 ifdef::showscript[]
 

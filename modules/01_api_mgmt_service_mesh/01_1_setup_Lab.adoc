@@ -3,7 +3,7 @@
 :data-uri:
 :toc2:
 :linkattrs:
-:lab_spreadsheet: link:https://docs.google.com/a/redhat.com/spreadsheets/d/e/2PACX-1vTcNkVOAYQJSN0c47zcf7i1ZKZDFUidcY_rdHWWlJquGOAn7Jr-UIMGAaYyKN9jLbe3NP1YGliDsIGW/pubhtml[APAC RHTE: Student lab info spreadsheet]
+:lab_spreadsheet: link:https://docs.google.com/spreadsheets/d/19Fb4aRYIPWDqUbctXbFvRD7JsT8G_BM9KF5tTo4dWE8/edit?usp=sharing[APAC RHTE: Student lab info spreadsheet]
 
 = Lab Setup
 
@@ -72,31 +72,35 @@ WARNING: Please make note of this sequential number assigned to you.
 If you have not been assigned a number then ask for one from your lab instructor.
 
 . Using that assigned number, you will reference needed lab information in the following spreadsheet: {lab_spreadsheet}
+. Add your name to Column C of the spreadsheet.
 
 == Environment Variables
 
 . Ensure you've ssh'd into your remote lab environment.
 
-. Once you've ssh'd into your remote terminal window, you'll want to set the following environment variables using the values assigned to you in: {lab_spreadsheet}:
+. Set the following environment variables using the values you've assigned yourself in: {lab_spreadsheet}:
 +
 -----
-######  Instructor will provide the values to these environment variables #######
+$ echo "export API_USERNAME=<column A of spreadsheet>" >> ~/.bashrc
+$ echo "export API_ADMIN_ACCESS_TOKEN=<column B of spreadsheet>" >> ~/.bashrc
+-----
 
-$ echo "export OCP_USERNAME=<provided by instructor" >> ~/.bashrc               # Column B
-$ echo 'export OCP_PASSWD=<provided by instructor' >> ~/.bashrc                 # Column C
 
-$ echo "export API_REGION=<provided by instructor>" >> ~/.bashrc                # Column D
-$ echo "export API_TENANT_SUFFIX=<provided by instructor>" >> ~/.bashrc         # Column E
-$ echo "export API_USERNAME=<provided by instructor>" >> ~/.bashrc              # Column F
-$ echo 'export API_PASSWD=<provided by instructor>' >> ~/.bashrc                # Column G
-$ echo "export API_ADMIN_ACCESS_TOKEN=<provided by instructor>" >> ~/.bashrc    # Column H
+. Copy & paste the following in the same terminal
++
+-----
 
 
 
-#  Using the above variables, copy & paste the following in the same terminal #
 
+#  Using the above variables, l #
+
+echo "export API_TENANT_SUFFIX=3scale-mt-adm1" >> ~/.bashrc
+echo "export OCP_USERNAME=developer" >> ~/.bashrc
+echo "export API_REGION=4a64" >> ~/.bashrc
 echo "export LAB_CODE=a1001" >> ~/.bashrc
-
+echo 'export API_PASSWD=r3dh4t1!' >> ~/.bashrc
+echo 'export OCP_PASSWD=r3dh4t1!' >> ~/.bashrc
 echo "export OCP_REGION=`echo $HOSTNAME | cut -d'.' -f2`" >> ~/.bashrc
 echo "export OCP_DOMAIN=clientvm.\$OCP_REGION.rhte.opentlc.com" >> ~/.bashrc
 echo "export OCP_WILDCARD_DOMAIN=apps.\$OCP_DOMAIN" >> ~/.bashrc

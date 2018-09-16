@@ -3,6 +3,7 @@
 :data-uri:
 :toc2:
 :linkattrs:
+:transaction_costs: link:https://en.wikipedia.org/wiki/Transaction_cost[transaction costs]
 
 = API Mgmt and Service Mesh Lab
 
@@ -21,7 +22,7 @@
 == Overview
 
 _API Management_ facilitates relationships between API consumers and producers.
-It lowers the link:https://en.wikipedia.org/wiki/Transaction_cost[transaction costs] (ie: search costs, price discovery, policing and enforcement costs, etc ) that would otherwise hinder mutually beneficial exchange between API consumer and producer.
+It lowers the {transaction costs} (ie: search costs, price discovery, policing and enforcement costs, etc ) that would otherwise hinder mutually beneficial exchange between API consumer and producer.
 It is often the case that these API producers and consumers do not personally know each other.
 
 A _service mesh_ provides the technical resilience and _observability_ needed to facilitate a Microservice Architecture (MSA).
@@ -30,19 +31,30 @@ The two technologies target different use cases.
 However, there is some overlap.
 
 The purpose of this lab is to discover how the two technologies can complement each other.
-You do this by applying both a _service mesh_ and an _API Management_ solution to a _cloud native_ application.
+You do this by applying both a _service mesh_ and an _API Management_ solution to an existing _cloud native_ application running in Red Hat's Openshift Container Platform.
+
+
+The lab takes you through a journey that has you gradually apply more and more features of both _API Mgmt_ and _service mesh_ to your cloud native application.
 
 === Background
 
-_Gartner's Magic Quadrant for Full Life Cylce API Management_ puts Red Hat's API management solution in the leader's quadrant.
+Red Hat has and continues to make extensive investments in technologies that foster Cloud Native Applications.
 
-Red Hat is also a significant innovator in the technologies used to facilitate _Dev Ops_ and _MicroService Architectures_ (MSAs).
+. *Dev / Ops*
++
+With its _Openshift_ series of offerings, Red Hat is a significant innovator in the technologies used to facilitate _Dev Ops_.
 
+. *API Management*
++
+_Gartner's Magic Quadrant for Full Life Cylce API Management_ puts Red Hat's 3scale API management solution in the leader's quadrant.
+
+. *MicroService Architectures(MSAs)*
++
 With MSAs, the need for a _service mesh_ becomes critical.
 As such, Red Hat is contributing to the Istio community project.
 In addition, Red Hat is actively working to productize Istio as a supported product on Red Hat's OpenShift Container Platform (OCP).
 
-The following table provides a feature comparison between API Management and a Service Mesh:
+Specific to API Management and MSA _Service Mesh_, the following table provides a broad feature comparison :
 
 [width="100%",cols="1,1",,options="header,footer"]
 |========================
@@ -63,7 +75,7 @@ The following table provides a feature comparison between API Management and a S
 |Distributed tracing|
 |========================
 
-Notice that the focus of Istio and Service mesh management is mainly about assigning identity, for the benefit of traffic control into and within the cluster/mesh.
+Notice that the focus of Istio and Service mesh management is mainly about assigning identity for the benefit of traffic control into and within the cluster/mesh.
 
 Also notice that the focus of API Management is about fostering business relationships between API consumers and producers.
 
@@ -121,10 +133,15 @@ The NGinx side-car acts as a service proxy to an Istio service-mesh (conceptuall
 
 Because the API Gateway of 3scale is also built on Nginx, the 3scale API gateway could also be potentially extended to serve as a side car to a service running in a service mesh.
 
+This approach is not covered in this lab.
+
+
 
 == API Gateway: Plain
 
-In this section of the lab, you will provision a supported version of 3scale _API Gateway_ to manage your CoolStore _catalog_ service.
+This lab takes you through a journey that has you gradually apply more and more features of both _API Mgmt_ and _service mesh_ to your cloud native application.
+
+As the first step in this journey, this section of the lab has you provision a supported version of 3scale _API Gateway_ to manage your CoolStore _catalog_ service.
 Your API gateway will retrieve _proxy service_ configurations from the pre-existing 3scale multi-tenant environment.
 
 image::images/deployment_apicast.png[]
@@ -132,6 +149,7 @@ image::images/deployment_apicast.png[]
 The management of this API gateway occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_.
 
 In a later section of this lab, you will switch to the use of a community variant of API gateway that is enabled with _OpenTracing_ and _Jaeger_ client libraries to participate in distributed tracing.
+
 
 === Deploy API Gateway
 
@@ -206,19 +224,19 @@ $ oc rollout resume deploy stage-apicast prod-apicast -n $GW_PROJECT
 In this section of the lab, you smoke test the management of your _catalog_ RESTful services using your API Manager and API gateways.
 
 Guidance is provided for both experienced and inexperienced 3scale users.
-Choose only one.
+[red]#Choose only one.#
 Afterwards, continue with the section: <<apicast_istio>>
 
 === Configure & Test: Experienced 3scale users
 
 If you are proficient with API Management using 3scale by Red Hat, then skip to the section: <<configuretestapi>> .
 
-Once complete, continue on with the section: <<apicast_istio>>
+Once complete, continue on with the next section: <<apicast_istio>>
 
 
 === Configure & Test:  Step-by-Step
 
-In this section, you define a service that manages access to the Coolstore Catalog service that has already been provisioned for you.
+In this section, you define a service that manages access to the Coolstore catalog service that has already been provisioned for you.
 
 The activities in this section are also found in the pre-req courses but is additionally provided here as a refresher for your convenience.
 
@@ -428,14 +446,21 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 
 === Overview
 
-Your lab environment should now consist of a _catalog_ RESTful service managed by out of the box API Manager 2.2 functionality.
+[blue]#Congradulations!#Your lab environment should now consist of a _catalog_ RESTful service managed by out of the box Red Hat 3scale API Manager 2.2 functionality.
 
-In this section of the lab, you will now inject your API gateway with the _Envoy_ sidecar proxy from Istio.
+#[blue]#This is a substantial accomplishment!# 
+You are now utilizing the tools needed to lower the {transaction costs} (ie: search costs, price discovery, policing and enforcement costs, etc ) that would otherwise hinder mutually beneficial exchange between API consumer and producer.
+Via the Red Hat 3scale API Management product, you can manage the entire life-cycle of your APIs and provide value-add to your customers and partners.
+
+As the next step in the journey toward API Management and Service Mesh, in this section of the lab you will inject your API gateway with the _Envoy_ sidecar proxy from Istio.
+Admittedly, simple injection of the _Envoy_ sidecar into your API gateway is likely of limited value. 
+However, this remains early in our journey.
+You will continue to build upon the foundations set here in later sections of this lab.
 
 image::images/deployment_apicast-istio.png[]
 
 In the above diagram, notice the introduction of a new pod: _prod-apicast-istio_.
-Ingress requests through the API gateway production route and service are now directed to this new API gateway pod injected with Istio's envoy sidecar.
+Inbound requests through the API gateway production route are now directed to this new API gateway pod injected with Istio's _envoy_ sidecar.
 
 The _Envoy_ sidecar in your _prod-apicast-istio_ pod will interoperate with _service mesh control plane_ functionality found in the _istio-system_ namespace.
 
@@ -443,11 +468,13 @@ Your API gateway will continue to pull _service proxy_ configurations from the p
 
 === Inject Istio
 
-. Retrieve the yaml representation of current API gateway production deployment:
+. Retrieve the yaml representation of the current API gateway production deployment:
 +
 -----
 $ oc get deploy prod-apicast -n $GW_PROJECT -o yaml > $HOME/lab/prod-apicast.yml
 -----
++
+You'll use the definition of your existing API gateway as a template to create a new _istio_ enabled API gateway.
 
 . Differentiate your Istio enabled API gateway from your existing API gateway:
 +
@@ -483,6 +510,9 @@ $ istioctl kube-inject \
            -f $HOME/lab/prod-apicast.yml \
            > $HOME/lab/prod-apicast-istio.yml
 -----
++
+NOTE:  For the purpose of this lab, you have now manually injected Istio related configs into a _deployment_ definition.  
+Please note that the cluster admin of the service mesh could have optionally automated the injection of these Envoy configs into all _deployments_ by default.
 
 . View Istio injected API gateway deployment descriptor:
 +
@@ -526,7 +556,7 @@ You'd see an error similiar to the following:
 -----
 Error creating: pods "user50-prod-apicast-istio-6456c879c8" is forbidden: unable to validate against any security context constraint: [spec.initContainers[0].securityContext.privileged: Invalid value: true: Privileged containers are not allowed capabilities.add: Invalid value: "NET_ADMIN": capability may not be added spec.initContainers[0].securityContext.privileged: Invalid value: true: Privileged containers are not allowed capabilities.add: Invalid value: "NET_ADMIN":
 -----
-+
+ 
 .. For the purpose of this lab, the cluster-admin of your OCP environment has provided you with the ability to _impersonate_ cluster admin.
 Doing so provides you with the ability to apply the _anyuid_ SCC to your project.
 
@@ -544,9 +574,8 @@ $ oc get pods
 
 
 NAME                                         READY     STATUS    RESTARTS   AGE
-prod-apicast-57db66b8b7-fm268                1/1       Running   0          28m
-stage-apicast-7f9d46f6dc-vtkrr               1/1       Running   0          43m
 
+....
 
 user50-prod-apicast-istio-784dc96c75-gvh5f   2/2       Running   0          5m
 
@@ -557,6 +586,7 @@ It's likely that _liveness_ and/or _readiness_ probes on the API gateway are fai
 It's possible that this is due to a mis-configuration of Istio.
 As an initial troubleshooting step, remove the _liveness_ and _readiness_ probes defined in the deployment.
 After doing so, do both containers start ?
+If so, you'll need to troubleshoot the root cause of why either the _liveness_ and/or _readiness_ probes are failing.
 
 . Modify the _prod-apicast_ service to route to new Istio enabled _apicast_
 +
@@ -564,6 +594,11 @@ After doing so, do both containers start ?
 $ oc patch service/prod-apicast -n $GW_PROJECT \
    --patch '{"spec":{"selector":{"app":"'$OCP_USERNAME'-prod-apicast-istio"}}}'
 -----
++
+Notice that the _service_ to your backend catalog application is being modified instead of the _route_.
+You've essentially conducted a simple _A / B Deployment_ at the _service_ layer where 100% of all traffic through the existing unmodified route will flow to this new Istio enabled pod.
+As an alternative, _A / B Deployment_ could have occured at the _route_ layer.
+This latter approach would have required you to create an additional _service_ associated with the new Istio enabled pod.
 
 . Make sure that your `$CATALOG_USER_KEY` environment variable is set:
 +
@@ -583,7 +618,7 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 .. Why would this be the case ?
 ... Inspect the API gateway log file for any clues.
 ... Is the request making it to your new Istio enabled API gateway ?
-... The root problem is that your Istio enabled API gateway is unable to connect to the _system-provider_ endpoint exposed by the multi-tenant API Manager via the value of: $THREESCALE_PORTAL_ENDPOINT.
+... The root problem is that your Istio enabled API gateway is unable to connect to the _system-provider_ endpoint exposed by the remote multi-tenant API Manager via the value of: $THREESCALE_PORTAL_ENDPOINT.
 +
 Your API gateway needs to do this to retrieve all of the policy management configuration data from the API Manager.
 The reason your API gateway can not make a connection to the 3scale API Manager is that $THREESCALE_PORTAL_ENDPOINT references an external internet URL.
@@ -700,19 +735,21 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 This time, you should see the catalog data in the response.
 This request now flows through your istio enabled API gateway .
 
-[blue]#Although at this point nothing has changed from a functional perspective, you are now well on your way toward accomplishing a non-functional objective of this lab: apply a service mesh to your API managed application.#
-
+[blue]#As mentioned previously, the value of what you've accomplished thus far from a non-functional requirements perspective is admittedly of minimal value.
+However, you are still early in this journey toward the full utilization of API Management and service mesh of your Container Native application.
+You'll continue to build upon what you've accomplished thus far in the next sections of this lab#
 
 == Istio Ingress gateway
 
-Up until now, incoming traffic into the production API gateway has been via the out-of-the-box _HAProxy_ based Kubernetes / OCP _router_.
+Up until now, incoming traffic into the production API gateway has been directly via the out-of-the-box _HAProxy_ based Kubernetes / OCP _router_.
 
-This has worked fine however what is missing is the ability to apply more sophisticated route rules as well as integration with service mesh _observability_ tools such as Jaeger and Promtheus.
+This has worked fine however what is missing is the ability to apply more sophisticated route rules as well as integration with service mesh _observability_ tools such as _Jaeger_ and _Prometheus_.
 Istio includes an _ingress_ gateway that implements these additional features.
 
-In this section of the lab, you will substitute use of the HAProxy based OCP router with the Istio _ingress_ service to direct traffic to your API gateway.
+In this section of the lab, you will modify the flow of inbound traffic such that it additionally flows through the _Ingress_ gateway of Istio.
+Among other benefits, you'll be able to trace inbound traffic as it initially enters your solution.
 
-
+image::images/api_and_ingress_gateway.png[]
 
 . Create an environment variable that reflects the _Production Public Base URL_ of the _catalog-service_ configured in the API Manager:
 +
@@ -784,7 +821,6 @@ spec:
 $ oc create -f $HOME/lab/catalog-istio-gateway-vs.yml -n $GW_PROJECT --as=system:admin
 -----
 
-
 . Set environment variables that reflect the host and port of the Istio Ingress gateway service:
 +
 -----
@@ -810,7 +846,7 @@ Notice the use of the HTTP _Host_ header.
 .. What happens if this _HOST_ header is not included in the request ?
 .. What happens if this _HOST_ header is included in the request but its value (along with the _host_ attributes in the gateway and virtual service) do not match the _Production Public Base Url_ of the _catalog-service_ in the API Manager ?
 
-. The previous smoke test utilized an $INGREGRESS_HOST and $INGRESS_PORT that are made available on a local network.
+. The previous smoke test utilized an $INGREGRESS_HOST and $INGRESS_PORT that are made available on the local OpenShift sub-net.
 Usage of this local $INGRESS_HOST only worked because your curl client happens to be co-located on the same machine as openshift.
 +
 The `istio-system` namespace provides a route called: `istio-ingressgateway`.
@@ -841,6 +877,10 @@ endif::showscript[]
 == API Gateway: OpenTracing enabled
 
 === Overview
+
+As the next step in the journey toward utilization of API Management and Service Mesh, in this section of the lab you will begin to explore the visibility provided of your service mesh using the _OpenTracing_ implementation: _Jaeger_.
+
+You'll do so in this section by utilizing an _Opentracing_ enabled variant of the 3scale API Gateway.
 
 OpenTracing is a consistent, expressive, vendor-neutral API for distributed tracing and context propagation.
 
@@ -873,7 +913,7 @@ $ oc rollout pause deploy $OCP_USERNAME-prod-apicast-istio
 .. Verify that the _jaeger-agent_ exists in the _istio-system_ namespace and is expecting UDP packets on port 6831:
 +
 -----
-$  oc get service jaeger-agent -n istio-system
+$  oc get service jaeger-agent -n istio-system --as=system:admin
 
 NAME           TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                      AGE
 jaeger-agent   ClusterIP   None         <none>        5775/UDP,6831/UDP,6832/UDP   4d
@@ -1018,9 +1058,24 @@ $ echo -en "\n\nhttp://"$(oc get route/tracing -o template --template {{.spec.ho
 image::images/trace_dropdown_selection.png[]
 
 .. In the drop down for `Service`, select the option for the API gateway associated with your username.  ie:  $OCP_USERNAME-prod-apicast-istio.
-.. In the drop down for `Operation`, select the charachter: '/'
+.. In the drop down for `Operation`, there are likely only two options available: `all` and `apicast_management`.
++
+At this time, neither of these operations are particularly relevant to our use case.
+The `apicast_management` operation pertains to the invocations made by the _readiness_ and _liveness_ probes of the deployment to the API gateway pod.
 
 . Return back to the terminal window of your lab, and use the `curl` utility to invoke your catalog service (via:  istio ingress gateway -> API gateway) a few times.
++
+-----
+$ curl -v \
+       -HHost:$CATALOG_API_GW_HOST \
+       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+-----
+
+.. Return back the Jaeger UI and notice more options present in the drop down for `Operation`.
++
+Select the character: '/'
++
+This corresponds to the requests flowing through the API gateway and backend catalog service.
 
 . In the `Jaeger UI`, click `Find Traces`.
 +
@@ -1128,8 +1183,12 @@ $ oc create \
 
 
 
-$ oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_AGENT_HOST=jaeger-agent.istio-system.svc.cluster.local -n $MSA_PROJECT
-$ oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_SERVICE_NAME=$OCP_USERNAME-cat-service-istio -n $MSA_PROJECT
+oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_AGENT_HOST=jaeger-agent.istio-system.svc.cluster.local -n $MSA_PROJECT
+oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_SERVICE_NAME=$OCP_USERNAME-cat-service-istio -n $MSA_PROJECT
+
+oc set env deploy/$OCP_USERNAME-cat-service-istio APP_CONFIGMAP_NAME=app-config  -n $MSA_PROJECT
+oc set env deploy/$OCP_USERNAME-cat-service-istio APP_CONFIGMAP_KEY=app-config.yaml  -n $MSA_PROJECT
+
 -----
 
 . Inject required resource limits and requests into Istio related containers :
@@ -1151,9 +1210,15 @@ $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
 +
 -----
 $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-cat-service-istio", "image": "docker.io/rhtgptetraining/catalog-service-tracing:1.0.9" }]}}}}' \
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-cat-service-istio", "image": "docker.io/rhtgptetraining/catalog-service-tracing:1.0.15" }]}}}}' \
    -n $MSA_PROJECT
 -----
+
+ifdef::showscript[]
+
+    based on:  https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht
+
+endif::showscript[]
 
 . Resume the paused deployment:
 +
@@ -1183,17 +1248,11 @@ $ echo $CATALOG_API_GW_HOST
 catalog-prod-apicast-developer.apps.clientvm.b902.rhte.opentlc.com
 -----
 
-. From the terminal, execute the following to invoke your catalog service via the Istio ingress and API gateways:
-+
------
-$ curl -v  -HHost:$CATALOG_API_GW_HOST \
-       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
------
+. From the terminal, use the curl utility as you've done so in the past to invoke your catalog service several times via the Istio ingress :
 
 . Return back to the Jaeger UI and locate your traces.
 +
 Drill into them and notice the _spans_.
-
 
 
 

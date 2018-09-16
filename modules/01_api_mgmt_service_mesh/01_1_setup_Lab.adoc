@@ -8,7 +8,10 @@
 = Lab Setup
 
 .Prerequisites
-.. `ssh` utility installed on your laptop
+.. `ssh` utility installed on your laptop.
++
+NOTE: If your network is intermittent, then you may want to consider installing the _mosh_ utility (ie: yum install mosh ) as an alternative to the `ssh` utility.
+
 .. Web browser installed on your laptop
 .. broadband internet connectivity
 
@@ -62,17 +65,13 @@ Clicking *Reset Workstation* will not stop or delete the lab environment.
 
 The virtual machine that you gained access to in the previous section of this lab is one of two components that comprises your lab environment.
 
-The other component of your lab environment is a 3scale _tenant_ that has been pre-provisioned and dedicated to you.
+The other component of your lab environment is a 3scale _multi-tenant_ environment that has been pre-provisioned and dedicated to you.
 
-You will be assigned a dedicated 3scale _tenant_ as well as more information about your lab environments as follows:
+You will select one of those dedicated 3scale _tenants_ as follows:
 
-. The lab instructor will assign each student a sequential number between 1 and 100 .
-+
-WARNING: Please make note of this sequential number assigned to you.
-If you have not been assigned a number then ask for one from your lab instructor.
-
-. Using that assigned number, you will reference needed lab information in the following spreadsheet: {lab_spreadsheet}
+. Using your browser, navigate to the following spreadsheet: {lab_spreadsheet}.
 . Add your name to Column C of the spreadsheet.
+. Utilize the values in the corresponding columns A and C to fill out the next section.
 
 == Environment Variables
 
@@ -189,7 +188,7 @@ kubernetes v1.10.0+b81c8f8
 -----
 
 .. In the above example, notice that version of the `oc` client is of the same release as the remote OCP master API.
-.. There a known subtle problems with using a version of the `oc` client that is different from your target OpenShift server.
+.. There are known subtle problems with using a version of the `oc` client that is different from your target OpenShift server.
 
 . View existing projects:
 +
@@ -218,6 +217,40 @@ The namespace _rhte-mw-api-mesh-*_ is where you will be working throughout the d
 -----
 $ oc project $MSA_PROJECT
 -----
+
+. View details of the ClusterQuota that the _cluster-admin_ has assigned to your openshift user:
++
+-----
+$ oc describe AppliedClusterResourceQuota clusterquota-rhte-mw-api-mesh-developer
+
+....
+
+Resource                Used    Hard
+--------                ----    ----
+configmaps              1       20
+limits.cpu              1100m   10
+limits.memory           1780Mi  15Gi
+persistentvolumeclaims  1       20
+pods                    4       30
+requests.cpu            425m    5
+requests.memory         820Mi   6Gi
+requests.storage        1Gi     50Gi
+secrets                 24      150
+services                4       150
+-----
+
+. Validate the ability to _impersonate_ cluster admin:
++
+-----
+$ oc get nodes --as=system:admin
+
+NAME        STATUS    ROLES     AGE       VERSION
+localhost   Ready     <none>    16h       v1.10.0+b81c8f8
+-----
++
+For the purpose of this lab, the cluster-admin of your OCP environment has provided you with the ability to _impersonate_ the _cluster-admin_.
+You would not have had the ability to execute the above command (by specifying `--as=system:admin`) if the cluster-admin had not already done so.
+From time to time, you will make use of this ability to impersonate cluster admin in the next lab.
 
 . Log into OpenShift Web Console
 .. Many OpenShift related tasks found in this lab can be completed in the Web Console (as an alternative to using the `oc` utility.
@@ -309,11 +342,12 @@ NOTE:  You'll use $NAKED_CATALOG_ROUTE environment variable a various stages in 
 +
 -----
 $ curl -X GET "http://$NAKED_CATALOG_ROUTE/products"
------
-+
-.Sample Output
------
+
+
+
+
 ...
+
 
 {
   "itemId" : "444435",
@@ -328,6 +362,7 @@ $ curl -X GET "http://$NAKED_CATALOG_ROUTE/products"
 The link:https://swagger.io/docs/specification/about/[OpenAPI Specification^] (formerly "Swagger Specification") is an API description format for REST APIs. link:https://swagger.io/[Swagger^] is a set of open-source tools built around the OpenAPI specification that can help you design, build, document, and consume REST APIs.
 
 Swagger documentation is available for the REST endpoints of the catalog microservice.
+You can optionally view this documentation as follows:
 
 . Display the URL for your project:
 +
@@ -365,7 +400,7 @@ image::images/3scale_login.png[]
 
 === Optional:  Administrative Access
 
-. On your client VM, access to the `root` operating system user can be achieved by executing: `sudo -i`
+. On your remote lab environment, you can optionally gain access to the `root` operating system user by executing: `sudo -i`
 . As the `root` operating system user, `cluster admin` access to your OCP environment can be achieved by executing :
 +
 -----
@@ -382,4 +417,10 @@ image::images/3scale_login.png[]
 +
 -----
 # systemctl restart oc-cluster.service
+-----
+
+. You can optionally install additional networking utilities (that could serve as useful troubleshooting tools ) as follows:
++
+-----
+$ yum install telnet bind-utils
 -----

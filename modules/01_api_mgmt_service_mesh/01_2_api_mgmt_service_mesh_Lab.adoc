@@ -1274,7 +1274,7 @@ Prometheus is an analytics tool that comes out of the box with Istio and is also
 The analytics and observability provided by Prometheus are conceptually similar to the analytics provided by the 3scale API Manager.
 It is possible that a future version of the 3scale API Manager provides support for Prometheus for API data analytics.
 
-== 3scale Mixer Adapter (Preview)
+== 3scale Mixer Adapter
 
 === Overview
 
@@ -1399,19 +1399,19 @@ $ oc logs -f `oc get pod -n istio-system | grep "istio-policy" | awk '{print $1}
 ....
 
 IntrospectionOptions: ctrlz.Options{Port:0x2694, Address:"127.0.0.1"}
-2018-09-17T23:48:27.516971Z     warn    Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
-2018-09-17T23:48:27.517481Z     info    Built new config.Snapshot: id='0'
-2018-09-17T23:48:27.517576Z     info    Cleaning up handler table, with config ID:-1
-2018-09-17T23:48:57.664804Z     info    Built new config.Snapshot: id='1'
-2018-09-17T23:48:57.664913Z     info    adapters        getting kubeconfig from: ""     {"adapter": "handler.kubernetesenv.istio-system"}
-2018-09-17T23:48:57.664936Z     warn    Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
-2018-09-17T23:48:57.665937Z     info    adapters        Waiting for kubernetes cache sync...    {"adapter": "handler.kubernetesenv.istio-system"}
-2018-09-17T23:48:57.766175Z     info    adapters        Cache sync successful.  {"adapter": "handler.kubernetesenv.istio-system"}
-2018-09-17T23:48:57.770506Z     info    Cleaning up handler table, with config ID:0
-2018-09-17T23:48:57.776693Z     info    adapters        serving prometheus metrics on 42422     {"adapter": "handler.prometheus.istio-system"}
-Istio Mixer: root@71a9470ea93c-docker.io/istio-1.0.0-3a136c90ec5e308f236e0d7ebb5c4c5e405217f4-Clean
+warn    Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
+info    Built new config.Snapshot: id='0'
+info    Cleaning up handler table, with config ID:-1
+info    Built new config.Snapshot: id='1'
+info    adapters        getting kubeconfig from: ""     {"adapter": "handler.kubernetesenv.istio-system"}
+warn    Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
+info    adapters        Waiting for kubernetes cache sync...    {"adapter": "handler.kubernetesenv.istio-system"}
+info    adapters        Cache sync successful.  {"adapter": "handler.kubernetesenv.istio-system"}
+info    Cleaning up handler table, with config ID:0
+info    adapters        serving prometheus metrics on 42422     {"adapter": "handler.prometheus.istio-system"}
+ Mixer: root@71a9470ea93c-docker.io/istio-1.0.0-3a136c90ec5e308f236e0d7ebb5c4c5e405217f4-Clean
 Starting gRPC server on port 9091
-2018-09-17T23:48:57.864365Z     info    ControlZ available at 172.17.0.10:9876
+info    ControlZ available at 172.17.0.10:9876
 -----
 
 
@@ -1493,15 +1493,11 @@ As per the diagram above, the two containers are as follows:
 
 .. *3scale-istio-adapter*
 +
------
 Accepts gRPC invocations from Istio Ingress and routes to the other side car in the pod:  _3scale-istio-httpclient_
------
 
 .. *3scale-istio-httpclient*
 +
------
 Accepts invocations from _3scale-istio-adapter_ and invokes the _system-provider_ and _backend-listener_ endpoints of the remote 3scale API Manager.
------
 
 . Inject 3scale handler into Istio Mixer Adapter:
 +
@@ -1642,6 +1638,8 @@ $ curl -v \
        `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
+[blue]#Congradulations! The catalog service is backed to being managed and secured by the 3scale API Manager.#.
+This time however, the 3scale Istio Mixer adapter is being utilize rather than the API gateway.
 
 === Fine tune 3scale Istio Mixer Adapter rules
 
@@ -1661,7 +1659,11 @@ $ oc patch rule/usethreescale \
        --as=system:admin
 -----
 +
-This modification introduces a fine grained _match_ with the following conditions such that only when all of them are met will traffic be routed to the 3scale mixer adapter:
+This modification introduces a fine grained _match_ rule with various conditions.
++
+Only when all of the conditions are met, will the inbound traffic be routed to the 3scale mixer adapter.
++
+The conditions of the rule are as follows:
 
 .. The destination service needs to be the backend catalog service.
 .. The inbound request needs to originate from outside the $MSA_PROJECT (ie: from the istio-ingress of the istio-system).
@@ -1675,6 +1677,7 @@ $ curl -v \
 -----
 +
 This request should have now been routed directly to your backend catalog service.
+This is because the `/products` endpoint is being invoked (which fails the 3rd condition of the rule).
 Subsequently, the API _user_key_ is not needed.
 
 
@@ -1694,6 +1697,7 @@ $ curl -v \
 -----
 +
 This request should have been routed to the 3scale Istio Mixer adapter.
+This is because all 3 conditions of the routing rule have met.
 Subsequently, because the API _user_key_ was not applied, the response should be a 403 PERMISSION DENIED .
 
 . Re-Attempt to POST a new catalog service using the catalog service _user_key_:
@@ -1761,6 +1765,18 @@ ifdef::showscript[]
 4)  answer D
 endif::showscript[]
 
+== Conclusion
+
+In this lab you where exposed to the following:
+
+* Injection Istio Envoy proxy configs into an API gateway
+* Configuration of an Istio Egress Route to allow the API gateway to communicate to the remote API Manager
+* Invocation of your backend service via the Istio Ingress gateway and 3scale API gateway
+* End-to-end distributed tracing of a MSA application using Jaeger implementation of the _OpenTracing_ specification
+* Review of the analytics dashboard provided by 3Scale
+* Introduction to the 3scale Mixer Adapter
+
+
 == Appendix
 
 [[configuretestapi]]
@@ -1790,16 +1806,29 @@ WARNING: [red]#Don't proceed beyond this section until this smoke test of your n
 
 Once you've smoke tested your API managed environment, proceed to the section: <<apicast_istio>>
 
-== Conclusion
+=== Delete 3scale Istio Mixer releated artifacts
 
-In this lab you where exposed to the following:
+For convenience, the following script is provided if/when there is a need to delete 3scale Istio Mixer related artifacts.
 
-* Injection Istio Envoy proxy configs into an API gateway
-* Configuration of an Istio Egress Route to allow the API gateway to communicate to the remote API Manager
-* Invocation of your backend service via the Istio Ingress gateway and 3scale API gateway
-* End-to-end distributed tracing of a MSA application using Jaeger implementation of the _OpenTracing_ specification
-* Review of the analytics dashboard provided by 3Scale
-* Introduction to the 3scale Mixer Adapter
+. Create deletion script:
++
+-----
+$ echo " 
+oc delete dc 3scale-istio-adapter -n istio-system --as=system:admin
+oc delete handler threescalehandler -n istio-system --as=system:admin
+oc delete instance threescaleauthorizationtemplate -n istio-system --as=system:admin
+oc delete rule usethreescale -n istio-system --as=system:admin
+oc delete adapter threescale -n istio-system --as=system:admin
+oc delete template authorization -n istio-system" --as=system:admin \
+> $HOME/lab/delete_mixer.sh
+
+
+$ chmod 755 $HOME/lab/delete_mixer.sh
+
+
+$ $HOME/lab/delete_mixer.sh 
+-----
+  
 
 ifdef::showscript[]
 

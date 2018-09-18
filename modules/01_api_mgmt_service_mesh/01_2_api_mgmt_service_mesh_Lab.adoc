@@ -1638,8 +1638,8 @@ $ curl -v \
        `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
-[blue]#Congradulations! The catalog service is backed to being managed and secured by the 3scale API Manager.#.
-This time however, the 3scale Istio Mixer adapter is being utilize rather than the API gateway.
+[blue]#Congradulations! The catalog service is backed to being managed and secured by the 3scale API Manager.#
+This time however, the 3scale Istio Mixer adapter is being utilized rather than the API gateway.
 
 === Fine tune 3scale Istio Mixer Adapter rules
 
@@ -1717,6 +1717,15 @@ $ curl -v \
 +
 This request should have been routed to the 3scale Istio Mixer adapter.
 Subsequently, because the API _user_key_ was applied, the response should be a 201 Created .
+
+=== Extra Credit
+
+Thus far, specific endpoints of a single backend _catalog_ service are being managed by the API Manager via the 3scale Istio Mixer adapter.
+
+As an additional exercise, introduce a new backend business service into your service mesh.
+Have this backend business service also managed by the API Manager via the 3scale Istio Mixer adapter.
+
+What configurations need to be modified or added ?
 
 == Questions
 

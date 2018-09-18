@@ -1276,11 +1276,6 @@ It is possible that a future version of the 3scale API Manager provides support 
 
 == 3scale Mixer Adapter (Preview)
 
-WARNING:  As of 12 Sept, 2018, this section of the lab is not complete.
-It is currently offered as a preview of future functionality.
-Feel free to execute the steps in this section but expect to encounter an error towards the end.
-Return back to this same lab in coming days / weeks for a version of this section that completely works.
-
 === Overview
 
 The Red Hat 3scale engineering team is actively working on an Istio _mixer_ adapter.
@@ -1289,8 +1284,11 @@ This Istio _mixer_ adapter will allow 3scale API Management policies to be appli
 image::images/3scale_mixer_adapter.png[]
 
 === Disable existing API gateways
-These API gateways will no longer be needed.
+
+Your API gateways will no longer be needed.
 Inbound traffic will flow through the Istio Ingress gateway directly to the 3scale Istio Mixer and out to the remote 3scale API Manager.
+
+Subsequently, the API gateways along with any associated routing rules can be deleted.
 
 . Scale down the non-istio enabled API gateway:
 +
@@ -1317,6 +1315,10 @@ $ oc delete gateway catalog-istio-gateway -n $GW_PROJECT --as=system:admin
 -----
 
 === New Virtual Service to catalog service
+
+Let's create a routing rule to invoke the backend catalog service directly via the Istio _ingress_ gateway.
+
+Later, more complex routing rules will modify the flow to re-direct through the 3scale Istio Mixer adapter.
 
 . Ensure the $NAKED_CATALOG_ROUTE environment variable still remains in your shell:
 +
@@ -1358,6 +1360,8 @@ spec:
   - match:
     - uri:
         prefix: /products
+    - uri:
+        prefix: /product
     route:
     - destination:
         host: catalog-service
@@ -1365,6 +1369,8 @@ spec:
           number: 8080" \
  > $HOME/lab/catalog-direct-gw-vs.yml
 -----
++
+Notice that a match is made for all context paths exposed by the catalog service:  `/products` and `/product`.
 
 . Create the gateway and virtual service in your $MSA_PROJECT :
 +
@@ -1372,7 +1378,65 @@ spec:
 $ oc create -f ~/lab/catalog-direct-gw-vs.yml -n $MSA_PROJECT --as=system:admin
 -----
 
-. From the terminal, conduct a smoke test to validate traffic to the catalog service directly from the Istio ingress gateway:
+. Bounce the istio _policy_ pod:
+.. With the 1.0.0 version of community Istio,  sometimes the Istio policy can get itself in an unstable state.
+Before progressing with management of more sophisticated routing rules to support the 3scale Istio Mixer, its a good idea to bounce the _policy_ pod.
+
+.. Execute:
++
+-----
+$ oc delete pod \
+     `oc get pod -n istio-system | grep "istio-policy" | awk '{print $1}'` \
+     -n istio-system \
+     --as=system:admin
+-----
+
+.. View the log file of the refreshed Istio policy pod:
++
+-----
+$ oc logs -f `oc get pod -n istio-system | grep "istio-policy" | awk '{print $1}'` -c mixer -n istio-system
+
+....
+
+IntrospectionOptions: ctrlz.Options{Port:0x2694, Address:"127.0.0.1"}
+2018-09-17T23:48:27.516971Z     warn    Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
+2018-09-17T23:48:27.517481Z     info    Built new config.Snapshot: id='0'
+2018-09-17T23:48:27.517576Z     info    Cleaning up handler table, with config ID:-1
+2018-09-17T23:48:57.664804Z     info    Built new config.Snapshot: id='1'
+2018-09-17T23:48:57.664913Z     info    adapters        getting kubeconfig from: ""     {"adapter": "handler.kubernetesenv.istio-system"}
+2018-09-17T23:48:57.664936Z     warn    Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
+2018-09-17T23:48:57.665937Z     info    adapters        Waiting for kubernetes cache sync...    {"adapter": "handler.kubernetesenv.istio-system"}
+2018-09-17T23:48:57.766175Z     info    adapters        Cache sync successful.  {"adapter": "handler.kubernetesenv.istio-system"}
+2018-09-17T23:48:57.770506Z     info    Cleaning up handler table, with config ID:0
+2018-09-17T23:48:57.776693Z     info    adapters        serving prometheus metrics on 42422     {"adapter": "handler.prometheus.istio-system"}
+Istio Mixer: root@71a9470ea93c-docker.io/istio-1.0.0-3a136c90ec5e308f236e0d7ebb5c4c5e405217f4-Clean
+Starting gRPC server on port 9091
+2018-09-17T23:48:57.864365Z     info    ControlZ available at 172.17.0.10:9876
+-----
+
+
+. From the terminal, conduct a smoke test to validate traffic to the catalog service directly from the Istio ingress gateway.
+.. For all of the following smoke tests, notice that the API _user_key_ is not being specified.
+It's not needed in these smoke tests because this inbound traffic is no longer flowing through your API gateway.
+
+.. POST a new catalog item:
++
+-----
+$ curl -v -X POST -H "Content-Type: application/json" `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})""`/product/ -d '{
+  "itemId" : "822222",
+  "name" : "Oculus Rift 2",
+  "desc" : "Oculus Rift 2",
+  "price" : 102.0
+}'
+-----
+
+.. View details of that recently posted catalog item:
++
+-----
+$ curl -v `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/product/822222"`
+-----
+
+.. View details of all catalog items:
 +
 -----
 $ curl -v `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products"`
@@ -1380,19 +1444,24 @@ $ curl -v `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o 
 
 
 === 3scale Istio Mixer
-The Istio Mixer that will be utilized will originate from the following community image in quay:
+
+In this section of the lab, you provision the community 3scale Istio Mixer in your _istio-system_ namespace.
+
+The Istio Mixer that will be utilized will originate from the following community image in Red Hat's _quay_ container image registry:
 
 -----
 quay.io/3scale/apicast:3scale-http-plugin
 -----
 
-In this section of the lab, you create the 3scale mixer handler deployment resource:
-
 . Clone the source code to the 3scale Istio Mixer to your lab environment:
+
+.. For the purpose of this lab, the source code utilized is an unmodified fork of the upstream community at:  `https://github.com/3scale/istio-integration`
+.. Execute:
 +
 -----
 $ git clone \
-      https://github.com/3scale/istio-integration.git \
+      --branch rhte-2018 \
+      https://github.com/gpe-mw-training/istio-integration.git \
       $HOME/lab/istio-integration
 -----
 
@@ -1400,6 +1469,14 @@ $ git clone \
 +
 -----
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/openshift -n istio-system --as=system:admin
+-----
+
+. Set the 2 containers at the debug log level:
++
+-----
+$ oc set env dc/3scale-istio-adapter --containers="3scale-istio-adapter" -e "THREESCALE_LOG_LEVEL=debug" -n istio-system --as=system:admin
+
+$ oc set env dc/3scale-istio-adapter --containers="3scale-istio-httpclient" -e "APICAST_LOG_LEVEL=debug" -n istio-system --as=system:admin
 -----
 
 . Verify that the 3scale Istio Mixer Adapter pod has started with 2 containers:
@@ -1426,16 +1503,30 @@ Accepts gRPC invocations from Istio Ingress and routes to the other side car in 
 Accepts invocations from _3scale-istio-adapter_ and invokes the _system-provider_ and _backend-listener_ endpoints of the remote 3scale API Manager.
 -----
 
+. Inject 3scale handler into Istio Mixer Adapter:
++
+-----
+$ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/authorization-template.yaml --as=system:admin
+
+
+$ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter.yaml --as=system:admin
+-----
++
+Embedded in these yaml files is the 3scale handler that gets injected into the Istio Mixer.
+The (less then ideal) alternative to injecting a mixer adapter would have been to develop the 3scale handler directly in the Istio mixer source code and then compile and deploy this entire modified Istio mixer.
+
 
 
 === 3scale mixer adapter configs
 
 Now that the 3scale Istio mixer adapter is running, various configurations need to be added to the service mesh.
 
+In particular, you will create routing logic that directs ingress traffic destined for your backend catalog service through the 3scale Istio Mixer adapter.
 
 . In the details of your _catalog_ service in the API Manager admin console, locate the `ID for API calls ... `:
 +
 image::images/service_id.png[]
+
 
 . Set an environment variable that captures this catalog service Id:
 +
@@ -1470,13 +1561,19 @@ $ sed -i "s/access_token: .*/access_token: \"$API_ADMIN_ACCESS_TOKEN\"/" \
       $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml
 -----
 
-. Create the Istio Handler :
+. Load the 3scale Istio Handler configurations :
 +
 -----
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml --as=system:admin
+
+...
+
+handler.config.istio.io "threescalehandler" created
+instance.config.istio.io "threescaleauthorizationtemplate" created
+rule.config.istio.io "usethreescale" created
 -----
 
-. Verify that the Istio Handler was created in the istio-system namespace:
+. Verify that the Istio Handler configurations were created in the istio-system namespace:
 +
 -----
 $ oc get handler -n istio-system --as=system:admin -o yaml
@@ -1493,25 +1590,52 @@ items:
     connection:
       address: threescaleistioadapter:3333
     params:
-      access_token: ca16cd9ebd664d07c7bd5511be4b78ecf6d58c30daa940ff711515ca7de1191a
+      access_token: fa16cd9ebd66jd07c7bd5511be4b78ecf6d58c30daa940ff711515ca7de1194a
       service_id: "103"
       system_url: https://user50-3scale-mt-admin.apps.4a64.openshift.opentlc.com
 
 -----
 
-. Create the _authorization_ handler:
-+
------
-$ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/authorization-template.yaml --as=system:admin
------
-
-. Define the 3scale _adapter_:
-+
------
-$ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter.yaml --as=system:admin
------
+=== Smoke Test 3scale Istio Mixer Adapter
 
 . From the terminal, execute the following to invoke your catalog service directly via the Istio ingress:
++
+-----
+$ curl -v \
+       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products"`
+
+
+
+...
+
+< HTTP/1.1 403 Forbidden
+< content-length: 57
+< content-type: text/plain
+< date: Tue, 18 Sep 2018 01:24:41 GMT
+< server: envoy
+< Set-Cookie: cd10b69e39387eb7ec9ac241201ab1ab=7a5ade075364285d1aba87dfec588d36; path=/; HttpOnly
+< 
+* Connection #0 to host istio-ingressgateway-istio-system.apps.clientvm.b902.rhte.opentlc.com left intact
+PERMISSION_DENIED:threescalehandler.handler.istio-system:
+-----
+
+.. Notice a 403 error response of `PERMISSION_DENIED:threescalehandler.handler.istio-system:`
+.. This is to be expected.  
+Inbound requests through the Istio Ingress are now correctly flowing through the mixer to the 3scale adapter.
+In the above request however, the API _user_key_ associated with your catalog service _application_ has been ommitted.
+.. View the log file of the 3scale adapter:
++
+-----
+$ oc logs -f `oc get pod -n istio-system | grep "3scale-istio-adapter" | awk '{print $1}'` \
+          -n istio-system \
+          -c 3scale-istio-adapter
+
+
+debug   Got adapter config: &Params{ServiceId:103,SystemUrl:https://user100-3scale-mt-adm1-admin.apps.4a64.openshift.opentlc.com,AccessToken:xxxxxxxxxx,}
+debug   Returning result: {Status:{Code:7 Message: Details:[] XXX_NoUnkeyedLiteral:{} XXX_unrecognized:[] XXX_sizecache:0} ValidDuration:1ms ValidUseCount:0}
+-----
+
+. Re-attempt invocation of your catalog service using the catalog service _user_key_:
 +
 -----
 $ curl -v \
@@ -1519,9 +1643,78 @@ $ curl -v \
 -----
 
 
+=== Fine tune 3scale Istio Mixer Adapter rules
+
+At this point, *all* traffic inbound through the Istio ingress is configured to route through the 3scale Istio Mixer adapter.
+Your use case may require more fine-grained routing rules.
+
+In this last section of the lab, you specify that requests for the catalog `/products` endpoint can by-pass the 3scale Istio Mixer adapter and invoke the catalog service directly.
+All requests to the `/product` endpoint will continue to require authentication via the 3scale Istio Mixer adapter.
+
+. Modify the existing `usethreescale` rule:
++
+-----
+$ oc patch rule/usethreescale \
+       --type=json \
+       --patch '[{"op": "add", "path": "/spec/match", "value":"destination.service == \"catalog-service.'$MSA_PROJECT'.svc.cluster.local\" && source.namespace != \"'$MSA_PROJECT'\" && match(request.path,\"/product\")"  }]' \
+       -n istio-system \
+       --as=system:admin
+-----
++
+This modification introduces a fine grained _match_ with the following conditions such that only when all of them are met will traffic be routed to the 3scale mixer adapter:
+
+.. The destination service needs to be the backend catalog service.
+.. The inbound request needs to originate from outside the $MSA_PROJECT (ie: from the istio-ingress of the istio-system).
+.. The target is the `/product/` endpoint (which allows for POST, DELETE and GET methods).
+
+. Re-attempt invocation of your catalog service *without* the catalog service _user_key_:
++
+-----
+$ curl -v \
+       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products"`
+-----
++
+This request should have now been routed directly to your backend catalog service.
+Subsequently, the API _user_key_ is not needed.
+
+
+. Attempt to POST a new catalog service *without* the catalog service _user_key_:
++
+-----
+$ curl -v \
+       -X POST \
+       -H "Content-Type: application/json" \
+       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/product"` \
+       -d '{
+  "itemId" : "833333",
+  "name" : "Oculus Rift 3",
+  "desc" : "Oculus Rift 3",
+  "price" : 103.0
+}'
+-----
++
+This request should have been routed to the 3scale Istio Mixer adapter.
+Subsequently, because the API _user_key_ was not applied, the response should be a 403 PERMISSION DENIED .
+
+. Re-Attempt to POST a new catalog service using the catalog service _user_key_:
++
+-----
+$ curl -v \
+       -X POST \
+       -H "Content-Type: application/json" \
+       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/product?user_key=$CATALOG_USER_KEY"` \
+       -d '{
+  "itemId" : "833333",
+  "name" : "Oculus Rift 3",
+  "desc" : "Oculus Rift 3",
+  "price" : 103.0
+}'
+-----
++
+This request should have been routed to the 3scale Istio Mixer adapter.
+Subsequently, because the API _user_key_ was applied, the response should be a 201 Created .
+
 == Questions
-
-
 
 . Which of the following libraries is embedded in community API gateway to support distributed tracing?
 +

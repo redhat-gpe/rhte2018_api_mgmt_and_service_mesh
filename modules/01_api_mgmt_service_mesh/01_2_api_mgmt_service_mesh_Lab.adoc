@@ -457,9 +457,9 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 
 === Overview
 
-[blue]#Congradulations!#Your lab environment should now consist of a _catalog_ RESTful service managed by out of the box Red Hat 3scale API Manager 2.2 functionality.
+[blue]#Congratulations!# Your lab environment should now consist of a _catalog_ RESTful service managed by out of the box Red Hat 3scale API Manager 2.2 functionality.
 
-#[blue]#This is a substantial accomplishment!# 
+[blue]#This is a substantial accomplishment!# 
 You are now utilizing the tools needed to lower the {transaction costs} (ie: search costs, price discovery, policing and enforcement costs, etc ) that would otherwise hinder mutually beneficial exchange between API consumer and producer.
 Via the Red Hat 3scale API Management product, you can manage the entire life-cycle of your APIs and provide value-add to your customers and partners.
 
@@ -1666,7 +1666,7 @@ $ curl -v \
        `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
-[blue]#Congradulations! The catalog service is backed to being managed and secured by the 3scale API Manager.#
+[blue]#Congratulations! The catalog service is backed to being managed and secured by the 3scale API Manager.#
 This time however, the 3scale Istio Mixer adapter is being utilized rather than the API gateway.
 
 === Fine tune 3scale Istio Mixer Adapter rules

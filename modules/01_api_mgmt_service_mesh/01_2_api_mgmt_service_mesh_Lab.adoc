@@ -1183,11 +1183,17 @@ $ oc create \
 
 
 
-oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_AGENT_HOST=jaeger-agent.istio-system.svc.cluster.local -n $MSA_PROJECT
-oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_SERVICE_NAME=$OCP_USERNAME-cat-service-istio -n $MSA_PROJECT
 
-oc set env deploy/$OCP_USERNAME-cat-service-istio APP_CONFIGMAP_NAME=app-config  -n $MSA_PROJECT
-oc set env deploy/$OCP_USERNAME-cat-service-istio APP_CONFIGMAP_KEY=app-config.yaml  -n $MSA_PROJECT
+$ oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_AGENT_HOST=jaeger-agent.istio-system.svc.cluster.local -n $MSA_PROJECT
+
+
+$ oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_SERVICE_NAME=$OCP_USERNAME-cat-service-istio -n $MSA_PROJECT
+
+
+$ oc set env deploy/$OCP_USERNAME-cat-service-istio APP_CONFIGMAP_NAME=app-config  -n $MSA_PROJECT
+
+
+$ oc set env deploy/$OCP_USERNAME-cat-service-istio APP_CONFIGMAP_KEY=app-config.yaml  -n $MSA_PROJECT
 
 -----
 
@@ -1210,7 +1216,7 @@ $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
 +
 -----
 $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-cat-service-istio", "image": "docker.io/rhtgptetraining/catalog-service-tracing:1.0.15" }]}}}}' \
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-cat-service-istio", "image": "docker.io/rhtgptetraining/catalog-service-tracing:1.0.9" }]}}}}' \
    -n $MSA_PROJECT
 -----
 
@@ -1248,7 +1254,7 @@ $ echo $CATALOG_API_GW_HOST
 catalog-prod-apicast-developer.apps.clientvm.b902.rhte.opentlc.com
 -----
 
-. From the terminal, use the curl utility as you've done so in the past to invoke your catalog service several times via the Istio ingress :
+. From the terminal, use the curl utility as you've done so in the past to invoke your catalog service several times via the Istio ingress.
 
 . Return back to the Jaeger UI and locate your traces.
 +

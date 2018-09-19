@@ -393,7 +393,7 @@ Log into the admin portal of your API Manager environment as follows:
 $ echo -en "\n\nhttps://$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\n\n"
 -----
 
-. Authenticate using the values of $API_USERNAME and $API_PASSWD   (Your 3scale credentials are the same as your OCP credentials).
+. Authenticate using the values of $API_USERNAME and $API_PASSWD .
 +
 image::images/3scale_login.png[]
 

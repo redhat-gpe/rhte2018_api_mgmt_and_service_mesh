@@ -341,7 +341,9 @@ $ echo -en "\n`oc get route catalog-stage-apicast-$OCP_USERNAME -n $GW_PROJECT -
 $ echo -en "\n`oc get route catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
 -----
 
-.. Add an additional `Mapping Rules` for the HTTP POST method:
+.. *MAPPING RULES*
++
+Add an additional `Mapping Rule` for the HTTP POST method:
 +
 You'll use the POST method in the last section in this lab.
 
@@ -1825,6 +1827,7 @@ If you are already proficient with 3scale, then configure and test the managemen
 . Using the existing _Developer_ account and the _catalog_app_plan_, create an application called: _catalog_app_
 . Capture the API key for the application and set its value as the following environment variable in your shell terminal:  _CATALOG_USER_KEY_ .
 . Configure the _Integration_ section of your _catalog_service_ and publish the service to production.
+.. Create mapping rules for the GET, POST and DELETE verbs.
 . Test the _/products_ endpoint of your _catalog_ RESTful service via both your staging and production API gateways.
 +
 You'll likely want to use the curl utility in a manner similar to the following:

@@ -306,7 +306,7 @@ $ echo "export CATALOG_USER_KEY=<the catalog app user key>" >> ~/.bashrc
 $ source ~/.bashrc
 -----
 
-==== Stage Service Integration
+==== Service Integration
 
 In this section, you define an _API proxy_ to manage your _catalog_ RESTful business service.
 
@@ -340,6 +340,15 @@ $ echo -en "\n`oc get route catalog-stage-apicast-$OCP_USERNAME -n $GW_PROJECT -
 -----
 $ echo -en "\n`oc get route catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
 -----
+
+.. Add an additional `Mapping Rules` for the HTTP POST method:
++
+You'll use the POST method in the last section in this lab.
+
+... In the `MAPPING RULES` section, click the green link: `Add Mapping Rule`
+... In the new mapping rule, change the verb to `POST` and set `/` as the Pattern
++
+image::images/post_mapping.png[]
 
 .. *API test GET request*: Enter `/products`.
 
@@ -1388,6 +1397,17 @@ $ oc create -f ~/lab/catalog-direct-gw-vs.yml -n $MSA_PROJECT --as=system:admin
 .. With the 1.0.0 version of community Istio,  sometimes the Istio policy can get itself in an unstable state.
 Before progressing with management of more sophisticated routing rules to support the 3scale Istio Mixer, its a good idea to bounce the _policy_ pod.
 
+.. For the purpose of this lab, allow deployments in the _istio-system_ namespace to deploy without specifying limits and requests.
++
+Do so by deleting the clusterquota that is currently associated with the user:  $OCP_USERNAME:
++
+-----
+$ oc delete clusterquota clusterquota-rhte-mw-api-mesh-$OCP_USERNAME --as=system:admin
+-----
++
+NOTE: This step will be made un-necessary in a future version of this lab.
+All OCP namespaces (to include the istio-system namespace) will be enabled with a _LimitRange_ that defines default limits and requests.
+
 .. Execute:
 +
 -----
@@ -1660,7 +1680,7 @@ All requests to the `/product` endpoint will continue to require authentication 
 -----
 $ oc patch rule/usethreescale \
        --type=json \
-       --patch '[{"op": "add", "path": "/spec/match", "value":"destination.service == \"catalog-service.'$MSA_PROJECT'.svc.cluster.local\" && source.namespace != \"'$MSA_PROJECT'\" && match(request.path,\"/product\")"  }]' \
+       --patch '[{"op": "add", "path": "/spec/match", "value":"destination.service == \"catalog-service.'$MSA_PROJECT'.svc.cluster.local\" && source.namespace != \"'$MSA_PROJECT'\" && request.method == \"POST\" && request.path.startsWith(\"/product\")"  }]' \
        -n istio-system \
        --as=system:admin
 -----

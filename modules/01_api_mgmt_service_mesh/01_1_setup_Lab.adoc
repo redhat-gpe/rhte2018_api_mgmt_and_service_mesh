@@ -78,24 +78,45 @@ You will select one of those dedicated 3scale _tenants_ as follows:
 
 . Ensure you've ssh'd into your remote lab environment.
 
+ifdef::showscript[]
+
 . Set the following environment variables using the values you've assigned yourself in: {lab_spreadsheet}:
 +
 -----
 $ echo "export API_USERNAME=<column B of spreadsheet>" >> ~/.bashrc
 $ echo "export API_ADMIN_ACCESS_TOKEN=<column C of spreadsheet>" >> ~/.bashrc
------
 
 
-. Copy & paste the following in the same terminal
-+
------
-
+# Copy and paste the following in the same terminal:
 echo 'export API_PASSWD=r3dh4t1!' >> ~/.bashrc
 echo 'export OCP_PASSWD=r3dh4t1!' >> ~/.bashrc
 echo "export API_TENANT_SUFFIX=3scale-mt-adm1" >> ~/.bashrc
 echo "export OCP_USERNAME=developer" >> ~/.bashrc
 echo "export API_REGION=4a64" >> ~/.bashrc
 echo "export LAB_CODE=a1001" >> ~/.bashrc
+
+-----
+
+endif::showscript[]
+
+. Set the following environment variables using the values you've assigned yourself in: {lab_spreadsheet}:
++
+-----
+$ echo "export API_USERNAME=<column B of spreadsheet>" >> ~/.bashrc
+$ echo "export API_ADMIN_ACCESS_TOKEN=<column C of spreadsheet>" >> ~/.bashrc
+$ echo 'export API_PASSWD=<column D of spreadsheet>' >> ~/.bashrc
+$ echo 'export OCP_PASSWD=<column E of spreadsheet>' >> ~/.bashrc
+$ echo "export API_TENANT_SUFFIX=<column F of spreadsheet>" >> ~/.bashrc
+$ echo "export OCP_USERNAME=<column G of spreadsheet>" >> ~/.bashrc
+$ echo "export API_REGION=<column H of spreadsheet>" >> ~/.bashrc
+$ echo "export LAB_CODE=<column I of spreadsheet>" >> ~/.bashrc
+-----
+
+
+
+. Copy & paste the following in the same terminal
++
+-----
 
 echo "export OCP_REGION=`echo $HOSTNAME | cut -d'.' -f2`" >> ~/.bashrc
 echo "export OCP_DOMAIN=clientvm.\$OCP_REGION.rhte.opentlc.com" >> ~/.bashrc
@@ -109,6 +130,7 @@ echo "export THREESCALE_PORTAL_ENDPOINT=https://\${API_ADMIN_ACCESS_TOKEN}@\$TEN
 echo "export BACKEND_ENDPOINT_OVERRIDE=https://backend-\$API_TENANT_SUFFIX.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
 
 -----
+
 
 . Source the modified ~/.bashrc so that the environment variables are set in your current shell session:
 +

@@ -737,7 +737,7 @@ $ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
 -----
 
 . Either wait up to 5 minutes for your Istio enabled API gateway to refresh its proxy configuration (because pulling this config data previously failed) or bounce the pod.
-. Using the curl utility, re-attempt the request to retrieve catalog data via your istio enabled API gateway .
+. Using the curl utility, re-attempt the request to retrieve catalog data via your Istio enabled API gateway .
 +
 -----
 $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
@@ -1399,17 +1399,6 @@ $ oc create -f ~/lab/catalog-direct-gw-vs.yml -n $MSA_PROJECT --as=system:admin
 .. With the 1.0.0 version of community Istio,  sometimes the Istio policy can get itself in an unstable state.
 Before progressing with management of more sophisticated routing rules to support the 3scale Istio Mixer, its a good idea to bounce the _policy_ pod.
 
-.. For the purpose of this lab, allow deployments in the _istio-system_ namespace to deploy without specifying limits and requests.
-+
-Do so by deleting the clusterquota that is currently associated with the user:  $OCP_USERNAME:
-+
------
-$ oc delete clusterquota clusterquota-rhte-mw-api-mesh-$OCP_USERNAME --as=system:admin
------
-+
-NOTE: This step will be made un-necessary in a future version of this lab.
-All OCP namespaces (to include the istio-system namespace) will be enabled with a _LimitRange_ that defines default limits and requests.
-
 .. Execute:
 +
 -----
@@ -1988,4 +1977,7 @@ Development of cloud native applications can be written in a wide variety of dev
 Details about these Red Hat development platforms are out of scope for this specific lab.
 
 
+endif::showscript[]
+
+ifdef::showscript[]
 endif::showscript[]

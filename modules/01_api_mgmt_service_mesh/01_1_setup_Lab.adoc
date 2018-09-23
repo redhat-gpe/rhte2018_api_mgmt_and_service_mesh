@@ -447,3 +447,35 @@ image::images/3scale_login.png[]
 -----
 $ yum install telnet bind-utils
 -----
+
+=== Optional:  Lab Environment Provisioning
+
+This section is offered to those that are interested in setting up an environment to support this lab using their own resources.
+
+==== Ansible Roles
+
+The lab environment can be provisioned via the following ansible roles:
+
+. *ocp-workload-3scale-multitenant*
++
+The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-3scale-multitenant[ocp-workload-3scale-multitenant] ansible role will provision a multi-tenant 3scale API Manager.
++
+This role only needs to be executed one time (so as to provision only one multi-tenant API Manager) on a pre-existing OCP 3.10 environment.
++
+The role also offers the ability to provision a configurable number of _tenants_ in that multi-tenant API Manager environment.
+And, if provisioning tenants, the role also provides the ability to automatically provision API gateways for each tenant (co-located in the same OCP cluster as the API Manager but in their own namespaces).
+
+. *ocp-workload-istio-community*
++
+The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-istio-community[ocp-workload-istio-community] ansible role will layer Istio on a a pre-existing OCP 3.10 environment.
++
+This role should be executed on an OCP environment dedicated to a student (ie:  using oc cluster up ).
+This role is applied to the same OCP environment utilized by the _ocp-workload-rhte-mw-api-mesh_ role.
+
+. *ocp-workload-rhte-mw-api-mesh*
++
+The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-rhte-mw-api-mesh[ocp-workload-rhte-mw-api-mesh] ansible role will provision supporting lab assets (ie: the catalog service).
++
+This role should be executed on an OCP environment dedicated to a student (ie:  using oc cluster up ).
+This role is applied to the same OCP environment utilized by the _ocp-workload-istio-community_ role.
+

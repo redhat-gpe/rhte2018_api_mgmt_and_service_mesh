@@ -133,8 +133,10 @@ The NGinx side-car acts as a service proxy to an Istio service-mesh (conceptuall
 
 Because the API Gateway of 3scale is also built on Nginx, the 3scale API gateway could also be potentially extended to serve as a side car to a service running in a service mesh.
 
-This approach is not covered in this lab.
+In fact, in an upcoming release of the 3scale API Gateway, it will have the capability to operate independantly of the 3scale API Manager.
+It could be injected as a sidecar to an application.
 
+This approach is not covered in this lab.
 
 
 == API Gateway: Plain
@@ -1133,21 +1135,14 @@ The Java client libraries allow for configuration via environment variables.
 The Dockerfile with environment variables (and their default values) utilized in building the new opentracing catalog image is as follows:
 
 -----
-FROM fabric8/java-jboss-openjdk8-jdk:1.3.1
+FROM redhat-openjdk-18/openjdk18-openshift:1.5-14
 ENV JAVA_APP_DIR=/deployments
 ENV AB_OFF=true
-ENV JAEGER_SERVICE_NAME=catalog\
-  JAEGER_PROPAGATION=b3\
-  JAEGER_SAMPLER_TYPE=const\
-  JAEGER_SAMPLER_PARAM=1 \
-  JAEGER_AGENT_HOST=jaeger-agent \
-  JAEGER_AGENT_PORT=6831
 EXPOSE 8080 8778 9779
-COPY target/catalog-service-tracing-1.0.7.jar /deployments/
+COPY target/catalog-service-tracing-1.0.16.jar /deployments/
 -----
 
-These environment variables can be over-written at deployment time.
-For the purpose of this lab, the _JAEGER_AGENT_HOST_ will need to be over-written so that the Java Jaeger client libraries pushes traces to the service endpoint at:  `jaeger-agent.istio-system.svc.cluster.local`
+The source code of the OpenTracing enabled catalog service can be found link:https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht[here].
 
 === Inject Envoy into _catalog_ service
 
@@ -1185,27 +1180,51 @@ $ istioctl kube-inject \
 $ cat $HOME/lab/catalog-service-istio.yml | more
 -----
 
+. Create a new configmap with parameters that configure the OpenTracing enabled Catalog Service:
++
+-----
+$ echo "service-name: $OCP_USERNAME-catalog-service
+catalog.http.port: 8080
+connection_string: mongodb://catalog-mongodb:27017
+db_name: catalogdb
+username: mongo
+password: mongo
+sampler-type: const
+sampler-param: 1
+reporter-log-spans: True
+collector-endpoint: \"http://jaeger-collector.istio-system.svc:14268/api/traces\"
+" > $HOME/lab/app-config.yaml
+
+
+# Delete existing configmap
+$ oc delete configmap app-config -n $MSA_PROJECT
+
+
+# Recreate configmap using additional OpenTracing related params
+$ oc create configmap app-config --from-file=$HOME/lab/app-config.yaml -n $MSA_PROJECT
+-----
+
 . Deploy a new Istio enabled API gateway production gateway that correctly points to the Jaeger agent in your _istio-system_ namespace:
 +
 -----
 $ oc create \
      -f $HOME/lab/catalog-service-istio.yml \
      -n $MSA_PROJECT
+-----
 
 
-
-
-$ oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_AGENT_HOST=jaeger-agent.istio-system.svc.cluster.local -n $MSA_PROJECT
-
-
-$ oc set env deploy/$OCP_USERNAME-cat-service-istio JAEGER_SERVICE_NAME=$OCP_USERNAME-cat-service-istio -n $MSA_PROJECT
-
-
+. Set various environment variables on the OpenTracing enabled Catalog Service:
++
+-----
 $ oc set env deploy/$OCP_USERNAME-cat-service-istio APP_CONFIGMAP_NAME=app-config  -n $MSA_PROJECT
 
 
 $ oc set env deploy/$OCP_USERNAME-cat-service-istio APP_CONFIGMAP_KEY=app-config.yaml  -n $MSA_PROJECT
 
+
+# Allows for optionally debugging of catalog service so as to better understand how exactly it utilizes the opentracing / jaeger java libraries
+$ oc set env deploy/$OCP_USERNAME-cat-service-istio JAVA_DEBUG=true  -n $MSA_PROJECT
+$ oc set env deploy/$OCP_USERNAME-cat-service-istio JAVA_DEBUG_PORT=8787  -n $MSA_PROJECT
 -----
 
 . Inject required resource limits and requests into Istio related containers :
@@ -1227,7 +1246,7 @@ $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
 +
 -----
 $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-cat-service-istio", "image": "docker.io/rhtgptetraining/catalog-service-tracing:1.0.9" }]}}}}' \
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-cat-service-istio", "image": "docker.io/rhtgptetraining/catalog-service-tracing:1.0.16" }]}}}}' \
    -n $MSA_PROJECT
 -----
 
@@ -1270,6 +1289,8 @@ catalog-prod-apicast-developer.apps.clientvm.b902.rhte.opentlc.com
 . Return back to the Jaeger UI and locate your traces.
 +
 Drill into them and notice the _spans_.
++
+image::images/spans_with_catalog.png[]
 
 
 

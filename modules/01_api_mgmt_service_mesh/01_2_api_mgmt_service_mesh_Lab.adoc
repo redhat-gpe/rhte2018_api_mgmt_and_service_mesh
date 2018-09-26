@@ -56,9 +56,9 @@ In addition, Red Hat is actively working to productize Istio as a supported prod
 
 Specific to API Management and MSA _Service Mesh_, the following table provides a broad feature comparison :
 
-[width="100%",cols="1,1",,options="header,footer"]
+[width="100%",cols="1,1",options="header,footer"]
 |========================
-|Service Mesh | API Mgmt
+|*Service Mesh* | *API Mgmt*
 |Service Discovery|Relationship Mgmt between API Producer and Consumer (who often don't know eachother)
 |Automatic retries|API Consumer Portal
 |Timeouts|API Consumer Portal CMS

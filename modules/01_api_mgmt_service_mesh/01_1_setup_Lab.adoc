@@ -72,7 +72,7 @@ The other component of your lab environment is a 3scale _multi-tenant_ environme
 
 You will select one of those dedicated 3scale _tenants_ as follows:
 
-. Using your browser, navigate to one of the the following spreadsheets depending on who your instructor is: 
+. Using your browser, navigate to one of the the following spreadsheets depending on who your instructor is:
 .. *Chad Darby's* lab : {lab_spreadsheet_chad}.
 .. *Jeff Bride's* lab : {lab_spreadsheet_jeff}.
 . Add your name to Column A of the spreadsheet.
@@ -83,20 +83,14 @@ You will select one of those dedicated 3scale _tenants_ as follows:
 . Ensure you've ssh'd into your remote lab environment.
 
 
-. Set the following environment variables using the values you've assigned yourself in: {lab_spreadsheet}:
+. Set the following environment variables using the values you've assigned yourself from the spreadsheet introduced in the previous section:
 +
 -----
 $ echo "export API_USERNAME=<column B of spreadsheet>" >> ~/.bashrc
 $ echo "export API_ADMIN_ACCESS_TOKEN=<column C of spreadsheet>" >> ~/.bashrc
+$ echo "export API_TENANT_SUFFIX=<column D of spreadsheet" >> ~/.bashrc
 
 
-# Copy and paste the following in the same terminal:
-echo 'export API_PASSWD=r3dh4t1!' >> ~/.bashrc
-echo 'export OCP_PASSWD=r3dh4t1!' >> ~/.bashrc
-echo "export API_TENANT_SUFFIX=3scale-mt-adm1" >> ~/.bashrc
-echo "export OCP_USERNAME=developer" >> ~/.bashrc
-echo "export API_REGION=4a64" >> ~/.bashrc
-echo "export LAB_CODE=a1001" >> ~/.bashrc
 
 -----
 
@@ -121,6 +115,11 @@ endif::showscript[]
 . Copy & paste the following in the same terminal
 +
 -----
+echo 'export API_PASSWD=r3dh4t1!' >> ~/.bashrc
+echo 'export OCP_PASSWD=r3dh4t1!' >> ~/.bashrc
+echo "export OCP_USERNAME=developer" >> ~/.bashrc
+echo "export API_REGION=4a64" >> ~/.bashrc
+echo "export LAB_CODE=a1001" >> ~/.bashrc
 
 echo "export OCP_REGION=`echo $HOSTNAME | cut -d'.' -f2`" >> ~/.bashrc
 echo "export OCP_DOMAIN=clientvm.\$OCP_REGION.rhte.opentlc.com" >> ~/.bashrc
@@ -420,6 +419,10 @@ $ echo -en "\n\nhttps://$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\n\n"
 -----
 
 . Authenticate using the values of $API_USERNAME and $API_PASSWD .
+.. `echo $API_USERNAME`
+.. `echo $API_PASSWD`
+
+. Click the blue `sign-in` button at the bottom right:
 +
 image::images/3scale_login.png[]
 
@@ -482,4 +485,3 @@ The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/
 +
 This role should be executed on an OCP environment dedicated to a student (ie:  using oc cluster up ).
 This role is applied to the same OCP environment utilized by the _ocp-workload-istio-community_ role.
-

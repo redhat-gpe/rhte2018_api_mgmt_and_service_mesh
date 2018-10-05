@@ -73,8 +73,8 @@ The other component of your lab environment is a 3scale _multi-tenant_ environme
 You will select one of those dedicated 3scale _tenants_ as follows:
 
 . Using your browser, navigate to one of the the following spreadsheets depending on who your instructor is: 
-.. Chad Darby's lab : {lab_spreadsheet_chad}.
-.. Jeff Bride's lab : {lab_spreadsheet_jeff}.
+.. *Chad Darby's* lab : {lab_spreadsheet_chad}.
+.. *Jeff Bride's* lab : {lab_spreadsheet_jeff}.
 . Add your name to Column A of the spreadsheet.
 . Utilize the values in the corresponding columns B and C to fill out the next section.
 

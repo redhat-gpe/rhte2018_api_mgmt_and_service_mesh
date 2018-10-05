@@ -4,7 +4,9 @@
 :toc2:
 :linkattrs:
 :lab_spreadsheet_apac: link:https://docs.google.com/spreadsheets/d/19Fb4aRYIPWDqUbctXbFvRD7JsT8G_BM9KF5tTo4dWE8/edit?usp=sharing[APAC RHTE: Student lab info spreadsheet]
-:lab_spreadsheet: link:https://docs.google.com/spreadsheets/d/1XxwdeGqTSgd1JQssnVMt8TlfyEEPn-MrFz0b2HI_HV0/edit?usp=sharing[EMEA RHTE: Student lab info spreadsheet]
+:lab_spreadsheet_emea: link:https://docs.google.com/spreadsheets/d/1XxwdeGqTSgd1JQssnVMt8TlfyEEPn-MrFz0b2HI_HV0/edit?usp=sharing[EMEA RHTE: Student lab info spreadsheet]
+:lab_spreadsheet_chad: link:https://docs.google.com/spreadsheets/d/1v70zpIlrVYRvFBcnnmUmzNFKSq3EK2Nk2JL4mVVFc2M/edit#gid=1002335978[Americas RHTE: Chad Darby Lab: API tenant info spreadsheet]
+:lab_spreadsheet_jeff: link:https://docs.google.com/spreadsheets/d/1v70zpIlrVYRvFBcnnmUmzNFKSq3EK2Nk2JL4mVVFc2M/edit#gid=820975580[Americas RHTE: Jeff Bride Lab: API tenant info spreadsheet]
 
 = Lab Setup
 
@@ -70,7 +72,9 @@ The other component of your lab environment is a 3scale _multi-tenant_ environme
 
 You will select one of those dedicated 3scale _tenants_ as follows:
 
-. Using your browser, navigate to the following spreadsheet: {lab_spreadsheet}.
+. Using your browser, navigate to one of the the following spreadsheets depending on who your instructor is: 
+.. Chad Darby's lab : {lab_spreadsheet_chad}.
+.. Jeff Bride's lab : {lab_spreadsheet_jeff}.
 . Add your name to Column A of the spreadsheet.
 . Utilize the values in the corresponding columns B and C to fill out the next section.
 
@@ -78,7 +82,6 @@ You will select one of those dedicated 3scale _tenants_ as follows:
 
 . Ensure you've ssh'd into your remote lab environment.
 
-ifdef::showscript[]
 
 . Set the following environment variables using the values you've assigned yourself in: {lab_spreadsheet}:
 +
@@ -97,7 +100,7 @@ echo "export LAB_CODE=a1001" >> ~/.bashrc
 
 -----
 
-endif::showscript[]
+ifdef::showscript[]
 
 . Set the following environment variables using the values you've assigned yourself in: {lab_spreadsheet}:
 +
@@ -111,6 +114,7 @@ $ echo "export OCP_USERNAME=<column G of spreadsheet>" >> ~/.bashrc
 $ echo "export API_REGION=<column H of spreadsheet>" >> ~/.bashrc
 $ echo "export LAB_CODE=<column I of spreadsheet>" >> ~/.bashrc
 -----
+endif::showscript[]
 
 
 

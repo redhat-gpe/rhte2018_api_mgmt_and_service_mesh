@@ -34,7 +34,7 @@ The purpose of this lab is to discover how the two technologies can complement e
 You do this by applying both a _service mesh_ and an _API Management_ solution to an existing _cloud native_ application running in Red Hat's Openshift Container Platform.
 
 
-The lab takes you through a journey that has you gradually apply more and more features of both _API Mgmt_ and _service mesh_ to your cloud native application.
+[blue]#The lab takes you through a journey that has you gradually apply more and more features of both _API Mgmt_ and _service mesh_ to your cloud native application.#
 
 === Background
 
@@ -269,6 +269,9 @@ image::images/create_app_plan.png[]
 . Enter `catalog_app_plan` for the *Name* and *System name*:
 
 . Click *Create Application Plan*.
+. For the  `catalog_app_plan` and click the *Publish* link:
++
+image::images/publish_app_plan.png[]
 
 ==== Create Application
 
@@ -313,10 +316,6 @@ $ source ~/.bashrc
 In this section, you define an _API proxy_ to manage your _catalog_ RESTful business service.
 
 . In the API Manager Admin Portal, navigate to the *APIs* tab.
-. From your `catalog_service`, select *Application Plans*.
-. For the  `catalog_app_plan` and click the *Publish* link:
-+
-image::images/publish_app_plan.png[]
 . From your `catalog_service`, select *Integration*.
 . Click *Add the base URL of your API and save the configuration*.
 +
@@ -454,19 +453,21 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 
 -----
 
+[blue]#Congratulations!# Your lab environment should now consist of a _catalog_ RESTful service managed by out of the box Red Hat 3scale API Manager 2.2 functionality.
+
+[blue]#This is a substantial accomplishment!#
+You are now utilizing the tools needed to lower the {transaction_costs} (ie: search costs, price discovery, policing and enforcement costs, etc ) that would otherwise hinder mutually beneficial exchange between API consumer and producer.
+Via the Red Hat 3scale API Management product, you can manage the entire life-cycle of your APIs and provide value-add to your customers and partners.
+
+
 [[apicast_istio]]
 == API Gateway: Istio enabled
 
 === Overview
 
-[blue]#Congratulations!# Your lab environment should now consist of a _catalog_ RESTful service managed by out of the box Red Hat 3scale API Manager 2.2 functionality.
-
-[blue]#This is a substantial accomplishment!# 
-You are now utilizing the tools needed to lower the {transaction costs} (ie: search costs, price discovery, policing and enforcement costs, etc ) that would otherwise hinder mutually beneficial exchange between API consumer and producer.
-Via the Red Hat 3scale API Management product, you can manage the entire life-cycle of your APIs and provide value-add to your customers and partners.
 
 As the next step in the journey toward API Management and Service Mesh, in this section of the lab you will inject your API gateway with the _Envoy_ sidecar proxy from Istio.
-Admittedly, simple injection of the _Envoy_ sidecar into your API gateway is likely of limited value. 
+Admittedly, simple injection of the _Envoy_ sidecar into your API gateway is likely of limited value.
 However, this remains early in our journey.
 You will continue to build upon the foundations set here in later sections of this lab.
 
@@ -524,7 +525,7 @@ $ istioctl kube-inject \
            > $HOME/lab/prod-apicast-istio.yml
 -----
 +
-NOTE:  For the purpose of this lab, you have now manually injected Istio related configs into a _deployment_ definition.  
+NOTE:  For the purpose of this lab, you have now manually injected Istio related configs into a _deployment_ definition.
 Please note that the cluster admin of the service mesh could have optionally automated the injection of these Envoy configs into all _deployments_ by default.
 
 . View Istio injected API gateway deployment descriptor:
@@ -569,7 +570,7 @@ You'd see an error similiar to the following:
 -----
 Error creating: pods "user50-prod-apicast-istio-6456c879c8" is forbidden: unable to validate against any security context constraint: [spec.initContainers[0].securityContext.privileged: Invalid value: true: Privileged containers are not allowed capabilities.add: Invalid value: "NET_ADMIN": capability may not be added spec.initContainers[0].securityContext.privileged: Invalid value: true: Privileged containers are not allowed capabilities.add: Invalid value: "NET_ADMIN":
 -----
- 
+
 .. For the purpose of this lab, the cluster-admin of your OCP environment has provided you with the ability to _impersonate_ cluster admin.
 Doing so provides you with the ability to apply the _anyuid_ SCC to your project.
 
@@ -923,16 +924,19 @@ You'll configure the Opentracing client libraries in your API gateway to forward
 $ oc rollout pause deploy $OCP_USERNAME-prod-apicast-istio
 -----
 
-.. Verify that the _jaeger-agent_ exists in the _istio-system_ namespace and is expecting UDP packets on port 6831:
+.. Verify that the _jaeger-agent_ and _jaeger-collector_ both exist in the _istio-system_ namespace :
 +
 -----
-$  oc get service jaeger-agent -n istio-system --as=system:admin
+$  oc get service jaeger-agent jaeger-collector -n istio-system --as=system:admin
 
 NAME           TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                      AGE
 jaeger-agent   ClusterIP   None         <none>        5775/UDP,6831/UDP,6832/UDP   4d
+jaeger-collector   ClusterIP   172.30.95.25   <none>        14267/TCP,14268/TCP          4d
 -----
 +
-The _jaeger-agent_ receives tracing information submitted by jaeger client libraries embedded in apps and forwards in batch to the Jaeger collector.
+The _jaeger-agent_ receives tracing information (in the form of UDP packets on port 6831) submitted by jaeger client libraries embedded in apps and forwards in batch to the Jaeger collector.
++
+Alternatively, jaeger client libraries can push tracing information via a TCP connection directly to the _jaeger-collector_ on port 14268.
 
 
 . Create a json config file that will instruct the opentracing and jaeger related client libraries in the API gateway how to push traces to the `jaeger-agent`:
@@ -1124,7 +1128,7 @@ The new catalog service is enabled with _opentracing_ and _jaeger_ libraries so 
 
 === OpenTracing libraries included in catalog_service
 
-The _catalog service_ is link:https://github.com/gpe-mw-training/appmod_vertx_experienced/tree/rhte_opentracing/lab-04[written in Java] (specifically using the _reactive_ programming framework: link:https://vertx.io/[vert.x]).
+The _catalog service_ is link:https://github.com/gpe-mw-training/catalog-service[written in Java] (specifically using the _reactive_ programming framework: link:https://vertx.io/[vert.x]).
 
 As such, the new catalog service used in the remainder of this course is embedded with the opentracing and jaeger Java client libraries.
 
@@ -1139,7 +1143,7 @@ FROM redhat-openjdk-18/openjdk18-openshift:1.5-14
 ENV JAVA_APP_DIR=/deployments
 ENV AB_OFF=true
 EXPOSE 8080 8778 9779
-COPY target/catalog-service-tracing-1.0.16.jar /deployments/
+COPY target/catalog-service-tracing-1.0.17.jar /deployments/
 -----
 
 The source code of the OpenTracing enabled catalog service can be found link:https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht[here].
@@ -1246,7 +1250,7 @@ $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
 +
 -----
 $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-cat-service-istio", "image": "docker.io/rhtgptetraining/catalog-service-tracing:1.0.16" }]}}}}' \
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-cat-service-istio", "image": "docker.io/rhtgptetraining/catalog-service-tracing:1.0.17" }]}}}}' \
    -n $MSA_PROJECT
 -----
 
@@ -1285,10 +1289,24 @@ catalog-prod-apicast-developer.apps.clientvm.b902.rhte.opentlc.com
 -----
 
 . From the terminal, use the curl utility as you've done so in the past to invoke your catalog service several times via the Istio ingress.
+.. Review the log file of your istio enabled catalog service.
++
+-----
+$ oc logs -f `oc get pod -n $MSA_PROJECT | grep "istio" | awk '{print $1}'` -c $OCP_USERNAME-cat-service-istio -n $MSA_PROJECT
+-----
+
+.. With every invocation of the `getProducts` function of the catalog service, there should be a log statement as follows:
++
+-----
+INFO: getProducts() started span ...
+-----
 
 . Return back to the Jaeger UI and locate your traces.
+.. Notice that there is now a new `service` corresponding to your istio enabled catalog service:
 +
-Drill into them and notice the _spans_.
+image::images/new_istio_cat_trace.png[]
+
+.. Drill into this service and notice the _spans_ (to include the span corresponding to invocation of the `getProducts()` function).
 +
 image::images/spans_with_catalog.png[]
 
@@ -1648,13 +1666,13 @@ $ curl -v \
 < date: Tue, 18 Sep 2018 01:24:41 GMT
 < server: envoy
 < Set-Cookie: cd10b69e39387eb7ec9ac241201ab1ab=7a5ade075364285d1aba87dfec588d36; path=/; HttpOnly
-< 
+<
 * Connection #0 to host istio-ingressgateway-istio-system.apps.clientvm.b902.rhte.opentlc.com left intact
 PERMISSION_DENIED:threescalehandler.handler.istio-system:
 -----
 
 .. Notice a 403 error response of `PERMISSION_DENIED:threescalehandler.handler.istio-system:`
-.. This is to be expected.  
+.. This is to be expected.
 Inbound requests through the Istio Ingress are now correctly flowing through the mixer to the 3scale adapter.
 In the above request however, the API _user_key_ associated with your catalog service _application_ has been ommitted.
 .. View the log file of the 3scale adapter:
@@ -1861,7 +1879,7 @@ For convenience, the following script is provided if/when there is a need to del
 . Create deletion script:
 +
 -----
-$ echo " 
+$ echo "
 oc delete dc 3scale-istio-adapter -n istio-system --as=system:admin
 oc delete handler threescalehandler -n istio-system --as=system:admin
 oc delete instance threescaleauthorizationtemplate -n istio-system --as=system:admin
@@ -1874,9 +1892,9 @@ oc delete template authorization -n istio-system" --as=system:admin \
 $ chmod 755 $HOME/lab/delete_mixer.sh
 
 
-$ $HOME/lab/delete_mixer.sh 
+$ $HOME/lab/delete_mixer.sh
 -----
-  
+
 
 ifdef::showscript[]
 

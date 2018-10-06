@@ -76,7 +76,7 @@ You will select one of those dedicated 3scale _tenants_ as follows:
 .. *Chad Darby's* lab : {lab_spreadsheet_chad}.
 .. *Jeff Bride's* lab : {lab_spreadsheet_jeff}.
 . Add your name to Column A of the spreadsheet.
-. Utilize the values in the corresponding columns B and C to fill out the next section.
+. Utilize the values in the corresponding columns B, C and D to fill out the next section.
 
 == Environment Variables
 

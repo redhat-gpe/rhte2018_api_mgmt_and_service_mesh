@@ -1061,6 +1061,14 @@ Jaeger defines _trace_ as “adata/execution path through the system, and can be
 
 === Procedure
 
+. If you are not already there, return back to the terminal window of your lab, and use the `curl` utility to invoke your catalog service (via:  istio ingress gateway -> API gateway) a few times.
++
+-----
+$ curl -v \
+       -HHost:$CATALOG_API_GW_HOST \
+       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+-----
+
 . Identify the URL to the Jaeger UI:
 +
 -----
@@ -1079,14 +1087,6 @@ image::images/trace_dropdown_selection.png[]
 +
 At this time, neither of these operations are particularly relevant to our use case.
 The `apicast_management` operation pertains to the invocations made by the _readiness_ and _liveness_ probes of the deployment to the API gateway pod.
-
-. Return back to the terminal window of your lab, and use the `curl` utility to invoke your catalog service (via:  istio ingress gateway -> API gateway) a few times.
-+
------
-$ curl -v \
-       -HHost:$CATALOG_API_GW_HOST \
-       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
------
 
 .. Return back the Jaeger UI and notice more options present in the drop down for `Operation`.
 +
@@ -1274,6 +1274,12 @@ $ oc patch service/catalog-service \
    -n $MSA_PROJECT
 -----
 
+. The original catalog service is no longer needed.  Go ahead and scale it down as follows:
++
+-----
+$ oc scale deploy/catalog-service --replicas=0 -n $MSA_PROJECT
+-----
+
 . Make sure that your `$CATALOG_USER_KEY` and $CATALOG_API_GW_HOST environment variables remains set:
 +
 -----
@@ -1338,6 +1344,8 @@ The Red Hat 3scale engineering team is actively working on an Istio _mixer_ adap
 This Istio _mixer_ adapter will allow 3scale API Management policies to be applied directly to the _service mesh_ .
 
 image::images/3scale_mixer_adapter.png[]
+
+In the above diagram, [blue]#notice the replacement of an API Gateway with the Istio 3scale Mixer Adapter#
 
 === Disable existing API gateways
 

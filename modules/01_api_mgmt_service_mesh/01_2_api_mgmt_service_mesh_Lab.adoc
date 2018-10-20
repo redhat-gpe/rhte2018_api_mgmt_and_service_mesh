@@ -138,92 +138,15 @@ It could be injected as a sidecar to an application.
 
 This approach is not covered in this lab.
 
-
-== API Gateway: Plain
+== Configure and Test API Mgmt
 
 This lab takes you through a journey that has you gradually apply more and more features of both _API Mgmt_ and _service mesh_ to your cloud native application.
 
-As the first step in this journey, this section of the lab has you provision a supported version of 3scale _API Gateway_ to manage your CoolStore _catalog_ service.
-Your API gateway will retrieve _proxy service_ configurations from the pre-existing 3scale multi-tenant environment.
+As the first step in this journey, you smoke test the management of your _catalog_ RESTful services using your API Manager and API gateways.
+
+A deployment topology diagram of the components involved in this API managed environment are as follows:
 
 image::images/deployment_apicast.png[]
-
-The management of this API gateway occurs via a Kubernetes _deployment_ as opposed to an OCP _deploymentconfig_.
-
-In a later section of this lab, you will switch to the use of a community variant of API gateway that is enabled with _OpenTracing_ and _Jaeger_ client libraries to participate in distributed tracing.
-
-
-=== Deploy API Gateway
-
-. In your course lab environment, ensure you are the same non-root user in which you previously set lab related environment variables.
-. Using the `oc` utility, ensure you are authenticated and then create a new project where your API gateways will reside:
-+
------
-$ echo "export GW_PROJECT=\$API_USERNAME-gw" >> $HOME/.bashrc
-$ source ~/.bashrc
-
-
-$ oc new-project $GW_PROJECT --description=$GW_PROJECT
------
-
-. Create a directory to store files related to this lab:
-+
------
-$ mkdir -p $HOME/lab
------
-
-. Retrieve API gateway template
-+
------
-$ curl -o $HOME/lab/3scale-apicast.yml \
-          https://raw.githubusercontent.com/gpe-mw-training/3scale_onpremise_implementation_labs/master/resources/rhte/3scale-apicast.yml
------
-
-. Review API gateway template
-+
------
-$ cat $HOME/lab/3scale-apicast.yml | more
------
-
-. Create API gateway staging related resources in OpenShift:
-+
------
-$ oc new-app \
-     -f $HOME/lab/3scale-apicast.yml \
-     --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
-     --param BACKEND_ENDPOINT_OVERRIDE=$BACKEND_ENDPOINT_OVERRIDE \
-     --param APP_NAME=stage-apicast \
-     --param ROUTE_NAME=catalog-stage-apicast-$OCP_USERNAME \
-     --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
-     --param THREESCALE_DEPLOYMENT_ENV=sandbox \
-     --param APICAST_CONFIGURATION_LOADER=lazy \
-     -n $GW_PROJECT > $HOME/lab/stage-apicast_details.txt
------
-
-. Create API gateway production related resources in OpenShift:
-+
------
-$ oc new-app \
-     -f $HOME/lab/3scale-apicast.yml \
-     --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
-     --param BACKEND_ENDPOINT_OVERRIDE=$BACKEND_ENDPOINT_OVERRIDE \
-     --param APP_NAME=prod-apicast \
-     --param ROUTE_NAME=catalog-prod-apicast-$OCP_USERNAME \
-     --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
-     --param THREESCALE_DEPLOYMENT_ENV=production \
-     --param APICAST_CONFIGURATION_LOADER=lazy \
-     -n $GW_PROJECT > $HOME/lab/prod-apicast_details.txt
------
-
-. Resume the paused deploy objects:
-+
------
-$ oc rollout resume deploy stage-apicast prod-apicast -n $GW_PROJECT
------
-
-== Configure and Test API Mgmt
-
-In this section of the lab, you smoke test the management of your _catalog_ RESTful services using your API Manager and API gateways.
 
 Guidance is provided for both experienced and inexperienced 3scale users.
 [red]#Choose only one.#

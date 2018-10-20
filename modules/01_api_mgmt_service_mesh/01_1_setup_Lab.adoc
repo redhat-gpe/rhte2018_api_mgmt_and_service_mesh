@@ -22,8 +22,7 @@ NOTE: If your network is intermittent, then you may want to consider installing 
 
 == Overview
 
-This first lab orientates you with the course lab assets provided to you.
-
+This first lab of this course orientates you with the course lab assets provided to you.
 
 Your lab environment consists of the following:
 
@@ -36,7 +35,48 @@ It is pre-installed with _OpenShift Container Platform_ and _Istio_.
 +
 Pre-provisioned with a API _domain_ dedicated to you for the duration of this lab.
 
-== Access Course VM via `GUID Grabber`
+== Access Course VM 
+
+This section guides you through the procedure to order a course virtual machine.
+
+There are several options for doing so. [red]#Execute only one of the options below#
+
+=== Access VM via RHPDS
+
+NOTE: [blue]#This section is only applicable if your desire is to utilize a lab environment in Red Hat's _Partner Demo System_ (RHPDS)#.
+
+[red]#TO_DO#
+
+=== Access VM via OPENTLC or RHSE
+
+NOTE: [blue]#This section is only applicable if you are an existing student of either Red Hat's _Open Partner Enablement Network (OPEN)_ or Skills Exchange (RHSE) programs.#
+
+. Begin by navigating to the _Cloud Forms_ environment for both OPEN and RHSE at:   https://labs.opentlc.com
+. Authenticate using your _OPENTLC_ credentials (ie:  johndoe-redhat.com )
+. Navigate to the following catalog:  `Services -> Catalog -> Catalog Items -> RHTE 2018 Labs`
+. Select the following catalog item: `A1004: 3scale API Mgmt & Service Mesh`
++
+image::images/catalog_item.png[]
+
+. Select the following in the order form:
+.. *OpenShift Container Platform version:* `3.10`
+.. *Region*: select the region you currently reside in
+.. Click `Order` at the bottom of the page
+. Confirmation Emails
++
+You will receive several emails confirming your order. These emails are sent to the email associated with your OPENTLC account.
++
+The most important email is the last one which indicates completion of the provisioning of your lab environment.
+This email arrive approximately 30 minutes from the time the lab was ordered.
+[blue]#Please save this email#.
+
+. SSH access to your VM
+.. The confirmation email will provide exact details as to how to ssh into your remote lab environment.
+.. Execute the steps outlined in the email to gain access to your lab environemnt.
+
+=== Access VM via `GUID Grabber`
+
+NOTE: [blue]#This section is only applicable if you are a participant in a Red Hat conferance such as Red Hat Tech Exchange (RHTE)#.
 
 This section of the lab explains how to access the Red Hat Tech Exchange _GuidGrabber_ in order to obtain a GUID.
 This GUID will be used to access a virtual machine that you will use in this course.
@@ -63,54 +103,49 @@ If you fail to do this, you will be locked into the GUID from the previous lab.
 [NOTE]
 Clicking *Reset Workstation* will not stop or delete the lab environment.
 
-
-== Lab Information spreadsheet
-
-The virtual machine that you gained access to in the previous section of this lab is one of two components that comprises your lab environment.
-
-The other component of your lab environment is a 3scale _multi-tenant_ environment that has been pre-provisioned and dedicated to you.
-
-You will select one of those dedicated 3scale _tenants_ as follows:
-
-. Using your browser, navigate to one of the the following spreadsheets depending on who your instructor is:
-.. *Chad Darby's* lab : {lab_spreadsheet_chad}.
-.. *Jeff Bride's* lab : {lab_spreadsheet_jeff}.
-. Add your name to Column A of the spreadsheet.
-. Utilize the values in the corresponding columns B, C and D to fill out the next section.
-
+[[env_vars]]
 == Environment Variables
 
-. Ensure you've ssh'd into your remote lab environment.
+The instructions in this course make heavy use of environment variables.
+In this section, you set these environment variables in your remote client environment.
 
 
-. Set the following environment variables using the values you've assigned yourself from the spreadsheet introduced in the previous section:
+. Lab environment specific variables.
++
+Select one of the following.
+.. *Dedicated API Management environment*
++
+NOTE: OPEN, RHSE students along with users of RHPDS should utilize this approach.
+
+... Ensure you've ssh'd into your remote lab environment.
+... Execute the following:
 +
 -----
-$ echo "export API_USERNAME=<column B of spreadsheet>" >> ~/.bashrc
-$ echo "export API_ADMIN_ACCESS_TOKEN=<column C of spreadsheet>" >> ~/.bashrc
-$ echo "export API_TENANT_SUFFIX=<column D of spreadsheet" >> ~/.bashrc
-
-
-
+$ echo "export API_USERNAME=user1" >> ~/.bashrc
+$ echo "export API_TENANT_SUFFIX=3scale-mt-api0" >> ~/.bashrc
 -----
 
-ifdef::showscript[]
-
-. Set the following environment variables using the values you've assigned yourself in: {lab_spreadsheet}:
+... Set your API Admin access token
++
+The user of your API Management tenant comes associated with a an _access token_.
+.... View the access token
 +
 -----
-$ echo "export API_USERNAME=<column B of spreadsheet>" >> ~/.bashrc
-$ echo "export API_ADMIN_ACCESS_TOKEN=<column C of spreadsheet>" >> ~/.bashrc
-$ echo 'export API_PASSWD=<column D of spreadsheet>' >> ~/.bashrc
-$ echo 'export OCP_PASSWD=<column E of spreadsheet>' >> ~/.bashrc
-$ echo "export API_TENANT_SUFFIX=<column F of spreadsheet>" >> ~/.bashrc
-$ echo "export OCP_USERNAME=<column G of spreadsheet>" >> ~/.bashrc
-$ echo "export API_REGION=<column H of spreadsheet>" >> ~/.bashrc
-$ echo "export LAB_CODE=<column I of spreadsheet>" >> ~/.bashrc
+$ more /opt/3scale_tenants_api0/api0_tenant_info_file_1_1.txt
 -----
-endif::showscript[]
 
+.... Set the acces token as an environment variable
++
+-----
+$ echo "export API_ADMIN_ACCESS_TOKEN=<value of API access token>" >> ~/.bashrc
+-----
 
+.. *Shared Multi-tenant API Management environment*
++
+NOTE:  Select this approach only if you've been explicitly instructed to do so by an instructor.
+
+... Execute the steps discussed in the section {{api_spreadsheet}}.
+... Return back to this section after completion.
 
 . Copy & paste the following in the same terminal
 +
@@ -426,6 +461,10 @@ $ echo -en "\n\nhttps://$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\n\n"
 +
 image::images/3scale_login.png[]
 
+== API Gateways
+
+NOTE: If you don't already have API Gateways deployed in your environment, please provision them as per the section: {{gw_provisioning}}
+
 == Appendix
 
 === Optional:  Administrative Access
@@ -491,3 +530,135 @@ The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/
 +
 This role should be executed on an OCP environment dedicated to a student (ie:  using oc cluster up ).
 This role is applied to the same OCP environment utilized by the _ocp-workload-istio-community_ role.
+
+[[gw_provisioning]]
+=== Optional: API Gateway Provisioning
+
+NOTE: [red]#This section is only relevant if you don't already have API Gateways provisioned#
+
+This section of the lab has you provision a supported version of 3scale _API Gateway_ to manage your CoolStore _catalog_ service.
+
+Your API gateway will retrieve _proxy service_ configurations from the pre-existing 3scale multi-tenant environment.
+
+The management of this API gateway occurs via a Kubernetes _deployment_ (as opposed to an OCP _deploymentconfig_).
+
+In a later section of this course, you will switch to the use of a community variant of API gateway that is enabled with _OpenTracing_ and _Jaeger_ client libraries to participate in distributed tracing.
+
+
+==== Deploy API Gateway
+
+. In your course lab environment, ensure you are the same non-root user in which you previously set lab related environment variables.
+. Using the `oc` utility, ensure you are authenticated and then create a new project where your API gateways will reside:
++
+-----
+$ echo "export GW_PROJECT=\$API_USERNAME-gw" >> $HOME/.bashrc
+$ source ~/.bashrc
+
+
+$ oc new-project $GW_PROJECT --description=$GW_PROJECT
+-----
+
+. Create a directory to store files related to this lab:
++
+-----
+$ mkdir -p $HOME/lab
+-----
+
+. Retrieve API gateway template
++
+-----
+$ curl -o $HOME/lab/3scale-apicast.yml \
+          https://raw.githubusercontent.com/gpe-mw-training/3scale_onpremise_implementation_labs/master/resources/rhte/3scale-apicast.yml
+-----
+
+. Review API gateway template
++
+-----
+$ cat $HOME/lab/3scale-apicast.yml | more
+-----
+
+. Create API gateway staging related resources in OpenShift:
++
+-----
+$ oc new-app \
+     -f $HOME/lab/3scale-apicast.yml \
+     --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
+     --param BACKEND_ENDPOINT_OVERRIDE=$BACKEND_ENDPOINT_OVERRIDE \
+     --param APP_NAME=stage-apicast \
+     --param ROUTE_NAME=catalog-stage-apicast-$OCP_USERNAME \
+     --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
+     --param THREESCALE_DEPLOYMENT_ENV=sandbox \
+     --param APICAST_CONFIGURATION_LOADER=lazy \
+     -n $GW_PROJECT > $HOME/lab/stage-apicast_details.txt
+-----
+
+. Create API gateway production related resources in OpenShift:
++
+-----
+$ oc new-app \
+     -f $HOME/lab/3scale-apicast.yml \
+     --param THREESCALE_PORTAL_ENDPOINT=$THREESCALE_PORTAL_ENDPOINT \
+     --param BACKEND_ENDPOINT_OVERRIDE=$BACKEND_ENDPOINT_OVERRIDE \
+     --param APP_NAME=prod-apicast \
+     --param ROUTE_NAME=catalog-prod-apicast-$OCP_USERNAME \
+     --param WILDCARD_DOMAIN=$OCP_WILDCARD_DOMAIN \
+     --param THREESCALE_DEPLOYMENT_ENV=production \
+     --param APICAST_CONFIGURATION_LOADER=lazy \
+     -n $GW_PROJECT > $HOME/lab/prod-apicast_details.txt
+-----
+
+. Resume the paused deploy objects:
++
+-----
+$ oc rollout resume deploy stage-apicast prod-apicast -n $GW_PROJECT
+-----
+
+[[api_spreadsheet]]
+=== Optional: Multi-tenant API Mgmt Information spreadsheet
+
+The virtual machine that you gained access to in the previous section of this lab is one of two components that comprises your lab environment.
+
+The other component of your lab environment is a 3scale _multi-tenant_ environment that has been pre-provisioned and dedicated to you.
+
+You will select one of those dedicated 3scale _tenants_ as follows:
+
+. Using your browser, navigate to one of the the following spreadsheets depending on who your instructor is:
+.. *Chad Darby's* lab : {lab_spreadsheet_chad}.
+.. *Jeff Bride's* lab : {lab_spreadsheet_jeff}.
+. Locate an existing row in the spreadsheet where Column A is empty
+. Claim an API Mgmt tenant by adding your name to that *existing row* in Column A of the spreadsheet.
++
+image::images/tenant_spreadsheet.png[]
+
+. Utilize the values in the corresponding columns B, C and D to set shell environment variables.
+
+. Ensure you've ssh'd into your remote lab environment.
+
+. Set the following environment variables using the values you've assigned yourself from the spreadsheet introduced in the previous section:
++
+-----
+$ echo "export API_USERNAME=<column B of spreadsheet>" >> ~/.bashrc
+$ echo "export API_ADMIN_ACCESS_TOKEN=<column C of spreadsheet>" >> ~/.bashrc
+$ echo "export API_TENANT_SUFFIX=<column D of spreadsheet" >> ~/.bashrc
+-----
+
+ifdef::showscript[]
+
+. Set the following environment variables using the values you've assigned yourself in: {lab_spreadsheet}:
++
+-----
+$ echo "export API_USERNAME=<column B of spreadsheet>" >> ~/.bashrc
+$ echo "export API_ADMIN_ACCESS_TOKEN=<column C of spreadsheet>" >> ~/.bashrc
+$ echo 'export API_PASSWD=<column D of spreadsheet>' >> ~/.bashrc
+$ echo 'export OCP_PASSWD=<column E of spreadsheet>' >> ~/.bashrc
+$ echo "export API_TENANT_SUFFIX=<column F of spreadsheet>" >> ~/.bashrc
+$ echo "export OCP_USERNAME=<column G of spreadsheet>" >> ~/.bashrc
+$ echo "export API_REGION=<column H of spreadsheet>" >> ~/.bashrc
+$ echo "export LAB_CODE=<column I of spreadsheet>" >> ~/.bashrc
+-----
+endif::showscript[]
+
+. Return back to the section: {{env_vars}}
+
+ifdef::showscript[]
+endif::showscript[]

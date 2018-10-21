@@ -49,7 +49,7 @@ NOTE: [blue]#This section is only applicable if your desire is to utilize a lab 
 
 === Access VM via OPENTLC or RHSE
 
-NOTE: [blue]#This section is only applicable if you are an existing student of either Red Hat's _Open Partner Enablement Network (OPEN)_ or Skills Exchange (RHSE) programs.#
+NOTE: [blue]#This section is applicable if you are an existing student of either Red Hat's _Open Partner Enablement Network (OPEN)_ or Skills Exchange (RHSE) programs.#
 
 . Begin by navigating to the _Cloud Forms_ environment for both OPEN and RHSE at:   https://labs.opentlc.com
 . Authenticate using your _OPENTLC_ credentials (ie:  johndoe-redhat.com )
@@ -57,11 +57,12 @@ NOTE: [blue]#This section is only applicable if you are an existing student of e
 . Select the following catalog item: `A1004: 3scale API Mgmt & Service Mesh`
 +
 image::images/catalog_item.png[]
+. Click `Order` at the top of the next page
 
-. Select the following in the order form:
-.. *OpenShift Container Platform version:* `3.10`
+. In the subsequent order form, select the following:
+.. *OpenShift Container Platform version:* `3.10.34`
 .. *Region*: select the region you currently reside in
-.. Click `Order` at the bottom of the page
+.. Click `Submit` at the top of the page
 . Confirmation Emails
 +
 You will receive several emails confirming your order. These emails are sent to the email associated with your OPENTLC account.

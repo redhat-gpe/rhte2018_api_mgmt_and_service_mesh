@@ -473,7 +473,7 @@ image::images/3scale_login.png[]
 
 NOTE: If you don't already have API Gateways deployed in your environment, please provision them as per the section: {{gw_provisioning}}
 
-[blue]#Congratulations!  Your lab environment is now properly set-up.  Please proceed to the next lab:  link:01_2_api_mgmt_service_mesh_Lab.html[*01_2 API Mgmt Service Mesh Lab*]#
+[blue]#Congratulations!#  Your lab environment is now properly set-up.  Please proceed to the next lab:  link:01_2_api_mgmt_service_mesh_Lab.html[*01_2 API Mgmt Service Mesh Lab*]
 
 == Appendix
 

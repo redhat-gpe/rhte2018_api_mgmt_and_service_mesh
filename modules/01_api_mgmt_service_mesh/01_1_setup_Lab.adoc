@@ -35,7 +35,7 @@ It is pre-installed with _OpenShift Container Platform_ and _Istio_.
 +
 Pre-provisioned with a API _domain_ dedicated to you for the duration of this lab.
 
-== Access Course VM 
+== Access Course VM
 
 This section guides you through the procedure to order a course virtual machine.
 
@@ -45,7 +45,14 @@ There are several options for doing so. [red]#Execute only one of the options be
 
 NOTE: [blue]#This section is only applicable if your desire is to utilize a lab environment in Red Hat's _Partner Demo System_ (RHPDS)#.
 
-[red]#TO_DO#
+. Begin by navigating to the _Cloud Forms_ environment for Red Hat Partner Demo System at:   https://rhpds.redhat.com
+. Authenticate using your _OPENTLC_ credentials (ie:  johndoe-redhat.com )
+. Navigate to the following catalog:  `Services -> Catalog -> All Services -> Red Hat Tech Exchange 2018`
+. Select the following catalog item: `A1004: 3scale API Mgmt & Service Mesh`
++
+image::images/rhpds_catalog.png[]
+. Click the `Order` button and in the following page, check the checkbox to confirm that you understand and know your runtime and expiration dates.
+. Clcik `Submit`
 
 === Access VM via OPENTLC or RHSE
 
@@ -53,7 +60,7 @@ NOTE: [blue]#This section is applicable if you are an existing student of either
 
 . Begin by navigating to the _Cloud Forms_ environment for both OPEN and RHSE at:   https://labs.opentlc.com
 . Authenticate using your _OPENTLC_ credentials (ie:  johndoe-redhat.com )
-. Navigate to the following catalog:  `Services -> Catalog -> Catalog Items -> RHTE 2018 Labs`
+. Navigate to the following catalog:  `Services -> Catalog -> Catalog Items -> OPENTLC Middleware Solutions Labs`
 . Select the following catalog item: `A1004: 3scale API Mgmt & Service Mesh`
 +
 image::images/catalog_item.png[]
@@ -108,7 +115,7 @@ Clicking *Reset Workstation* will not stop or delete the lab environment.
 == Environment Variables
 
 The instructions in this course make heavy use of environment variables.
-In this section, you set these environment variables in your remote client environment.
+Now that you have a lab environment, in this section, you set these environment variables in your remote client environment.
 
 
 . Lab environment specific variables.

@@ -137,12 +137,15 @@ NOTE: OPEN, RHSE students along with users of RHPDS should utilize this approach
 ... Execute the following:
 +
 -----
-$ echo "export API_REGION=<GUID from confirmation email>" >> ~/.bashrc
 
-$ echo "export API_USERNAME=user1" >> ~/.bashrc
-$ echo "export API_TENANT_SUFFIX=3scale-mt-api0" >> ~/.bashrc
+echo "export API_REGION=`echo $HOSTNAME | cut -d'.' -f2`" >> ~/.bashrc
+echo "export API_DOMAIN=clientvm.\$API_REGION.openshift.opentlc.com" >> ~/.bashrc
+echo "export API_USERNAME=user1" >> ~/.bashrc
+echo "export API_TENANT_SUFFIX=3scale-mt-api0" >> ~/.bashrc
+echo "export GW_PROJECT=\$API_USERNAME-gw" >> $HOME/.bashrc
 
-$ source ~/.bashrc
+
+source ~/.bashrc
 
 -----
 
@@ -187,7 +190,6 @@ echo "export OCP_DOMAIN=clientvm.\$OCP_REGION.openshift.opentlc.com" >> ~/.bashr
 echo "export OCP_WILDCARD_DOMAIN=apps.\$OCP_DOMAIN" >> ~/.bashrc
 echo "export MSA_PROJECT=rhte-mw-api-mesh-\$LAB_CODE" >> ~/.bashrc
 
-echo "export API_DOMAIN=\$API_REGION.openshift.opentlc.com" >> ~/.bashrc
 echo "export API_WILDCARD_DOMAIN=apps.\$API_DOMAIN" >> ~/.bashrc
 echo "export TENANT_NAME=\$API_USERNAME-\$API_TENANT_SUFFIX" >> ~/.bashrc
 echo "export THREESCALE_PORTAL_ENDPOINT=https://\${API_ADMIN_ACCESS_TOKEN}@\$TENANT_NAME-admin.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
@@ -286,6 +288,7 @@ $ oc get projects
 
 istio-system                                      Active
 rhte-mw-api-mesh-1       rhte-mw-api-mesh-1       Active
+user1-gw                                          Active
 -----
 
 .. *istio-system*
@@ -298,6 +301,10 @@ This utility will need both view and edit privileges to the _istio-system_ names
 .. *rhte-mw-api-mesh-**
 +
 The namespace _rhte-mw-api-mesh-*_ is where you will be working throughout the duration of this lab.
+
+.. *user1-gw*
++
+This namespace includes an API gateway pre-configured to interact with your API Management tenant.
 
 . Switch to your  OpenShift project
 +
@@ -444,7 +451,7 @@ $ curl -X GET "http://$NAKED_CATALOG_ROUTE/products"
 }
 -----
 
-==== Invoke _Open API Specification_ docs
+==== (Optional) Invoke _Open API Specification_ docs
 
 The link:https://swagger.io/docs/specification/about/[OpenAPI Specification^] (formerly "Swagger Specification") is an API description format for REST APIs. link:https://swagger.io/[Swagger^] is a set of open-source tools built around the OpenAPI specification that can help you design, build, document, and consume REST APIs.
 
@@ -488,10 +495,34 @@ $ echo -en "\n\nhttps://$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\n\n"
 image::images/3scale_login.png[]
 
 == API Gateways
+In this section you'll create a couple of OCP routes for your API Gateways whose names are in-line with your backend business service.
 
-NOTE: If you don't already have API Gateways deployed in your environment, please provision them as per the section: {{gw_provisioning}}
+NOTE: If you don't already have API Gateways deployed in your environment, please provision them as per the section: <<gw_provisioning>>.
 
-[blue]#Congratulations!#  Your lab environment is now properly set-up.  Please proceed to the next lab:  link:01_2_api_mgmt_service_mesh_Lab.html[*01_2 API Mgmt Service Mesh Lab*]
+. Add a new route for staging:
++
+-----
+$ oc create route edge catalog-stage-apicast-$OCP_USERNAME --service=stage-apicast  -n $GW_PROJECT
+-----
+
+. Add a new route for production:
++
+-----
+$ oc create route edge catalog-prod-apicast-$OCP_USERNAME --service=prod-apicast  -n $GW_PROJECT
+-----
++
+You'll reference these route names in the next section of the lab.
+
+. Resume the paused deploy objects:
++
+-----
+$ oc rollout resume deploy stage-apicast prod-apicast -n $GW_PROJECT
+-----
+
+[blue]#Congratulations!#
+Your lab environment is now properly set-up.  Please proceed to the next lab:  link:01_2_api_mgmt_service_mesh_Lab.html[*01_2 API Mgmt Service Mesh Lab*]
+
+
 
 == Appendix
 

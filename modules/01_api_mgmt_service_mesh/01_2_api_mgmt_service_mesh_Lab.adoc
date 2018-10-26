@@ -85,7 +85,7 @@ Also notice that the focus of API Management is about fostering business relatio
 .. link:https://docs.google.com/presentation/d/1PaE3RqyKoadllKHlPg0-kHcUrTuCeIdAe81CMk12iWw/edit#slide=id.g17a49862ec_0_0[3scale Next.Gen and Istio]
 .. link:https://istio.io/docs/concepts/what-is-istio/[Community Istio Documentation]
 .. link:https://github.com/Maistra/istio-operator[Red Hat community Istio (Maistra) operator]
-.. link:https://deploy-preview-14--maistra.netlify.com/istiodocs/install/#_installation_custom_resource[Red Hat community Istio (Maistra) documentation]
+.. link:https://maistra.io/[OpenShift Service Mesh (Maistra) project]
 
 . Distributed Tracing:
 .. link:https://github.com/opentracing[Github organization for OpenTracing]

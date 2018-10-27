@@ -43,7 +43,6 @@ This section guides you through the procedure to order a course virtual machine.
 
 There are three options for doing so. [red]#Execute only one of the options below:#
 
-
 ==== Access VM via RHPDS
 
 NOTE: [blue]#This section is only applicable if your desire is to utilize a lab environment in Red Hat's _Partner Demo System_ (RHPDS)#.
@@ -55,7 +54,7 @@ NOTE: [blue]#This section is only applicable if your desire is to utilize a lab 
 +
 image::images/rhpds_catalog.png[]
 . Click the `Order` button and in the following page, click the checkbox to confirm that you understand and know your runtime and expiration dates.
-. Clcik `Submit`
+. Click `Submit`
 
 ==== Access VM via OPENTLC or RHSE
 
@@ -103,7 +102,7 @@ If you fail to do this, you will be locked into the GUID from the previous lab.
 [NOTE]
 Clicking *Reset Workstation* will not stop or delete the lab environment.
 
-=== Confirmation Emails
+=== Confirmation Emails and SSH access
 
 . Upon ordering your VM, you will receive several emails confirming your order.
 These emails are sent to the email associated with your OPENTLC account.

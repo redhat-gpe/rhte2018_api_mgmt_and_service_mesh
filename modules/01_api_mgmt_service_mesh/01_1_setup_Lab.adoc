@@ -13,7 +13,7 @@
 .Prerequisites
 .. `ssh` utility installed on your laptop.
 +
-NOTE: If your network connection is intermittent, consider installing the [mosh](https://mosh.org) utility (`yum install mosh`) as an alternative to the `ssh` utility.
+NOTE: If your network connection is intermittent, consider installing the _mosh_ utility (`yum install mosh`) as an alternative to the `ssh` utility.
 
 .. Web browser installed on your laptop
 .. Broadband internet connectivity

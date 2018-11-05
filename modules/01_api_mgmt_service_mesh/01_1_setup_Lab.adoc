@@ -213,7 +213,7 @@ $ source ~/.bashrc
 .. _oc_
 
 . Validate that your virtual machine consists of at least 16GB RAM and 4 CPUs.
-.. Execute:
+.. Verify the total memory available:
 +
 -----
 $ cat /proc/meminfo | grep MemTotal
@@ -221,7 +221,7 @@ $ cat /proc/meminfo | grep MemTotal
 MemTotal:        16016680 kB
 -----
 
-.. Execute:
+.. Verify the number of CPUs:
 +
 -----
 $ cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l

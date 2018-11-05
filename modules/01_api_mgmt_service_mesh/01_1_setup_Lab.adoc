@@ -112,8 +112,8 @@ The most important message is the last one, which indicates completion of the pr
 This message should arrive about 30 minutes after the lab was ordered.
 [blue]#Please save this email#.
 
-The confirmation email will specify a unique GUID.  Please make note of the value of this GUID:
-+
+The confirmation email will specify a unique GUID. Please make note of the value of this GUID:
+
 image::images/email_guid.png[]
 
 .SSH access to your VM

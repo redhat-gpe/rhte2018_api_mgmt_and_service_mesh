@@ -60,18 +60,18 @@ image::images/rhpds_catalog.png[]
 
 NOTE: [blue]#This section is applicable if you are an existing student of either Red Hat's _Open Partner Enablement Network (OPEN)_ or Skills Exchange (RHSE) programs.#
 
-. Begin by navigating to the _Cloud Forms_ environment for both OPEN and RHSE at:   https://labs.opentlc.com
-. Authenticate using your _OPENTLC_ credentials (ie:  johndoe-redhat.com )
-. Navigate to the following catalog:  `Services -> Catalog -> Catalog Items -> OPENTLC Middleware Solutions Labs`
-. Select the following catalog item: `3scale API Mgmt & Service Mesh`
+. In a web browser, navigate to the _Cloud Forms_ environment for OPEN and RHSE at:   https://labs.opentlc.com.
+. Authenticate using your _OPENTLC_ credentials, for example: `johndoe-redhat.com`.
+. Navigate to the following catalog:  `Services -> Catalog -> Catalog Items -> OPENTLC Middleware Solutions Labs`.
+. Select the following catalog item: `3scale API Mgmt & Service Mesh`.
 +
 image::images/catalog_item.png[]
-. Click `Order` at the top of the next page
+. Click `Order` on the next page.
 
 . In the subsequent order form, select the following:
-.. *OpenShift Container Platform version:* `3.10.34`
-.. *Region*: select the region you currently reside in
-.. Click `Submit` at the top of the page
+.. *OpenShift Container Platform version*: `3.10.34`
+.. *Region*: Select the region you currently reside in
+.. Click `Submit`.
 
 ==== Access VM via `GUID Grabber`
 

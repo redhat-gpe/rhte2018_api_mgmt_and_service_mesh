@@ -48,7 +48,7 @@ There are three methods for ordering a VM. [red]#Use only one of these methods.#
 NOTE: [blue]#This section is only applicable if you want to utilize a lab environment in Red Hat's _Partner Demo System_ (RHPDS)#.
 
 . In a web browser, navigate to the _Cloud Forms_ environment for Red Hat Partner Demo System at: https://rhpds.redhat.com.
-. Authenticate using your _OPENTLC_ credentials (ie:  johndoe-redhat.com).
+. Authenticate using your _OPENTLC_ credentials, for example: `johndoe-redhat.com`.
 . Navigate to the following catalog: `Services -> Catalog -> All Services -> Red Hat Tech Exchange 2018`.
 . Select the following catalog item: `3scale API Mgmt & Service Mesh`.
 +

@@ -104,19 +104,22 @@ Clicking *Reset Workstation* will not stop or delete the lab environment.
 
 === Confirmation Emails and SSH access
 
-. Upon ordering your VM, you will receive several emails confirming your order.
-These emails are sent to the email associated with your OPENTLC account.
-+
-The most important email is the last one which indicates completion of the provisioning of your lab environment.
-This email arrive approximately 30 minutes from the time the lab was ordered.
+.Confirmation Emails
+After ordering your VM, you will receive several email messages confirming your order.
+These messages are sent to the email address associated with your OPENTLC account.
+
+The most important message is the last one, which indicates completion of the provisioning of your lab environment.
+This message should arrive about 30 minutes after the lab was ordered.
 [blue]#Please save this email#.
 
-. The confirmation email will specify a unique GUID.  Please make note of the value of this GUID:
+The confirmation email will specify a unique GUID.  Please make note of the value of this GUID:
 +
 image::images/email_guid.png[]
-. SSH access to your VM
-.. The confirmation email will provide exact details as to how to ssh into your remote lab environment.
-.. Execute the steps outlined in the email to gain access to your lab environment.
+
+.SSH access to your VM
+The confirmation email will describe how to access your remote lab environment via SSH.
+
+Complete the steps in the email to gain access to your lab environment.
 
 [[env_vars]]
 == Environment Variables

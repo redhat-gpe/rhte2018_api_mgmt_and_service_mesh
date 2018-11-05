@@ -28,13 +28,13 @@ Your lab environment consists of the following:
 
 . *Remote Virtual Machine*
 +
-Accessible via the ssh protocol.
+Accessible via the SSH protocol.
 It is pre-installed with _OpenShift Container Platform_ and _Istio_.
 
 . *Red Hat 3scale API Manager*
 +
 Pre-provisioned with a API _domain_ dedicated to you for the duration of this lab.
-The 3scale API Manager may or may not be installed on your virtual machine depending on how you enrolled in this lab.
+The 3scale API Manager may or may not be installed on your virtual machine, depending on how you enrolled in this lab.
 More details in the following sections.
 
 == Course VM

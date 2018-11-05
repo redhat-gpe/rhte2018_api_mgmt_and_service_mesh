@@ -37,24 +37,24 @@ Pre-provisioned with an API _domain_ dedicated to you for the duration of this l
 The 3scale API Manager may or may not be installed on your virtual machine, depending on how you enrolled in this lab.
 More details in the following sections.
 
-== Course VM
-=== Order VM
-This section guides you through the procedure to order a course virtual machine.
+== Course Virtual Machine
+=== Order Virtual Machine
+This section guides you through the procedure to order a virtual machine (VM) for this course.
 
-There are three options for doing so. [red]#Execute only one of the options below:#
+There are three methods for ordering a VM. [red]#Use only one of these methods.#
 
 ==== Access VM via RHPDS
 
-NOTE: [blue]#This section is only applicable if your desire is to utilize a lab environment in Red Hat's _Partner Demo System_ (RHPDS)#.
+NOTE: [blue]#This section is only applicable if you want to utilize a lab environment in Red Hat's _Partner Demo System_ (RHPDS)#.
 
-. Begin by navigating to the _Cloud Forms_ environment for Red Hat Partner Demo System at:   https://rhpds.redhat.com
-. Authenticate using your _OPENTLC_ credentials (ie:  johndoe-redhat.com )
-. Navigate to the following catalog:  `Services -> Catalog -> All Services -> Red Hat Tech Exchange 2018`
-. Select the following catalog item: `3scale API Mgmt & Service Mesh`
+. In a web browser, navigate to the _Cloud Forms_ environment for Red Hat Partner Demo System at: https://rhpds.redhat.com.
+. Authenticate using your _OPENTLC_ credentials (ie:  johndoe-redhat.com).
+. Navigate to the following catalog: `Services -> Catalog -> All Services -> Red Hat Tech Exchange 2018`.
+. Select the following catalog item: `3scale API Mgmt & Service Mesh`.
 +
 image::images/rhpds_catalog.png[]
-. Click the `Order` button and in the following page, click the checkbox to confirm that you understand and know your runtime and expiration dates.
-. Click `Submit`
+. Click `Order` and in the following page, click the check box to confirm that you understand and know your runtime and expiration dates.
+. Click `Submit`.
 
 ==== Access VM via OPENTLC or RHSE
 

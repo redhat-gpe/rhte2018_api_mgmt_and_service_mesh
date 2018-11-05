@@ -231,9 +231,9 @@ $ cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l
 
 == OpenShift Container Platform
 
-Your lab environment is built on Red Hat's OpenShift Container Platform.
+Your lab environment is built on Red Hat's OpenShift Container Platform (OCP).
 
-Access to your OCP resources can be gained via both the `oc` utility as well as the OCP web console.
+Access to your OCP resources can be gained via both the `oc` CLI utility and the OCP web console.
 
 . Verify that OCP has started:
 +
@@ -254,7 +254,7 @@ Aug 31 21:58:27 clientvm.a4f6.rhte.opentlc.com occlusterup[20544]: oc login -u s
 Aug 31 21:58:27 clientvm.a4f6.rhte.opentlc.com systemd[1]: Started OpenShift oc cluster up Service.
 -----
 
-. Using the `oc` utility, log into OpenShift
+. Using the `oc` utility, log into OpenShift:
 +
 -----
 $ oc login https://$HOSTNAME:8443 -u $OCP_USERNAME -p $OCP_PASSWD
@@ -274,7 +274,7 @@ openshift v3.10.14
 kubernetes v1.10.0+b81c8f8
 -----
 
-.. In the above example, notice that version of the `oc` client is of the same release as the remote OCP master API.
+.. In the above example, notice that the version of the `oc` client is the same release as the remote OCP master API.
 .. There are known subtle problems with using a version of the `oc` client that is different from your target OpenShift server.
 
 . View existing projects:
@@ -293,7 +293,7 @@ user1-gw                                          Active
 +
 Your OCP user has been provided with _view_ and _edit_ access to the central _istio-system_ namespace with all _control plane_ Istio functionality.
 +
-Later in this lab, you'll use a utility called _istioctl_ .
+Later in this lab, you will use a utility called _istioctl_ .
 This utility will need both view and edit privileges to the _istio-system_ namespace.
 
 .. *rhte-mw-api-mesh-**
@@ -304,13 +304,13 @@ The namespace _rhte-mw-api-mesh-*_ is where you will be working throughout the d
 +
 This namespace includes an API gateway pre-configured to interact with your API Management tenant.
 
-. Switch to your  OpenShift project
+. Switch to your OpenShift project:
 +
 -----
 $ oc project $MSA_PROJECT
 -----
 
-. View details of the ClusterQuota that the _cluster-admin_ has assigned to your openshift user:
+. View details of the ClusterQuota that the _cluster-admin_ has assigned to your OpenShift user:
 +
 -----
 $ oc describe AppliedClusterResourceQuota clusterquota-rhte-mw-api-mesh-developer
@@ -342,11 +342,11 @@ localhost   Ready     <none>    16h       v1.10.0+b81c8f8
 +
 For the purpose of this lab, the cluster-admin of your OCP environment has provided you with the ability to _impersonate_ the _cluster-admin_.
 You would not have had the ability to execute the above command (by specifying `--as=system:admin`) if the cluster-admin had not already done so.
-From time to time, you will make use of this ability to impersonate cluster admin in the next lab.
+In the next lab you will use this ability to impersonate the cluster admin.
 
 . Log into OpenShift Web Console
-.. Many OpenShift related tasks found in this lab can be completed in the Web Console (as an alternative to using the `oc` utility.
-.. To access the OCP web console, point to your browser to the output of the following:
+.. Many OpenShift related tasks found in this lab can be completed in the Web Console (as an alternative to using the `oc` CLI utility.
+.. To access the OCP web console, use the output of the following command as the web address:
 +
 -----
 $ echo -en "\n\nhttps://$OCP_DOMAIN:8443\n\n"

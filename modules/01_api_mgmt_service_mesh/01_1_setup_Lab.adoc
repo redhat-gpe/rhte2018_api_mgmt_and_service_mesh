@@ -73,30 +73,30 @@ image::images/catalog_item.png[]
 .. *Region*: Select the region you currently reside in
 .. Click `Submit`.
 
-==== Access VM via `GUID Grabber`
+==== Access VM via GUID Grabber
 
-NOTE: [blue]#This section is only applicable if you are a participant in a Red Hat conferance such as Red Hat Tech Exchange (RHTE)#.
+NOTE: [blue]#This section is only applicable if you are a participant in a Red Hat conference such as Red Hat Tech Exchange (RHTE)#.
 
-This section of the lab explains how to access the Red Hat Tech Exchange _GuidGrabber_ in order to obtain a GUID.
+This section of the lab explains how to access the Red Hat Tech Exchange _GuidGrabber_ to obtain a Globally Unique Identifier (GUID).
 This GUID will be used to access a virtual machine that you will use in this course.
 
-. Begin by navigating to: http://bit.ly/rhte-guidgrabber
+. In a web browser, navigate to: http://bit.ly/rhte-guidgrabber.
 
-. From this page select the *Lab Code* :  _A1004 - API Management with 3scale + Istio Microservices_
+. Select the *Lab Code* :  `A1004 - API Management with 3scale + Istio Microservices`.
 
 . Enter the *Activation Key* provided to you by your instructor.
 
-. Click *Next*.
+. Click `Next`.
 
 . The resulting page will display your lab's GUID and other useful information about your lab environment.
 +
 image::images/guid_grabber_response.png[Guid Grabber Information Page]
 
-. Your remote virtual machine is accessible via the `ssh` protocol.
+. Your remote virtual machine is accessible via the `SSH` protocol.
 +
-Follow the directions exactly as indicated in the Guid Grabber Information Page to ssh into your remote lab VM.
+Follow the directions exactly as indicated in the Guid Grabber Information Page to log into your remote lab VM via SSH.
 
-. When you are completely done with your lab environment at the end of this course, please click *Reset Workstation* so that you can move on to the next lab.
+. When you are finished with your lab environment at the end of this course, please click *Reset Workstation* so that you can move on to the next lab.
 If you fail to do this, you will be locked into the GUID from the previous lab.
 +
 [NOTE]

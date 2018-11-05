@@ -194,7 +194,7 @@ echo "export BACKEND_ENDPOINT_OVERRIDE=https://backend-\$API_TENANT_SUFFIX.\$API
 -----
 
 
-. Source the modified ~/.bashrc file so that the environment variables are set in your current shell session:
+. Source the modified `~/.bashrc` file so that the environment variables are set in your current shell session:
 +
 -----
 $ source ~/.bashrc

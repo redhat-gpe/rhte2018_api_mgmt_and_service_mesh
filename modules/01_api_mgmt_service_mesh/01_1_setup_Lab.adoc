@@ -53,7 +53,7 @@ NOTE: [blue]#This section is only applicable if you want to utilize a lab enviro
 . Select the following catalog item: `3scale API Mgmt & Service Mesh`.
 +
 image::images/rhpds_catalog.png[]
-. Click `Order` and in the following page, click the check box to confirm that you understand and know your runtime and expiration dates.
+. Click `Order` and in the next page, click the check box to confirm that you understand and know your runtime and expiration dates.
 . Click `Submit`.
 
 ==== Access VM via OPENTLC or RHSE

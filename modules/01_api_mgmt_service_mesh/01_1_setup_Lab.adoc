@@ -528,8 +528,13 @@ Your lab environment is now ready to use.  Please proceed to the next lab:  link
 
 === Optional:  Administrative Access
 
-. On your remote lab environment, you can optionally gain access to the `root` operating system user by executing: `sudo -i`
-. As the `root` operating system user, `cluster admin` access to your OCP environment can be achieved by executing :
+. On your remote lab environment, you can optionally gain access to the `root` operating system user by executing:
++
+----
+$ `sudo -i`
+----
+
+. As the `root` operating system user, you can gain `cluster admin` access to your OCP environment by executing:
 +
 -----
 # oc login -u system:admin

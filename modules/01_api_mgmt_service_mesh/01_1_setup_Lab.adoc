@@ -474,21 +474,23 @@ image::images/swagger-ui-coolstore-catalog.png[]
 
 Your lab environment includes access to a multi-tenant API Manager installation.
 
-For the purpose of this lab, you will serve as the administrator of your own 3scale _tenant_ (aka: _domain_)
+For the purpose of this lab, you will serve as the administrator of your own 3scale _tenant_, also known as a _domain_.
 
-Log into the admin portal of your API Manager environment as follows:
+Log into the administration portal of your API Manager environment as follows:
 
-. To access the admin portal of your 3scale environment, point to your browser to the output of the following:
+. Display the URL for your 3scale tenant:
 +
 -----
 $ echo -en "\n\nhttps://$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\n\n"
 -----
 
+. Copy and paste the URL into a web browser.
+
 . Authenticate using the values of $API_USERNAME and $API_PASSWD .
 .. `echo $API_USERNAME`
 .. `echo $API_PASSWD`
 
-. Click the blue `sign-in` button at the bottom right:
+. Click the `Sign in` button:
 +
 image::images/3scale_login.png[]
 

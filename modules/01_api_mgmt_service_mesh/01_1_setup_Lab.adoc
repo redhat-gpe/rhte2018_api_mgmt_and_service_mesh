@@ -371,16 +371,15 @@ The _istioctl_ utility (introduced later in this lab) of Istio requires the use 
 Subsequently, for the purpose of this lab, we'll use the Kubernetes _Deployment_ type (instead of DeploymentConfig) for most of the functionality.
 One exception to this is the MongoDB.
 
-The CoolStore catalog service included in your lab environment connects to a MongoDB database.
-This MongoDB database is managed by Kubernetes using an OpenShift DeploymentConfig instead of a Kubernetes Deployment.
-The reason for this is that the OpenShift _DeploymentConfig_ provides more features than a Kubernetes _Deployment_.
-In particular, the MongoDB that supports this lab makes use of _life-cycle_ hooks that are only available in a DeploymentConfig.
-The life-cycle hooks are used to pre-seed the data in the MongoDB.
-This _post deployment_ life-cycle hook is simply ignored if added to a Kubernetes Deployment.
+In your lab environment, the CoolStore catalog service connects to a MongoDB database.
+Kubernetes is used to manage the MongoDB database, using an OpenShift DeploymentConfig instead of a Kubernetes Deployment.
+The OpenShift _DeploymentConfig_ provides more features than a Kubernetes _Deployment_.
+For example, the MongoDB database is pre-seeded using life-cycle hooks, and these are only available in a DeploymentConfig.
+The _post deployment_ life-cycle hook is ignored if added to a Kubernetes Deployment.
 
 
-If you interested in learning more about the differences between Kubernetes _Deployments_ and OCP _DeploymentConfigurations_, please see
-link:https://docs.openshift.com/container-platform/3.10/dev_guide/deployments/kubernetes_deployments.html#kubernetes-deployments-vs-deployment-configurations[this documentation].
+To learn more about the differences between Kubernetes _Deployments_ and OCP _DeploymentConfigurations_, see
+link:https://docs.openshift.com/container-platform/3.10/dev_guide/deployments/kubernetes_deployments.html#kubernetes-deployments-vs-deployment-configurations[Kubernetes Deployments Versus Deployment Configurations].
 
 ==== OpenShift objects
 

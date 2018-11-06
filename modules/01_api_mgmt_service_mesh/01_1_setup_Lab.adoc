@@ -679,7 +679,7 @@ $ oc rollout resume deploy stage-apicast prod-apicast -n $GW_PROJECT
 -----
 
 [[api_spreadsheet]]
-=== Optional: Multi-tenant API Mgmt Information spreadsheet
+=== Optional: Multi-tenant API Management Information spreadsheet
 
 The virtual machine that you gained access to in the previous section of this lab is one of two components that comprises your lab environment.
 
@@ -687,19 +687,19 @@ The other component of your lab environment is a 3scale _multi-tenant_ environme
 
 You will select one of those dedicated 3scale _tenants_ as follows:
 
-. Using your browser, navigate to one of the the following spreadsheets depending on who your instructor is:
+. In a web browser, navigate to one of the following spreadsheets, depending on who your instructor is:
 .. *Chad Darby's* lab : {lab_spreadsheet_chad}.
 .. *Jeff Bride's* lab : {lab_spreadsheet_jeff}.
-. Locate an existing row in the spreadsheet where Column A is empty
-. Claim an API Mgmt tenant by adding your name to that *existing row* in Column A of the spreadsheet.
+. Locate an existing row in the spreadsheet where Column A is empty.
+. Claim an API Management tenant by adding your name to that *existing row* in Column A of the spreadsheet.
 +
 image::images/tenant_spreadsheet.png[]
 
 . Utilize the values in the corresponding columns B, C and D to set shell environment variables.
 
-. Ensure you've ssh'd into your remote lab environment.
+. Log in to your remote lab environment via SSH.
 
-. Set the following environment variables using the values you've assigned yourself from the spreadsheet introduced in the previous section:
+. Set the following environment variables, using the values you've assigned yourself from the spreadsheet introduced in the previous section:
 +
 -----
 $ echo "export API_USERNAME=<column B of spreadsheet>" >> ~/.bashrc
@@ -709,13 +709,13 @@ $ echo "export API_TENANT_SUFFIX=<column D of spreadsheet" >> ~/.bashrc
 
 ifdef::showscript[]
 
-. Set the following environment variables using the values you've assigned yourself in: {lab_spreadsheet}:
+. Set the following environment variables, using the values you've assigned yourself in: {lab_spreadsheet}:
 +
 -----
 $ echo "export API_USERNAME=<column B of spreadsheet>" >> ~/.bashrc
 $ echo "export API_ADMIN_ACCESS_TOKEN=<column C of spreadsheet>" >> ~/.bashrc
-$ echo 'export API_PASSWD=<column D of spreadsheet>' >> ~/.bashrc
-$ echo 'export OCP_PASSWD=<column E of spreadsheet>' >> ~/.bashrc
+$ echo "export API_PASSWD=<column D of spreadsheet>" >> ~/.bashrc
+$ echo "export OCP_PASSWD=<column E of spreadsheet>" >> ~/.bashrc
 $ echo "export API_TENANT_SUFFIX=<column F of spreadsheet>" >> ~/.bashrc
 $ echo "export OCP_USERNAME=<column G of spreadsheet>" >> ~/.bashrc
 $ echo "export API_REGION=<column H of spreadsheet>" >> ~/.bashrc
@@ -723,7 +723,7 @@ $ echo "export LAB_CODE=<column I of spreadsheet>" >> ~/.bashrc
 -----
 endif::showscript[]
 
-. Return back to the section: {{env_vars}}
+. Return to section: {{env_vars}}
 
 ifdef::showscript[]
 endif::showscript[]

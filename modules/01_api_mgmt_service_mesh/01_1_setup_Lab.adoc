@@ -495,7 +495,7 @@ $ echo -en "\n\nhttps://$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\n\n"
 image::images/3scale_login.png[]
 
 == API Gateways
-In this section you'll create a couple of OCP routes for your API Gateways whose names are in-line with your backend business service.
+In this section you will create two OCP routes for your API Gateways whose names are consistent with your backend business service.
 
 NOTE: If you don't already have API Gateways deployed in your environment, please provision them as per the section: <<gw_provisioning>>.
 
@@ -511,7 +511,7 @@ $ oc create route edge catalog-stage-apicast-$OCP_USERNAME --service=stage-apica
 $ oc create route edge catalog-prod-apicast-$OCP_USERNAME --service=prod-apicast  -n $GW_PROJECT
 -----
 +
-You'll reference these route names in the next section of the lab.
+You will reference these route names in the next section of the lab.
 
 . Resume the paused deploy objects:
 +
@@ -520,7 +520,7 @@ $ oc rollout resume deploy stage-apicast prod-apicast -n $GW_PROJECT
 -----
 
 [blue]#Congratulations!#
-Your lab environment is now properly set-up.  Please proceed to the next lab:  link:01_2_api_mgmt_service_mesh_Lab.html[*01_2 API Mgmt Service Mesh Lab*]
+Your lab environment is now ready to use.  Please proceed to the next lab:  link:01_2_api_mgmt_service_mesh_Lab.html[*01_2 API Mgmt Service Mesh Lab*]
 
 
 

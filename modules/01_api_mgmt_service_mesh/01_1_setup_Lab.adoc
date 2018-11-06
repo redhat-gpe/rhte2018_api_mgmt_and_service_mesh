@@ -600,25 +600,26 @@ This role is applied to the same OCP environment utilized by the _ocp-workload-i
 
 NOTE: [red]#This section is only relevant if you don't already have API Gateways provisioned#
 
-This section of the lab has you provision a supported version of 3scale _API Gateway_ to manage your CoolStore _catalog_ service.
+In this section of the lab you provision a supported version of 3scale _API Gateway_ to manage your CoolStore _catalog_ service.
 
 Your API gateway will retrieve _proxy service_ configurations from the pre-existing 3scale multi-tenant environment.
 
 The management of this API gateway occurs via a Kubernetes _deployment_ (as opposed to an OCP _deploymentconfig_).
 
-In a later section of this course, you will switch to the use of a community variant of API gateway that is enabled with _OpenTracing_ and _Jaeger_ client libraries to participate in distributed tracing.
+In a later section of this course, you will switch to the use of a community variant of API gateway that is enabled with _OpenTracing_ and _Jaeger_ client libraries, to participate in distributed tracing.
 
 
 ==== Deploy API Gateway
 
 . In your course lab environment, ensure you are the same non-root user in which you previously set lab related environment variables.
-. Using the `oc` utility, ensure you are authenticated and then create a new project where your API gateways will reside:
+
+. Using the `oc` utility, ensure you are authenticated:
 +
 -----
 $ echo "export GW_PROJECT=\$API_USERNAME-gw" >> $HOME/.bashrc
 $ source ~/.bashrc
 
-
+. Using the `oc` utility, create a new project where your API gateways will reside:
 $ oc new-project $GW_PROJECT --description=$GW_PROJECT
 -----
 
@@ -628,14 +629,14 @@ $ oc new-project $GW_PROJECT --description=$GW_PROJECT
 $ mkdir -p $HOME/lab
 -----
 
-. Retrieve API gateway template
+. Retrieve the API gateway template:
 +
 -----
 $ curl -o $HOME/lab/3scale-apicast.yml \
           https://raw.githubusercontent.com/gpe-mw-training/3scale_onpremise_implementation_labs/master/resources/rhte/3scale-apicast.yml
 -----
 
-. Review API gateway template
+. Review the API gateway template:
 +
 -----
 $ cat $HOME/lab/3scale-apicast.yml | more

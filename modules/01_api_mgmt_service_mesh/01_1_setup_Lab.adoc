@@ -383,7 +383,7 @@ link:https://docs.openshift.com/container-platform/3.10/dev_guide/deployments/ku
 
 ==== OpenShift objects
 
-. Review DeploymentConfig
+. Review DeploymentConfig:
 +
 -----
 $ oc get dc -n $MSA_PROJECT
@@ -394,7 +394,7 @@ NAME              REVISION   DESIRED   CURRENT   TRIGGERED BY
 catalog-mongodb   1          1         1         config,image(mongodb:3.4)
 -----
 
-. Review Deployment
+. Review Deployment:
 +
 -----
 $ oc get deploy -n $MSA_PROJECT
@@ -405,7 +405,7 @@ NAME              DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
 catalog-service   1         1         1            1           4m
 -----
 
-. Review running pods
+. Review running pods:
 +
 -----
 $ oc get pods -n $MSA_PROJECT
@@ -428,7 +428,7 @@ $ echo "export NAKED_CATALOG_ROUTE=$(oc get route catalog-unsecured -o template 
 +
 NOTE:  You will use the $NAKED_CATALOG_ROUTE environment variable during the lab.
 
-. Reload the `.bashrc` file to enable the new environment variable.
+. Reload the `.bashrc` file to enable the new environment variable:
 +
 ----
 $ source ~/.bashrc

@@ -8,11 +8,11 @@
 = API Mgmt and Service Mesh Lab
 
 .Goals
-* Inject Istio Envoy proxy configs into an API gateway
+* Inject Istio Envoy proxy configurations into an API gateway
 * Configure an Istio Egress Route for an API gateway
-* End-to-end distributed tracing of a MSA application using Jaeger implementation of the _OpenTracing_ specification
+* End-to-end distributed tracing of an MSA application using Jaeger implementation of the _OpenTracing_ specification
 
-.Prerequisite
+.Prerequisites
 * Skills
 ** Completion of the _APIs as a Business_ lab
 ** Completion of the _MSA and Service Mesh_ lab

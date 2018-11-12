@@ -104,12 +104,12 @@ In regards to API Management and a MSA service mesh, the following are related c
 
 _Jaeger_ is a tool that provides distributed tracing.
 
-Available in the open-source community is the _all-in-one_ community Jaeger that includes a jaeger-agent and jaeger-collector.
-link:https://medium.com/@jmprusi_49013/adding-opentracing-support-to-apicast-api-gateway-a8e0a38347d2[This tutorial] very nicely details the use of an opentracing enabled API gateway with the _all-in-one_ community Jaeger.
+Available in the open source community is the _all-in-one_ community Jaeger that includes a jaeger-agent and jaeger-collector.
+This link:https://medium.com/@jmprusi_49013/adding-opentracing-support-to-apicast-api-gateway-a8e0a38347d2[OpenTracing tutorial] details the use of an OpenTracing-enabled API gateway with the _all-in-one_ community Jaeger.
 
 
 As an alternative to the _all-in-one_ standalone Jaeger, Istio also comes included with Jaeger.
-In this lab, this Jaeger based tracing functionality provided by Istio is utilized instead of a standalone Jaeger installation.
+In this lab, the Jaeger-based tracing functionality provided by Istio is utilized instead of a standalone Jaeger installation.
 
 ==== Istio API Management Working Group
 

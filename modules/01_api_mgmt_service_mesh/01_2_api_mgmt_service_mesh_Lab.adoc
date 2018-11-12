@@ -78,21 +78,21 @@ Also note that the focus of API Management is fostering business relationships b
 
 === Reference
 
-. Istio / Service Mesh
+. Istio / Service Mesh:
 .. link:https://docs.google.com/presentation/d/1PaE3RqyKoadllKHlPg0-kHcUrTuCeIdAe81CMk12iWw/edit#slide=id.g17a49862ec_0_0[3scale Next.Gen and Istio]
 .. link:https://istio.io/docs/concepts/what-is-istio/[Community Istio Documentation]
 .. link:https://github.com/Maistra/istio-operator[Red Hat community Istio (Maistra) operator]
 .. link:https://maistra.io/[OpenShift Service Mesh (Maistra) project]
 
 . Distributed Tracing:
-.. link:https://github.com/opentracing[Github organization for OpenTracing]
+.. link:https://github.com/opentracing[GitHub organization for OpenTracing]
 +
-Includes the OpenTracing specification as well as the OpenTracing client libraries for many languages.
+Includes the OpenTracing specification and the OpenTracing client libraries for many languages.
 
 .. link:https://www.jaegertracing.io/[jaegertracing.io]
-.. link:https://github.com/jaegertracing/[Github organization for community Jaeger]
+.. link:https://github.com/jaegertracing/[GitHub organization for community Jaeger]
 +
-Includes source code to community Jaeger as well as Jaeger client libraries for many languages (that implement the corresponding OpenTracing client libraries]
+Includes source code of community Jaeger, and Jaeger client libraries for many languages that implement the corresponding OpenTracing client libraries.
 
 .. link:https://istio.io/blog/2018/v1alpha3-routing/[Overview of Istio v1alpha3 routing API]
 

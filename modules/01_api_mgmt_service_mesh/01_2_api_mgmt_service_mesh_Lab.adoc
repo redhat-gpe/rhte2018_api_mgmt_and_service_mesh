@@ -35,46 +35,46 @@ You do this by applying both a _service mesh_ and an _API Management_ solution t
 
 === Background
 
-Red Hat has and continues to make extensive investments in technologies that foster Cloud Native Applications.
+Red Hat invests in technologies that foster cloud-native applications.
 
-. *Dev / Ops*
+. *DevOps*
 +
-With its _Openshift_ series of offerings, Red Hat is a significant innovator in the technologies used to facilitate _Dev Ops_.
+With its _Openshift_ series of offerings, Red Hat is a significant innovator in the technologies used to facilitate _DevOps_.
 
 . *API Management*
 +
-_Gartner's Magic Quadrant for Full Life Cylce API Management_ puts Red Hat's 3scale API management solution in the leader's quadrant.
+_Gartner's Magic Quadrant for Full Life Cycle API Management_ names Red Hat a leader for its 3scale API management solution.
 
-. *MicroService Architectures(MSAs)*
+. *Microservice Architectures (MSAs)*
 +
 With MSAs, the need for a _service mesh_ becomes critical.
 As such, Red Hat is contributing to the Istio community project.
-In addition, Red Hat is actively working to productize Istio as a supported product on Red Hat's OpenShift Container Platform (OCP).
+Red Hat is also working to productize Istio as a supported product on Red Hat's OpenShift Container Platform (OCP).
 
 Specific to API Management and MSA _Service Mesh_, the following table provides a broad feature comparison :
 
 [width="100%",cols="1,1",options="header"]
 |========================
-|*Service Mesh* | *API Mgmt*
-|Service Discovery|Relationship Mgmt between API Producer and Consumer (who often don't know eachother)
-|Automatic retries|API Consumer Portal
-|Timeouts|API Consumer Portal CMS
-|Load Balancing|API domain Administration
-|Rating and Limiting|API documentation
-|Circuit Breaker|API testing and request sampling
-|Bulk Heading|billing
-|Authorization and Authentication|API methods and metrics
+|*Service Mesh* | *API Management*
+|Service discovery|Relationship management between API producer and consumer
+|Automatic retries|API consumer portal
+|Timeouts|API Consumer portal CMS
+|Load balancing|API domain administration
+|Rating and limiting|API documentation
+|Circuit breaker|API testing and request sampling
+|Bulk heading|Billing
+|Authorization and authentication|API methods and metrics
 |Routing (DMZ, Surgical, Dynamic for Blue-green / Canary, Mirroring, Shadow traffic)|Usage limits
-|Fault Injection|Sign-up and subscriptions
-|App level & end-to-end monitoring|Analytics that provide insight into API utilization
-|logging|
-|metrics|
+|Fault injection|Sign-up and subscriptions
+|App level and end-to-end monitoring|Analytics that provide insight into API utilization
+|Logging|
+|Metrics|
 |Distributed tracing|
 |========================
 
-Notice that the focus of Istio and Service mesh management is mainly about assigning identity for the benefit of traffic control into and within the cluster/mesh.
+Note that the primary purpose of Istio and service mesh management is assigning identity for the benefit of traffic control into and within the cluster/mesh.
 
-Also notice that the focus of API Management is about fostering business relationships between API consumers and producers.
+Also note that the focus of API Management is fostering business relationships between API consumers and producers.
 
 === Reference
 

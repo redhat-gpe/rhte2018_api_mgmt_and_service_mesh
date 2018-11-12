@@ -51,7 +51,7 @@ With MSAs, the need for a _service mesh_ becomes critical.
 As such, Red Hat is contributing to the Istio community project.
 Red Hat is also working to productize Istio as a supported product on Red Hat's OpenShift Container Platform (OCP).
 
-Specific to API Management and MSA _Service Mesh_, the following table provides a broad feature comparison :
+The following table provides a broad feature comparison of API Management and MSA _service mesh_ :
 
 [width="100%",cols="1,1",options="header"]
 |========================

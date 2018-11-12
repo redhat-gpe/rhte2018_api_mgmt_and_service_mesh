@@ -5,7 +5,7 @@
 :linkattrs:
 :transaction_costs: link:https://en.wikipedia.org/wiki/Transaction_cost[transaction costs]
 
-= API Mgmt and Service Mesh Lab
+= API Management and Service Mesh Lab
 
 .Goals
 * Inject Istio Envoy proxy configurations into an API gateway

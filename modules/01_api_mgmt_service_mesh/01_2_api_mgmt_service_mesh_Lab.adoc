@@ -21,20 +21,17 @@
 
 == Overview
 
-_API Management_ facilitates relationships between API consumers and producers.
-It lowers the {transaction costs} (ie: search costs, price discovery, policing and enforcement costs, etc ) that would otherwise hinder mutually beneficial exchange between API consumer and producer.
-It is often the case that these API producers and consumers do not personally know each other.
+_API Management_ facilitates relationships between API consumers and producers, lowering {transaction costs} such as search costs, price discovery, policing and enforcement costs, and so on. These would otherwise hinder mutually beneficial exchanges between API consumers and producers.
 
 A _service mesh_ provides the technical resilience and _observability_ needed to facilitate a Microservice Architecture (MSA).
 
-The two technologies target different use cases.
-However, there is some overlap.
+_API Management_ and a _service mesh_ target different use cases, although there is some overlap.
 
-The purpose of this lab is to discover how the two technologies can complement each other.
-You do this by applying both a _service mesh_ and an _API Management_ solution to an existing _cloud native_ application running in Red Hat's Openshift Container Platform.
+The purpose of this lab is to discover how these technologies can complement each other.
+You do this by applying both a _service mesh_ and an _API Management_ solution to an existing _cloud-native_ application running on Red Hat's Openshift Container Platform.
 
 
-[blue]#The lab takes you through a journey that has you gradually apply more and more features of both _API Mgmt_ and _service mesh_ to your cloud native application.#
+[blue]#In this lab you gradually apply more and more features of both _API Management_ and _service mesh_ to your cloud-native application.#
 
 === Background
 

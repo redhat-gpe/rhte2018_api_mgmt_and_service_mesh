@@ -156,11 +156,11 @@ If you are an experienced user of Red Hat 3scale API Management, complete the in
 If you are not an experienced user of Red Hat 3scale API Management, complete the instructions in section <<configuretestapi_stepbystep>>, then continue with section <<apicast_istio>>.
 
 [[configuretestapi_stepbystep]]
-=== Configure & Test:  Step-by-Step
+=== Configure and Test: Step-by-Step
 
 In this section, you define a service that manages access to the Coolstore catalog service that has already been provisioned for you.
 
-The activities in this section are also found in the pre-req courses but is additionally provided here as a refresher for your convenience.
+The activities in this section are also found in the prerequisite courses but are provided here as a refresher for your convenience.
 
 ==== Define Catalog Service
 

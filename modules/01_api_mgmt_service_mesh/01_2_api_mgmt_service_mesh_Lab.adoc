@@ -195,20 +195,20 @@ image::images/publish_app_plan.png[]
 
 ==== Create Application
 
-In this section, you associate an application to an API consumer account.
-This generates a _user key_ to the application based on the details previously defined in the application plan.
-The user key is used as a query parameter to the HTTP request to invoke your business services via your on-premise API gateway.
+In this section, you associate an application with an API consumer account.
+This generates a _user key_ for the application based on the details previously defined in the application plan.
+The user key is used as a query parameter to the HTTP request to invoke your business services via the on-premise API gateway.
 
 . Navigate to the *Developers* tab.
 . Select the `Developer` account.
 . Create Application
 .. Click the *0 Applications* link at the top:
 +
-NOTE: A default application may have already been created (in which case the link will indicate 1 Application, not 0).
-If so, this default application is typically associated with the out-of-the-box `API` service (which is not what you want).
-If it exists, feel free to click on default application to identify which service it is associated with and then delete it.
+NOTE: A default application may have already been created, in which case the link will indicate 1 Application, not 0.
+If so, this default application is typically associated with the out-of-the-box `API` service, which is not desireable.
+If it exists, click on the default application to identify which service it is associated with, then delete it.
 
-.. Click image:images/create_app_icon.png[].
+.. Click *Create Application*.
 .. Fill in the *New Application* form as follows:
 ... *Application plan*: `catalog_app_plan`
 ... *Service Plan*: `Default`

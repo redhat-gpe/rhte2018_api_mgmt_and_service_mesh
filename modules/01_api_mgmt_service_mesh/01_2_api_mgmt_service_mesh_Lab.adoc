@@ -239,7 +239,7 @@ In this section, you define an _API proxy_ to manage your _catalog_ RESTful busi
 . From your `catalog_service`, select *Integration*.
 . Click *Add the base URL of your API and save the configuration*.
 +
-* This takes you to a page that allows you to associate the API gateway staging and production URLs with your new 3scale proxy service.
+* This navigates to a page that allows you to associate the API gateway staging and production URLs with your new 3scale proxy service.
 
 . Populate the *Configuration: configure & test immediately in the staging environment* form as follows:
 .. *Private Base URL*:
@@ -250,47 +250,51 @@ In this section, you define an _API proxy_ to manage your _catalog_ RESTful busi
 $ echo -en "\n\nhttp://catalog-service.$MSA_PROJECT.svc.cluster.local:8080\n\n"
 -----
 
-.. *Staging Public Base URL*: Populate this field with the output from the following command:
+.. *Staging Public Base URL*:
++
+Populate this field with the output from the following command:
 +
 -----
 $ echo -en "\n`oc get route catalog-stage-apicast-$OCP_USERNAME -n $GW_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
 -----
 
-.. *Production Public Base URL*: Populate this field with the output from the following command:
+.. *Production Public Base URL*:
++
+Populate this field with the output from the following command:
 +
 -----
 $ echo -en "\n`oc get route catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT --template "https://{{.spec.host}}"`:443\n\n"
 -----
 
-.. *MAPPING RULES*
+.. *MAPPING RULES*:
 +
-Add an additional `Mapping Rule` for the HTTP POST method:
-+
-You'll use the POST method in the last section in this lab.
+Add an additional `Mapping Rule` for the HTTP POST method. You'll use the POST method in the last section in this lab.
 
-... In the `MAPPING RULES` section, click the green link: `Add Mapping Rule`
-... In the new mapping rule, change the verb to `POST` and set `/` as the Pattern
+... In the `MAPPING RULES` section, click *Add Mapping Rule*.
+... In the new mapping rule, change the *Verb* to `POST` and enter `/` as the Pattern.
 +
 image::images/post_mapping.png[]
 
-.. *API test GET request*: Enter `/products`.
-
-** Expect to see a test cURL command populated with the API key assigned to you for the `catalog_app_plan`:
+.. *API test GET request*:
++
+Enter `/products`.
++
+Expect to see a test *curl* command populated with the API key assigned to you for the `catalog_app_plan`:
 +
 image::images/apikey_shows_up.png[]
 +
-.. If not, go back through the steps to create an Application Plan and corresponding Application.
+If you do not see an example curl command, repeat the steps to create an Application Plan and corresponding Application.
 +
 NOTE: When there are multiple developer accounts, Red Hat 3scale API Management uses the default developer account that is created with every new API provider account to determine which user key to use. When creating new services, the API Manager sets the first application from the first account subscribed to the new service as the default.
 
 . Click *Update & test in Staging Environment*
-.. In doing so, the `apicast-stage` pod invokes your backend _catalog_ business service as per the `Private Base URL`.
-.. The page should turn green with a message indicating success.
+.. The `apicast-stage` pod invokes your backend _catalog_ business service as per the `Private Base URL`.
+.. The page should turn green with a message indicating success:
 +
 image::images/stage_success.png[]
 
-. Click *Back to Integration & Configuration*:
-. Click *Promote v. 1 to Production*:
+. Click *Back to Integration & Configuration*
+. Click *Promote v. 1 to Production*
 +
 image::images/stage_and_prod.png[]
 

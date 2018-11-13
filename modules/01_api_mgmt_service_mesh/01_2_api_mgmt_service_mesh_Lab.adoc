@@ -150,11 +150,10 @@ As the first step, you smoke test the management of your _catalog_ RESTful servi
 
 Instructions are provided for both experienced and inexperienced 3scale users.
 [red]#Follow only one set of instructions.#
-After completing the smoke testing, continue with the section: <<apicast_istio>>.
 
-If you are an experienced user of Red Hat 3scale API Management, skip to the section: <<configuretestapi>>.
+If you are an experienced user of Red Hat 3scale API Management, complete the instructions in section <<configuretestapi>>, then continue with section <<apicast_istio>>.
 
-If you are not an experienced user of Red Hat 3scale API Management, complete the instructions in <<configuretestapi_stepbystep>>.
+If you are not an experienced user of Red Hat 3scale API Management, complete the instructions in section <<configuretestapi_stepbystep>>, then continue with section <<apicast_istio>>.
 
 [[configuretestapi_stepbystep]]
 === Configure & Test:  Step-by-Step

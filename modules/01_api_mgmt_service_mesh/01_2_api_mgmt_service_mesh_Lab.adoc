@@ -135,27 +135,28 @@ It could be injected as a sidecar to an application.
 
 This approach is not covered in this lab.
 
-== Configure and Test API Mgmt
+== Configure and Test API Management
 
-This lab takes you through a journey that has you gradually apply more and more features of both _API Mgmt_ and _service mesh_ to your cloud native application.
-
-As the first step in this journey, you smoke test the management of your _catalog_ RESTful services using your API Manager and API gateways.
-
-A deployment topology diagram of the components involved in this API managed environment are as follows:
+The following deployment topology diagram illustrates the components of this API managed environment, and the connections between them:
 
 image::images/deployment_apicast.png[]
 
-Guidance is provided for both experienced and inexperienced 3scale users.
-[red]#Choose only one.#
-Afterwards, continue with the section: <<apicast_istio>>
-
-=== Configure & Test: Experienced 3scale users
-
-If you are proficient with API Management using 3scale by Red Hat, then skip to the section: <<configuretestapi>> .
-
-Once complete, continue on with the next section: <<apicast_istio>>
+In this lab you incrementally add features of both _API Management_ and _service mesh_ to your cloud-native application.
 
 
+=== Configure and Test: Experienced 3scale users
+
+As the first step, you smoke test the management of your _catalog_ RESTful services using your API Manager and API gateways.
+
+Instructions are provided for both experienced and inexperienced 3scale users.
+[red]#Follow only one set of instructions.#
+After completing the smoke testing, continue with the section: <<apicast_istio>>.
+
+If you are an experienced user of Red Hat 3scale API Management, skip to the section: <<configuretestapi>>.
+
+If you are not an experienced user of Red Hat 3scale API Management, complete the instructions in <<configuretestapi_stepbystep>>.
+
+<<configuretestapi_stepbystep>>
 === Configure & Test:  Step-by-Step
 
 In this section, you define a service that manages access to the Coolstore catalog service that has already been provisioned for you.

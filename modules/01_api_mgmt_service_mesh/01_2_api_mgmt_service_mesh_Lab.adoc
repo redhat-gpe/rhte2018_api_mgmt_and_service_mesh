@@ -301,8 +301,8 @@ image::images/stage_and_prod.png[]
 Your 3scale by Red Hat service is configured.
 Next, the configuration details of your service need to be propagated to your on-premise API gateway.
 
-==== Refresh API gateway at boot
-Every time a configuration change is made to an api proxy or application plan, the production API gateways need to be refreshed with the latest changes.
+==== Refresh API Gateway at Boot
+Every time a configuration change is made to an API proxy or application plan, the production API gateways need to be refreshed with the latest changes.
 
 The API gateways are configured to refresh the latest configuration information from the API management platform every 5 minutes.
 When this internal NGINX timer is triggered, you see log statements in your API gateway similar to the following:
@@ -316,9 +316,9 @@ When this internal NGINX timer is triggered, you see log statements in your API 
 [info] 36#36: *3574 [lua] configuration_loader.lua:160: auto updating configuration finished successfuly, context: ngx.timer
 -----
 
-For the purpose of this lab, instead of potentially waiting for 5 minutes, you can simply bounce your API gateway pods .
+For the purpose of this lab, you can delete your API gateway pods instead of waiting for 5 minutes.
 
-. Bounce API gateway related pods:
+. Delete API gateway related pods:
 +
 -----
 $ for i in `oc get pod -n $GW_PROJECT | grep "apicast" | awk '{print $1}'`; do oc delete pod $i; done
@@ -328,9 +328,11 @@ Kubernetes will detect the absence of these pods and start new ones.
 +
 Because the value of the _APICAST_CONFIGURATION_LOADER_ environment variable in the pod is set to `boot`, the service proxy configuration from the API Manager will automatically be pulled upon restart.
 
-. Tail the log of the new API gateway production pod.
-
-* A debug-level log statement similar to the following appears:
+. Confirm the API gateway related pods have been started.
++
+Tail the log file of the new API gateway production pod.
++
+* When the pods are successfully restarted, a debug-level log statement similar to the following appears:
 +
 .Sample Output
 -----

@@ -341,7 +341,7 @@ Tail the log file of the new API gateway production pod.
 
 In this section, you invoke your Catalog business service via your production API gateway.
 
-. Make sure that your `$CATALOG_USER_KEY` environment variable is still set:
+. Verify your `$CATALOG_USER_KEY` environment variable is still set:
 +
 -----
 $ echo $CATALOG_USER_KEY
@@ -365,7 +365,7 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 }
 -----
 
-. If you are still tailing the log of your `apicast` pod, expect to see statements similar to this:
+. If you are still viewing the end of `apicast` pod's log file, expect to see statements similar to this:
 +
 .Sample Output
 -----
@@ -377,11 +377,11 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 
 -----
 
-[blue]#Congratulations!# Your lab environment should now consist of a _catalog_ RESTful service managed by out of the box Red Hat 3scale API Manager 2.2 functionality.
+[blue]#Congratulations!# Your lab environment should now consist of a _catalog_ RESTful service managed by standard Red Hat 3scale API Manager 2.2 functionality.
 
 [blue]#This is a substantial accomplishment!#
-You are now utilizing the tools needed to lower the {transaction_costs} (ie: search costs, price discovery, policing and enforcement costs, etc ) that would otherwise hinder mutually beneficial exchange between API consumer and producer.
-Via the Red Hat 3scale API Management product, you can manage the entire life-cycle of your APIs and provide value-add to your customers and partners.
+You are now utilizing the tools needed to lower the {transaction_costs} such as search costs, price discovery, policing and enforcement costs, and so on, that would otherwise hinder mutually beneficial exchanges between API consumers and producers.
+Using the Red Hat 3scale API Management product, you can manage the entire life cycle of your APIs and provide added value to your customers and partners.
 
 
 [[apicast_istio]]

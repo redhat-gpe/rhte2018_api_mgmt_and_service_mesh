@@ -328,7 +328,7 @@ Because the value of the _APICAST_CONFIGURATION_LOADER_ environment variable in 
 
 . Verify the API gateway related pods have been started.
 +
-Tail the log file of the new API gateway production pod.
+View the latest entries in the new API gateway production pod's log file with the `tail` command.
 +
 * When the pods are successfully restarted, a debug-level log statement similar to the following appears:
 +

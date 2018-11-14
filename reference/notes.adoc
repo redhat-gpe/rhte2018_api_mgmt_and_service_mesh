@@ -29,6 +29,9 @@ Intro to Cloud-Native App Dev
 +
 nginx-opentracing
 
+== Datawire Ambassador
+. https://www.getambassador.io/about/why-ambassador/
+
 == Apigee Mixer in Istio
 
 . https://groups.google.com/forum/#!topic/istio-users/zKtk4uswGLQ

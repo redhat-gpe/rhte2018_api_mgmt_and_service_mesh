@@ -673,15 +673,15 @@ This request now flows through your Istio enabled API gateway.
 [blue]#As mentioned previously, what you have accomplished so far is of limited value on its own. However, this is a step to full utilization of API management and service mesh of your container native application.
 In the next sections of this lab you will continue to build upon this foundation.#
 
-== Istio Ingress gateway
+== Istio Ingress Gateway
 
-Up until now, incoming traffic into the production API gateway has been directly via the out-of-the-box _HAProxy_ based Kubernetes / OCP _router_.
+Until now, traffic into the production API gateway has been directly via the standard _HAProxy_-based Kubernetes or OCP _router_.
 
-This has worked fine however what is missing is the ability to apply more sophisticated route rules as well as integration with service mesh _observability_ tools such as _Jaeger_ and _Prometheus_.
-Istio includes an _ingress_ gateway that implements these additional features.
+This has worked, but what is missing is the ability to apply more sophisticated route rules and integration with service mesh _observability_ tools such as _Jaeger_ and _Prometheus_.
+Istio includes an _Ingress_ gateway that implements these additional features.
 
-In this section of the lab, you will modify the flow of inbound traffic such that it additionally flows through the _Ingress_ gateway of Istio.
-Among other benefits, you'll be able to trace inbound traffic as it initially enters your solution.
+In this section of the lab, you will modify the flow of inbound traffic so that it also flows through the _Ingress_ gateway of Istio.
+Among other benefits, you will be able to trace inbound traffic as it initially enters your solution.
 
 image::images/api_and_ingress_gateway.png[]
 
@@ -691,16 +691,16 @@ image::images/api_and_ingress_gateway.png[]
 $ export CATALOG_API_GW_HOST=`oc get route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT -o template --template {{.spec.host}}`
 -----
 +
-The value of $CATALOG_API_GW_HOST will be specified in the request to the Istio ingress gateway as a HTTP _HOST_ header.
-It should match what's been configured in the _catalog-service_ in your API Manager.
+The value of $CATALOG_API_GW_HOST will be specified in the request to the Istio ingress gateway as an HTTP _HOST_ header.
+It should match what has been configured in the _catalog-service_ in your API Manager.
 +
 image::images/recall_prod_base.png[]
 
 
-. Create a file that defines an _ingress_ gateway:
+. Create a file that defines an _Ingress_ gateway:
 +
 -----
-echo \
+$ echo \
     "apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
@@ -727,7 +727,7 @@ $ oc create -f $HOME/lab/catalog-istio-gateway.yml -n $GW_PROJECT --as=system:ad
 . Create a file that defines a virtual service:
 +
 -----
-echo \
+$ echo \
     "apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -763,8 +763,8 @@ $ export INGRESS_HOST=$(oc -n istio-system get service istio-ingressgateway -o j
 $ export INGRESS_PORT=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].port}')
 -----
 +
-NOTE:  This $INGRESS_HOST:$INGRESS_PORT socket is local to the openshift subnet.
-It only becomes available when there is an Istio gateway and virtual service present and even then it might take up to about 5 minutes to become available.
+NOTE:  This $INGRESS_HOST:$INGRESS_PORT socket is local to the OpenShift Container Platform subnet.
+It only becomes available when there is an Istio gateway and virtual service present and even then it might take up to 5 minutes to become available.
 
 . Smoke test a request for catalog data via the newly configured Istio Ingress Gateway:
 +
@@ -780,8 +780,8 @@ Notice the use of the HTTP _Host_ header.
 .. What happens if this _HOST_ header is not included in the request ?
 .. What happens if this _HOST_ header is included in the request but its value (along with the _host_ attributes in the gateway and virtual service) do not match the _Production Public Base Url_ of the _catalog-service_ in the API Manager ?
 
-. The previous smoke test utilized an $INGREGRESS_HOST and $INGRESS_PORT that are made available on the local OpenShift sub-net.
-Usage of this local $INGRESS_HOST only worked because your curl client happens to be co-located on the same machine as openshift.
+. The previous smoke test used an $INGRESS_HOST and $INGRESS_PORT that are made available on the local OpenShift Container Platform network subnet.
+Usage of this local $INGRESS_HOST only worked because your curl client is on the same host as OpenShift Container Platform.
 +
 The `istio-system` namespace provides a route called: `istio-ingressgateway`.
 Like all OCP routes, it is exposed to external clients.

@@ -389,11 +389,8 @@ Using the Red Hat 3scale API Management product, you can manage the entire life 
 
 === Overview
 
-
-As the next step in the journey toward API Management and Service Mesh, in this section of the lab you will inject your API gateway with the _Envoy_ sidecar proxy from Istio.
-Admittedly, simple injection of the _Envoy_ sidecar into your API gateway is likely of limited value.
-However, this remains early in our journey.
-You will continue to build upon the foundations set here in later sections of this lab.
+As the next step in the journey toward API management and service mesh, in this section of the lab you will inject your API gateway with the _Envoy_ sidecar proxy from Istio.
+This is of limited value on its own, but you will continue to build upon the foundations set here in later sections of this lab.
 
 image::images/deployment_apicast-istio.png[]
 

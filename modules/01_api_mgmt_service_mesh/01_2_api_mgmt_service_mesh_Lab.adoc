@@ -587,11 +587,11 @@ command terminated with exit code 35
 .. If you received an error response similar to above, you have isolated the problem to an inability for your API gateway pod to make an external call out of the service mesh.
 
 
-=== Apply custom _Egress Route_
+=== Apply Custom _Egress Route_
 
 In this section, you create a custom Istio _ServiceEntry_ that allows your API gateway to connect to the _system-provider_ of the multi-tenant API Manager.
 
-. Create a custom Istio _Egress Route_ for API gateway config file:
+. Create a custom Istio _Egress Route_ for API gateway configuration file:
 +
 -----
 $ echo \
@@ -611,7 +611,7 @@ spec:
  > $HOME/lab/catalog-apicast-egressrule.yml
 -----
 
-.. Note the value of `spec -> hosts` is set to the same value of the $THREESCALE_PORTAL_ENDPOINT specified in your 3scale API gateway.
+.. Note the value of `spec -> hosts` is set to the same value of the $THREESCALE_PORTAL_ENDPOINT specified in your 3scale API Management gateway.
 .. This should allow your API gateway to connect to the route that exposes the _system-provider_ service of the multi-tenant API Manager.
 
 
@@ -623,7 +623,7 @@ $ oc create -f $HOME/lab/catalog-apicast-egressrule.yml -n $GW_PROJECT --as=syst
 +
 WARNING:  This command also requires _cluster admin_ capabilities to execute.
 
-. View new ServiceEntry
+. View new ServiceEntry:
 +
 -----
 $ oc describe serviceentry $OCP_USERNAME-catalog-apicast-egress-rule --as=system:admin
@@ -633,7 +633,7 @@ WARNING:  This command also requires _cluster admin_ capabilities to execute.
 
 . Now that a custom _egress route_ has been added, your API gateway should be able to pull configuration data from the API Manager.
 +
-Use a command like the following to verify that your Istio enabled API gateway can now poll the API Manager for proxy service configuration information::
+Use a command like the following to verify that your Istio enabled API gateway can now poll the API Manager for proxy service configuration information:
 +
 -----
 $ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
@@ -660,19 +660,18 @@ $ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
 ....
 -----
 
-. Either wait up to 5 minutes for your Istio enabled API gateway to refresh its proxy configuration (because pulling this config data previously failed) or bounce the pod.
-. Using the curl utility, re-attempt the request to retrieve catalog data via your Istio enabled API gateway .
+. Either wait up to 5 minutes for your Istio enabled API gateway to refresh its proxy configuration (because pulling this configuration data previously failed) or restart the pod.
+. Using the curl utility, attempt again to retrieve catalog data via your Istio enabled API gateway:
 +
 -----
 $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 +
 This time, you should see the catalog data in the response.
-This request now flows through your istio enabled API gateway .
+This request now flows through your Istio enabled API gateway.
 
-[blue]#As mentioned previously, the value of what you've accomplished thus far from a non-functional requirements perspective is admittedly of minimal value.
-However, you are still early in this journey toward the full utilization of API Management and service mesh of your Container Native application.
-You'll continue to build upon what you've accomplished thus far in the next sections of this lab#
+[blue]#As mentioned previously, what you have accomplished so far is of limited value on its own. However, this is a step to full utilization of API management and service mesh of your container native application.
+In the next sections of this lab you will continue to build upon this foundation.#
 
 == Istio Ingress gateway
 

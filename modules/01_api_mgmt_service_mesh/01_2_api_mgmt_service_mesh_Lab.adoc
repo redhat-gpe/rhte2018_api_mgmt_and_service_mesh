@@ -326,7 +326,7 @@ $ for i in `oc get pod -n $GW_PROJECT | grep "apicast" | awk '{print $1}'`; do o
 +
 Because the value of the _APICAST_CONFIGURATION_LOADER_ environment variable in the pod is set to `boot`, the service proxy configuration from the API Manager will automatically be pulled upon restart.
 
-. Confirm the API gateway related pods have been started.
+. Verify the API gateway related pods have been started.
 +
 Tail the log file of the new API gateway production pod.
 +

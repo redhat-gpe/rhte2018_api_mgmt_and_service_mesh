@@ -814,11 +814,9 @@ endif::showscript[]
 
 As the next step in the journey toward utilization of API Management and Service Mesh, in this section of the lab you will begin to explore the visibility provided of your service mesh using the _OpenTracing_ implementation: _Jaeger_.
 
-You'll do so in this section by utilizing an _Opentracing_ enabled variant of the 3scale API Gateway.
+You will do so in this section by utilizing an _Opentracing_ enabled variant of the 3scale API Gateway.
 
-OpenTracing is a consistent, expressive, vendor-neutral API for distributed tracing and context propagation.
-
-Jaeger is one of several implementations of OpenTracing.
+OpenTracing is a consistent, expressive, vendor-neutral API for distributed tracing and context propagation. Jaeger is one of several implementations of OpenTracing.
 
 The API gateway that you will switch to in this section of the lab includes a couple of additional _Opentracing_ and _Jaeger_ related libraries:
 
@@ -834,7 +832,7 @@ These libraries provide support for the _OpenTracing_ specification using _Jaege
 
 image::images/jaeger_architecture.png[]
 
-You'll configure the Opentracing client libraries in your API gateway to forward traces via UDP to the _jaeger-agent_.
+You will configure the Opentracing client libraries in your API gateway to forward traces via UDP to the _jaeger-agent_.
 
 === Procedure
 

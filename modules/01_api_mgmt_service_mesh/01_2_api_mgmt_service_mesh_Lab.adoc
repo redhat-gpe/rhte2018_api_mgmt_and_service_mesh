@@ -969,13 +969,11 @@ The Jaeger UI provides a visual depiction of traces through the services that ma
 
 === Terminology
 
-In the world of _distributed tracing_, one important term to understand is: _span_.
-Jaeger defines _span_ as: “a logical unit of work in the system that has an operation name, the start time of the operation, and the duration. Spans can be nested and ordered to model causal relationships.
+An important _distributed tracing_ term to understand is: _span_.
+Jaeger defines _span_ as “a logical unit of work in the system that has an operation name, the start time of the operation, and the duration. Spans can be nested and ordered to model causal relationships.
 An RPC call is an example of a span.”
 
-Another important term to understand is: _trace_
-
-Jaeger defines _trace_ as “adata/execution path through the system, and can be thought of as a directed acyclic graph of spans"
+Another important term to understand is: _trace_. Jaeger defines _trace_ as “a data or execution path through the system, and can be thought of as a directed acyclic graph of spans".
 
 === Procedure
 

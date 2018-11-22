@@ -784,10 +784,10 @@ Notice the use of the HTTP _Host_ header.
 Usage of this local $INGRESS_HOST only worked because your curl client is on the same host as OpenShift Container Platform.
 +
 The `istio-system` namespace provides a route called: `istio-ingressgateway`.
-Like all OCP routes, it is exposed to external clients.
+Like all OpenShift Container Platform routes, it is exposed to external clients.
 +
 Try invoking the API gateway via this `istio-ingressgateway` route instead of using the internal _service-mesh_ related $INGRESS_HOST and $INGRESS_PORT.
-The results should be the same.  The curl command to use is as follows:
+The results should be the same.  The command to use is as follows:
 +
 -----
 $  curl -v \

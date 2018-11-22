@@ -814,11 +814,11 @@ endif::showscript[]
 
 As the next step in the journey toward utilization of API Management and Service Mesh, in this section of the lab you will begin to explore the visibility provided of your service mesh using the _OpenTracing_ implementation: _Jaeger_.
 
-You will do so in this section by utilizing an _Opentracing_ enabled variant of the 3scale API Gateway.
+You will do so in this section by utilizing an _OpenTracing_-enabled variant of the 3scale API Gateway.
 
 OpenTracing is a consistent, expressive, vendor-neutral API for distributed tracing and context propagation. Jaeger is one of several implementations of OpenTracing.
 
-The API gateway that you will switch to in this section of the lab includes a couple of additional _Opentracing_ and _Jaeger_ related libraries:
+The API gateway that you will switch to in this section of the lab includes several additional _OpenTracing_ and _Jaeger_ related libraries:
 
 . *ngx_http_opentracing_module_so*
 +
@@ -832,11 +832,11 @@ These libraries provide support for the _OpenTracing_ specification using _Jaege
 
 image::images/jaeger_architecture.png[]
 
-You will configure the Opentracing client libraries in your API gateway to forward traces via UDP to the _jaeger-agent_.
+You will configure the OpenTracing client libraries in your API gateway to forward traces via UDP to the _jaeger-agent_.
 
-=== Procedure
+=== Enable OpenTracing using Jaeger
 
-. You'll be making quite a few changes to your Istio enabled API gateway.  Subsequently, put it in a paused state while those changes are being made:
+. You will be making quite a few changes to your Istio-enabled API gateway.  Subsequently, put it in a paused state while those changes are being made:
 +
 -----
 $ oc rollout pause deploy $OCP_USERNAME-prod-apicast-istio
@@ -852,12 +852,12 @@ jaeger-agent   ClusterIP   None         <none>        5775/UDP,6831/UDP,6832/UDP
 jaeger-collector   ClusterIP   172.30.95.25   <none>        14267/TCP,14268/TCP          4d
 -----
 +
-The _jaeger-agent_ receives tracing information (in the form of UDP packets on port 6831) submitted by jaeger client libraries embedded in apps and forwards in batch to the Jaeger collector.
+The Jaeger agent receives tracing information (in the form of UDP packets on port 6831) submitted by Jaeger client libraries embedded in applications. It forwards the tracing information in batches to the Jaeger collector.
 +
-Alternatively, jaeger client libraries can push tracing information via a TCP connection directly to the _jaeger-collector_ on port 14268.
+Alternatively, Jaeger client libraries can push tracing information via a TCP connection directly to the _jaeger-collector_ on port 14268.
 
 
-. Create a json config file that will instruct the opentracing and jaeger related client libraries in the API gateway how to push traces to the `jaeger-agent`:
+. Create a JSON configuration file that will instruct the OpenTracing and Jaeger related client libraries in the API gateway to push traces to the `jaeger-agent`:
 +
 -----
 $   cat <<EOF > $HOME/lab/jaeger_config.json
@@ -889,24 +889,24 @@ $   cat <<EOF > $HOME/lab/jaeger_config.json
 EOF
 -----
 
-.. Pay special attention to the value of _localAgentHostPort_ .
+.. Pay special attention to the value of _localAgentHostPort_.
 +
-Thi is the URL that your API gateway will push traces (via UDP) to the _jaeger-agent_ service host and port.
+This is the URL of your API gateway that will push traces (via UDP) to the _jaeger-agent_ service host and port.
 
 
-. Create a configmap from the opentracing json file:
+. Create a _configmap_ from the OpenTracing JSON file:
 +
 -----
 $ oc create configmap jaeger-config --from-file=$HOME/lab/jaeger_config.json -n $GW_PROJECT
 -----
 
-. Mount the configmap to your opentracing enabled API Gateway:
+. Mount the configmap to your OpenTracing-enabled API Gateway:
 +
 -----
 $ oc volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ --configmap-name jaeger-config -n $GW_PROJECT
 -----
 
-. Set environment variables that indicate to the API gateway where to read opentracing related configurations:
+. Set environment variables that indicate to the API gateway where to read OpenTracing related configurations:
 +
 -----
 $ oc env deploy/$OCP_USERNAME-prod-apicast-istio \
@@ -915,7 +915,7 @@ $ oc env deploy/$OCP_USERNAME-prod-apicast-istio \
          -n $GW_PROJECT
 -----
 
-. Update the API gateway _deployment_ to use the Opentracing and Jaeger enabled image:
+. Update the API gateway _deployment_ to use the OpenTracing and Jaeger enabled image:
 +
 -----
 $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
@@ -925,15 +925,15 @@ $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
 Notice the use of a community version of the API gateway container image available in a public _quay.io_ organization.
 This is the container image that includes the _opentracing_ and _jaeger_ client libraries.
 
-. Resume your Istio and opentracing enabled API gateway.
+. Resume your Istio and OpenTracing enabled API gateway:
 +
 -----
 $ oc rollout resume deploy $OCP_USERNAME-prod-apicast-istio
 -----
 
-. Verify the existence of the opentracing library for NGinx in the API gateway.
+. Verify the existence of the OpenTracing library for NGinx in the API gateway.
 +
-Once your API gateway is back up and running, execute the following command :
+Once your API gateway is back up and running, execute the following command:
 +
 -----
 $ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
@@ -944,7 +944,7 @@ $ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /usr/local
 -rwxr-xr-x. 1 root root 1457848 Jun 11 06:29 /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
 -----
 
-. Verify the existence of the jaeger client library in the API gateway:
+. Verify the existence of the Jaeger client library in the API gateway:
 +
 -----
 $ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /opt/app-root/lib/libjaegertracing.so.0

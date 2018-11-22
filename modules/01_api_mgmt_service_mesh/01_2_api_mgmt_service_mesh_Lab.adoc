@@ -960,9 +960,9 @@ lrwxrwxrwx. 1 root root 25 Jun 11 06:38 /opt/app-root/lib/libjaegertracing.so.0 
 
 Often the first thing to understand about your microservice architecture is specifically which microservices are involved in an end-user transaction.
 
-The _observability_ tooling (specifically either Zipkin or Jaeger) built into Istio can provide this information.
+The _observability_ tooling built into Istio, either Zipkin or Jaeger, can provide this information.
 
-In this section of the lab, you are exposed to the `Jaeger UI`.
+In this section of the lab, you are exposed to the Jaeger user interface (UI).
 
 The Jaeger UI provides a visual depiction of traces through the services that make up your application.
 

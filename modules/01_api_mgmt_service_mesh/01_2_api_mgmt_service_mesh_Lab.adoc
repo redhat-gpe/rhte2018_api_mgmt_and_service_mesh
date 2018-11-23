@@ -1041,17 +1041,17 @@ Ingress requests through the _catalog-service_ are now directed to this new Isti
 
 The new catalog service is enabled with OpenTracing and Jaeger libraries so that it can also participate in distributed tracing.
 
-=== OpenTracing libraries included in catalog_service
+=== OpenTracing Libraries Included in Catalog Service
 
-The _catalog service_ is link:https://github.com/gpe-mw-training/catalog-service[written in Java] (specifically using the _reactive_ programming framework: link:https://vertx.io/[vert.x]).
+The _catalog service_ is link:https://github.com/gpe-mw-training/catalog-service[written in Java] using the _reactive_ programming framework link:https://vertx.io/[vert.x].
 
-As such, the new catalog service used in the remainder of this course is embedded with the opentracing and jaeger Java client libraries.
+As such, the new catalog service used in the remainder of this course is embedded with the OpenTracing and Jaeger Java client libraries.
 
-Recall that when configuring the NGinx and C++ opentracing/jaeger client libraries in the API gateway, a configuration file (via a config map) was loaded.
-The opentracing and jaeger client libraries for Java are a bit easier to work with.
+Recall that when configuring the NGinx and C++ OpenTracing/Jaeger client libraries in the API gateway, a configuration file (via a config map) was loaded.
+The OpenTracing and Jaeger client libraries for Java are easier to work with.
 The Java client libraries allow for configuration via environment variables.
 
-The Dockerfile with environment variables (and their default values) utilized in building the new opentracing catalog image is as follows:
+The Dockerfile with environment variables (and their default values) utilized in building the new OpenTracing catalog image is as follows:
 
 -----
 FROM redhat-openjdk-18/openjdk18-openshift:1.5-14
@@ -1061,7 +1061,7 @@ EXPOSE 8080 8778 9779
 COPY target/catalog-service-tracing-1.0.17.jar /deployments/
 -----
 
-The source code of the OpenTracing enabled catalog service can be found link:https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht[here].
+The source code of the OpenTracing-enabled catalog service is available at link:https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht[https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht].
 
 === Inject Envoy into _catalog_ service
 

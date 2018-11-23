@@ -976,7 +976,7 @@ Another important term to understand is: _trace_. Jaeger defines _trace_ as “a
 
 === Procedure
 
-. If you are not already there, return back to the terminal window of your lab, and use the `curl` utility to invoke your catalog service (via:  istio ingress gateway -> API gateway) a few times.
+. If you are not already there, return to the terminal window of your lab, and use the `curl` utility to invoke your catalog service (via Istio ingress gateway -> API gateway) a few times:
 +
 -----
 $ curl -v \
@@ -990,46 +990,46 @@ $ curl -v \
 $ echo -en "\n\nhttp://"$(oc get route/tracing -o template --template {{.spec.host}} -n istio-system)"\n\n"
 -----
 
-.. Using your browser, navigate to this URL.
-.. In this version of Istio, the `Jaeger UI` is currently not secured.
+.. In a web browser, navigate to this URL.
+.. In this version of Istio, the Jaeger UI is currently not secured.
 
 . In the _Find Traces_ panel, scroll down to locate the traces associated with your OCP user name:
 +
 image::images/trace_dropdown_selection.png[]
 
-.. In the drop down for `Service`, select the option for the API gateway associated with your username.  ie:  $OCP_USERNAME-prod-apicast-istio.
-.. In the drop down for `Operation`, there are likely only two options available: `all` and `apicast_management`.
+.. From the `Service` drop-down list, select the option for the API gateway associated with your username, such as $OCP_USERNAME-prod-apicast-istio.
+.. In the `Operation` drop-down list, there are likely only two options available: `all` and `apicast_management`.
 +
 At this time, neither of these operations are particularly relevant to our use case.
-The `apicast_management` operation pertains to the invocations made by the _readiness_ and _liveness_ probes of the deployment to the API gateway pod.
+The `apicast_management` operation relates to the invocations made by the _readiness_ and _liveness_ relates to probes of the deployment to the API gateway pod.
 
-.. Return back the Jaeger UI and notice more options present in the drop down for `Operation`.
+.. Return to the Jaeger UI and notice more options present in the `Operation` drop-down.
 +
-Select the character: '/'
+Select the character: '/'.
 +
 This corresponds to the requests flowing through the API gateway and backend catalog service.
 
-. In the `Jaeger UI`, click `Find Traces`.
+. In the Jaeger UI, click `Find Traces`.
 +
 You should see an overview with timelines of all of your traces:
 +
 image::images/trace_overview.png[]
 
-. Click on any one of the bubbles that appear.
+. Click on any one of the circles.
 Each one corresponds to an invocation to your catalog service.
 +
 image::images/individual_trace.png[]
 
-. Click the span pertaining to _@upstream_
+. Click the span relevant to _@upstream_
 +
 image::images/upstream_span.png[]
 +
-Notice that this span pertains to the invocation of the `products` endpoint of your catalog service.
+Notice that this span relates to the invocation of the `products` endpoint of your catalog service.
 
-Traces pertaining to your Istio enabled API gateway are now available .
-However, what is missing is tracing that includes the backend _catalog_ service.
+Traces relevant to your Istio enabled API gateway are now available .
+However, tracing of the backend _catalog_ service is missing.
 
-In the next section, you'll enable your _catalog_ service to participate in this end-to-end distributed tracing .
+In the next section, you will enable your _catalog_ service to participate in this end-to-end distributed tracing.
 
 == Catalog Service: Istio enabled
 

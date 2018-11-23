@@ -1225,23 +1225,23 @@ image::images/spans_with_catalog.png[]
 
 
 
-== 3scale API Manager Analytics
+== Red Hat 3scale API Management Analytics
 
-Return back to your API Manager as the domain admin and navigate to the _Analytics_ tab at the top.
+Return to your API Manager as the domain administrator and navigate to the _Analytics_ tab.
 
 image::images/3scale_analytics.png[]
 
 Notice that the _hits_ metric for your _catalog_service_ API is automatically depicted.
-3scale analytics can depict the total count of _hits_ on both the API as well as the API method level graphed over time.
+3scale analytics can depict the total count of _hits_ on both the API and the API method level graphed over time.
 
-Your API analytics are currently course grained in that the _hits_ are the sum of invocations on all methods of your catalog service.
-Defining of fine grained _methods_ and _mappings_ for your catalog API will subsequently provide for more fine grained analytics at the method level.
+Your API analytics are currently course-grained in that the _hits_ are the sum of invocations on all methods of your catalog service.
+Defining fine-grained _methods_ and _mappings_ for your catalog API will subsequently provide for more fine-grained analytics at the method level.
 
-The analytics provided by the 3scale API Manager compliment the distributed tracing capabilities of Jaeger.
+The analytics provided by Red Hat 3scale API Management complement the distributed tracing capabilities of Jaeger.
 
-Prometheus is an analytics tool that comes out of the box with Istio and is also being tightly integrated with OpenShift.
-The analytics and observability provided by Prometheus are conceptually similar to the analytics provided by the 3scale API Manager.
-It is possible that a future version of the 3scale API Manager provides support for Prometheus for API data analytics.
+Prometheus is an analytics tool that comes by default with Istio and is being closely integrated with Red Hat OpenShift.
+The analytics and observability provided by Prometheus are conceptually similar to the analytics provided by the Red Hat 3scale API Management.
+It is possible that a future version of Red Hat 3scale API Management will provide support for Prometheus for API data analytics.
 
 == 3scale Mixer Adapter
 

@@ -1417,15 +1417,15 @@ $ curl -v `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o 
 
 In this section of the lab, you provision the community 3scale Istio Mixer in your _istio-system_ namespace.
 
-The Istio Mixer that will be utilized will originate from the following community image in Red Hat's _quay_ container image registry:
+The Istio Mixer that will be utilized will originate from the following community image in Red Hat's _Quay_ container image registry:
 
 -----
 quay.io/3scale/apicast:3scale-http-plugin
 -----
 
-. Clone the source code to the 3scale Istio Mixer to your lab environment:
+. Clone the source code of the 3scale Istio Mixer to your lab environment:
 
-.. For the purpose of this lab, the source code utilized is an unmodified fork of the upstream community at:  `https://github.com/3scale/istio-integration`
+.. For the purpose of this lab, the source code utilized is an unmodified fork of the upstream community at link:https://github.com/3scale/istio-integration[].
 .. Execute:
 +
 -----
@@ -1469,7 +1469,7 @@ Accepts gRPC invocations from Istio Ingress and routes to the other side car in 
 +
 Accepts invocations from _3scale-istio-adapter_ and invokes the _system-provider_ and _backend-listener_ endpoints of the remote 3scale API Manager.
 
-. Inject 3scale handler into Istio Mixer Adapter:
+. Inject the 3scale handler into the Istio Mixer Adapter:
 +
 -----
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/authorization-template.yaml --as=system:admin

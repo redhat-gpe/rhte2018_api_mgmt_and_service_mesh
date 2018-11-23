@@ -1248,13 +1248,13 @@ It is possible that a future version of Red Hat 3scale API Management will provi
 === Overview
 
 The Red Hat 3scale API Management engineering team is actively working on an Istio _mixer_ adapter.
-This Istio mixer adapter will allow Red Hat 3scale API Management policies to be applied directly to the _service mesh_ .
+This Istio mixer adapter will allow Red Hat 3scale API Management policies to be applied directly to the _service mesh_.
 
 image::images/3scale_mixer_adapter.png[]
 
-In the above diagram, [blue]#notice the replacement of an API Gateway with the Istio 3scale Mixer Adapter#
+In the above diagram, [blue]#notice the replacement of an API Gateway with the Istio 3scale Mixer Adapter#.
 
-=== Disable existing API gateways
+=== Disable Existing API Gateways
 
 Your API gateways will no longer be needed.
 Inbound traffic will flow through the Istio Ingress gateway directly to the 3scale Istio Mixer and out to the remote 3scale API Manager.

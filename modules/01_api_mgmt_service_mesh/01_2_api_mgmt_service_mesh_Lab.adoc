@@ -1031,15 +1031,15 @@ However, tracing of the backend _catalog_ service is missing.
 
 In the next section, you will enable your _catalog_ service to participate in this end-to-end distributed tracing.
 
-== Catalog Service: Istio enabled
+== Catalog Service: Istio Enabled
 
 image::images/deployment_catalog-istio.png[]
 
 In the above diagram, notice the introduction of a new pod: _catalog-service-istio_.
 
-Ingress requests through the _catalog-service_ are now directed to this new Istio enabled _catalog_ pod (instead of the original _catalog_ pod that is not Istio enabled).
+Ingress requests through the _catalog-service_ are now directed to this new Istio-enabled _catalog_ pod (instead of the original _catalog_ pod that is not Istio enabled).
 
-The new catalog service is enabled with _opentracing_ and _jaeger_ libraries so that it can also participate in distributed tracing .
+The new catalog service is enabled with OpenTracing and Jaeger libraries so that it can also participate in distributed tracing.
 
 === OpenTracing libraries included in catalog_service
 

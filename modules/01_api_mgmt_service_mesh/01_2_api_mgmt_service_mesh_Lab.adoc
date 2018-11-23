@@ -1435,13 +1435,13 @@ $ git clone \
       $HOME/lab/istio-integration
 -----
 
-. Load the Istio Mixer Adapter deployment (found in the 3scale istio integration project you just cloned ) into the istio-system namesapce:
+. Load the Istio Mixer Adapter deployment (found in the 3scale Istio integration project you just cloned) into the istio-system namespace:
 +
 -----
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/openshift -n istio-system --as=system:admin
 -----
 
-. Set the 2 containers at the debug log level:
+. Set the 2 containers to debug log level:
 +
 -----
 $ oc set env dc/3scale-istio-adapter --containers="3scale-istio-adapter" -e "THREESCALE_LOG_LEVEL=debug" -n istio-system --as=system:admin
@@ -1478,8 +1478,8 @@ $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/authorization-tem
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter.yaml --as=system:admin
 -----
 +
-Embedded in these yaml files is the 3scale handler that gets injected into the Istio Mixer.
-The (less then ideal) alternative to injecting a mixer adapter would have been to develop the 3scale handler directly in the Istio mixer source code and then compile and deploy this entire modified Istio mixer.
+Embedded in these YAML files is the 3scale handler that is injected into the Istio Mixer.
+The discouraged alternative to injecting a mixer adapter would be to develop the 3scale handler directly in the Istio mixer source code and then compile and deploy this entire modified Istio mixer.
 
 
 

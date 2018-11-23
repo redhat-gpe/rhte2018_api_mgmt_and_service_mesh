@@ -1247,8 +1247,8 @@ It is possible that a future version of Red Hat 3scale API Management will provi
 
 === Overview
 
-The Red Hat 3scale engineering team is actively working on an Istio _mixer_ adapter.
-This Istio _mixer_ adapter will allow 3scale API Management policies to be applied directly to the _service mesh_ .
+The Red Hat 3scale API Management engineering team is actively working on an Istio _mixer_ adapter.
+This Istio mixer adapter will allow Red Hat 3scale API Management policies to be applied directly to the _service mesh_ .
 
 image::images/3scale_mixer_adapter.png[]
 

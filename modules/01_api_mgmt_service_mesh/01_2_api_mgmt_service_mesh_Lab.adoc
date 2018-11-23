@@ -1349,7 +1349,7 @@ Notice that a match is made for all context paths exposed by the catalog service
 $ oc create -f ~/lab/catalog-direct-gw-vs.yml -n $MSA_PROJECT --as=system:admin
 -----
 
-. Bounce the istio _policy_ pod:
+. Bounce the Istio _policy_ pod:
 .. With the 1.0.0 version of community Istio, the Istio policy may get into an unstable state.
 Before progressing with management of more sophisticated routing rules to support the 3scale Istio Mixer, it is recommended to bounce the _policy_ pod.
 

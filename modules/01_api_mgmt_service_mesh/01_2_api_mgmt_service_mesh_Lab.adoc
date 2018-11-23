@@ -1189,7 +1189,7 @@ $ oc patch service/catalog-service \
 $ oc scale deploy/catalog-service --replicas=0 -n $MSA_PROJECT
 -----
 
-. Ensure your `$CATALOG_USER_KEY` and $CATALOG_API_GW_HOST environment variables remain set:
+. Ensure your `$CATALOG_USER_KEY` and `$CATALOG_API_GW_HOST` environment variables remain set:
 +
 -----
 $ echo $CATALOG_USER_KEY

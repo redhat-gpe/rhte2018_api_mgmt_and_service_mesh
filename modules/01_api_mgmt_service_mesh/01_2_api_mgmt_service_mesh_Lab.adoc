@@ -1285,11 +1285,11 @@ $ oc delete virtualservice catalog-istio-gateway-vs -n $GW_PROJECT --as=system:a
 $ oc delete gateway catalog-istio-gateway -n $GW_PROJECT --as=system:admin
 -----
 
-=== New Virtual Service to catalog service
+=== New Virtual Service to Catalog Service
 
-Let's create a routing rule to invoke the backend catalog service directly via the Istio _ingress_ gateway.
+You will create a routing rule to invoke the backend catalog service directly via the Istio _ingress_ gateway.
 
-Later, more complex routing rules will modify the flow to re-direct through the 3scale Istio Mixer adapter.
+Later, more complex routing rules will modify the flow to redirect through the 3scale Istio Mixer adapter.
 
 . Ensure the $NAKED_CATALOG_ROUTE environment variable still remains in your shell:
 +
@@ -1299,7 +1299,7 @@ $ echo $NAKED_CATALOG_ROUTE
 catalog-unsecured-rhte-mw-api-mesh-a1001.apps.clientvm.b902.rhte.opentlc.com
 -----
 
-. Define a gateway and virtual service that routes inbound traffic (with a web context of _/path_) directly to your backend _catalog_ service.
+. Define a gateway and virtual service that routes inbound traffic (with a web context of _/path_) directly to your backend catalog service.
 +
 -----
 $ echo \
@@ -1350,8 +1350,8 @@ $ oc create -f ~/lab/catalog-direct-gw-vs.yml -n $MSA_PROJECT --as=system:admin
 -----
 
 . Bounce the istio _policy_ pod:
-.. With the 1.0.0 version of community Istio,  sometimes the Istio policy can get itself in an unstable state.
-Before progressing with management of more sophisticated routing rules to support the 3scale Istio Mixer, its a good idea to bounce the _policy_ pod.
+.. With the 1.0.0 version of community Istio, the Istio policy may get into an unstable state.
+Before progressing with management of more sophisticated routing rules to support the 3scale Istio Mixer, it is recommended to bounce the _policy_ pod.
 
 .. Execute:
 +
@@ -1385,10 +1385,9 @@ Starting gRPC server on port 9091
 info    ControlZ available at 172.17.0.10:9876
 -----
 
-
 . From the terminal, conduct a smoke test to validate traffic to the catalog service directly from the Istio ingress gateway.
 .. For all of the following smoke tests, notice that the API _user_key_ is not being specified.
-It's not needed in these smoke tests because this inbound traffic is no longer flowing through your API gateway.
+It is not needed in these smoke tests because this inbound traffic is no longer flowing through your API gateway.
 
 .. POST a new catalog item:
 +
@@ -1401,7 +1400,7 @@ $ curl -v -X POST -H "Content-Type: application/json" `echo "http://"$(oc get ro
 }'
 -----
 
-.. View details of that recently posted catalog item:
+.. View details of the recently posted catalog item:
 +
 -----
 $ curl -v `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/product/822222"`

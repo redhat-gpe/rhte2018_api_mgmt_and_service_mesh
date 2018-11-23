@@ -1063,15 +1063,15 @@ COPY target/catalog-service-tracing-1.0.17.jar /deployments/
 
 The source code of the OpenTracing-enabled catalog service is available at link:https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht[https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht].
 
-=== Inject Envoy into _catalog_ service
+=== Inject Envoy into Catalog Service
 
-. Retrieve yaml representation of current _catalog service_ deployment:
+. Retrieve YAML representation of current _catalog service_ deployment:
 +
 -----
 $ oc get deploy catalog-service -n $MSA_PROJECT -o yaml > $HOME/lab/catalog-service.yml
 -----
 
-. Differentiate your Istio enabled catalog service from your existing catalog service:
+. Differentiate your Istio-enabled catalog service from your existing catalog service:
 +
 -----
 $ sed -i "s/ catalog-service/ $OCP_USERNAME-cat-service-istio/" $HOME/lab/catalog-service.yml
@@ -1083,8 +1083,7 @@ $ sed -i "s/ catalog-service/ $OCP_USERNAME-cat-service-istio/" $HOME/lab/catalo
 $ sed -i "s/replicas:\ 1/replicas: 1\n  paused: true/" $HOME/lab/catalog-service.yml
 -----
 
-
-. Inject Istio configs into a new catalog service deployment
+. Inject Istio configurations into a new catalog service deployment:
 +
 -----
 
@@ -1093,13 +1092,13 @@ $ istioctl kube-inject \
            > $HOME/lab/catalog-service-istio.yml
 -----
 
-. View Istio injected catalog service deployment descriptor:
+. View Istio-injected catalog service deployment descriptor:
 +
 -----
 $ cat $HOME/lab/catalog-service-istio.yml | more
 -----
 
-. Create a new configmap with parameters that configure the OpenTracing enabled Catalog Service:
+. Create a new configmap with parameters that configure the OpenTracing-enabled catalog service:
 +
 -----
 $ echo "service-name: $OCP_USERNAME-catalog-service
@@ -1114,16 +1113,14 @@ reporter-log-spans: True
 collector-endpoint: \"http://jaeger-collector.istio-system.svc:14268/api/traces\"
 " > $HOME/lab/app-config.yaml
 
-
 # Delete existing configmap
 $ oc delete configmap app-config -n $MSA_PROJECT
-
 
 # Recreate configmap using additional OpenTracing related params
 $ oc create configmap app-config --from-file=$HOME/lab/app-config.yaml -n $MSA_PROJECT
 -----
 
-. Deploy a new Istio enabled API gateway production gateway that correctly points to the Jaeger agent in your _istio-system_ namespace:
+. Deploy a new production Istio-enabled API gateway that correctly points to the Jaeger agent in your _istio-system_ namespace:
 +
 -----
 $ oc create \
@@ -1131,25 +1128,22 @@ $ oc create \
      -n $MSA_PROJECT
 -----
 
-
-. Set various environment variables on the OpenTracing enabled Catalog Service:
+. Set various environment variables on the OpenTracing-enabled Catalog Service:
 +
 -----
 $ oc set env deploy/$OCP_USERNAME-cat-service-istio APP_CONFIGMAP_NAME=app-config  -n $MSA_PROJECT
 
-
 $ oc set env deploy/$OCP_USERNAME-cat-service-istio APP_CONFIGMAP_KEY=app-config.yaml  -n $MSA_PROJECT
-
 
 # Allows for optionally debugging of catalog service so as to better understand how exactly it utilizes the opentracing / jaeger java libraries
 $ oc set env deploy/$OCP_USERNAME-cat-service-istio JAVA_DEBUG=true  -n $MSA_PROJECT
 $ oc set env deploy/$OCP_USERNAME-cat-service-istio JAVA_DEBUG_PORT=8787  -n $MSA_PROJECT
 -----
 
-. Inject required resource limits and requests into Istio related containers :
+. Inject required resource limits and requests into Istio-related containers :
 +
 There is a clusterquota assigned to your OCP user.
-This clusterquota requires that all containers (including the _istio-proxy_ and _istio-init_ ) specify _limits_ and _requests_.
+This clusterquota requires that all containers, including the _istio-proxy_ and _istio-init_, specify _limits_ and _requests_.
 +
 -----
 $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
@@ -1161,7 +1155,7 @@ $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
    -n $MSA_PROJECT
 -----
 
-. Update the new catalog service deployment to use the Opentracing and Jaeger enabled image:
+. Update the new catalog service deployment to use the OpenTracing and Jaeger enabled image:
 +
 -----
 $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
@@ -1181,7 +1175,7 @@ endif::showscript[]
 $ oc rollout resume deploy/$OCP_USERNAME-cat-service-istio -n $MSA_PROJECT
 -----
 
-. Modify the _service_ to route to new Istio enabled _catalog_ service:
+. Modify the _service_ to route to the new Istio-enabled catalog service:
 +
 -----
 $ oc patch service/catalog-service \
@@ -1189,28 +1183,26 @@ $ oc patch service/catalog-service \
    -n $MSA_PROJECT
 -----
 
-. The original catalog service is no longer needed.  Go ahead and scale it down as follows:
+. The original catalog service is no longer needed.  Scale it down as follows:
 +
 -----
 $ oc scale deploy/catalog-service --replicas=0 -n $MSA_PROJECT
 -----
 
-. Make sure that your `$CATALOG_USER_KEY` and $CATALOG_API_GW_HOST environment variables remains set:
+. Ensure your `$CATALOG_USER_KEY` and $CATALOG_API_GW_HOST environment variables remain set:
 +
 -----
 $ echo $CATALOG_USER_KEY
 
 d59904ad4515522ecccb8b81c761a283
 
-
-
 $ echo $CATALOG_API_GW_HOST
 
 catalog-prod-apicast-developer.apps.clientvm.b902.rhte.opentlc.com
 -----
 
-. From the terminal, use the curl utility as you've done so in the past to invoke your catalog service several times via the Istio ingress.
-.. Review the log file of your istio enabled catalog service.
+. From the terminal, use the `curl` utility as you have done previously to invoke your catalog service several times via the Istio ingress.
+.. Review the log file of your Istio-enabled catalog service:
 +
 -----
 $ oc logs -f `oc get pod -n $MSA_PROJECT | grep "istio" | awk '{print $1}'` -c $OCP_USERNAME-cat-service-istio -n $MSA_PROJECT
@@ -1222,8 +1214,8 @@ $ oc logs -f `oc get pod -n $MSA_PROJECT | grep "istio" | awk '{print $1}'` -c $
 INFO: getProducts() started span ...
 -----
 
-. Return back to the Jaeger UI and locate your traces.
-.. Notice that there is now a new `service` corresponding to your istio enabled catalog service:
+. Return to the Jaeger UI and locate your traces.
+.. Notice that there is now a new `service` corresponding to your Istio-enabled catalog service:
 +
 image::images/new_istio_cat_trace.png[]
 

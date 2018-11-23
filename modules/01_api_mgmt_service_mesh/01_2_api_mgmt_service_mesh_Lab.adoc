@@ -1585,10 +1585,11 @@ $ curl -v \
 PERMISSION_DENIED:threescalehandler.handler.istio-system:
 -----
 
-.. Notice a 403 error response of `PERMISSION_DENIED:threescalehandler.handler.istio-system:`
-.. This is to be expected.
-Inbound requests through the Istio Ingress are now correctly flowing through the mixer to the 3scale adapter.
-In the above request however, the API _user_key_ associated with your catalog service _application_ has been ommitted.
+.. Notice a 403 error response of `PERMISSION_DENIED:threescalehandler.handler.istio-system:`. This is to be expected.
++
+Inbound requests through the Istio ingress are now correctly flowing through the mixer to the 3scale adapter.
++
+In the above request however, the API _user_key_ associated with your catalog service _application_ has been omitted.
 .. View the log file of the 3scale adapter:
 +
 -----
@@ -1608,7 +1609,7 @@ $ curl -v \
        `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
-[blue]#Congratulations! The catalog service is backed to being managed and secured by the 3scale API Manager.#
+[blue]#Congratulations! The catalog service is again being managed and secured by the 3scale API Manager.#
 This time however, the 3scale Istio Mixer adapter is being utilized rather than the API gateway.
 
 === Fine tune 3scale Istio Mixer Adapter rules

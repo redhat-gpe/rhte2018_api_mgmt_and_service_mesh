@@ -1483,21 +1483,21 @@ The discouraged alternative to injecting a mixer adapter would be to develop the
 
 
 
-=== 3scale mixer adapter configs
+=== Red Hat 3scale Mixer Adapter Configurations
 
 Now that the 3scale Istio mixer adapter is running, various configurations need to be added to the service mesh.
 
 In particular, you will create routing logic that directs ingress traffic destined for your backend catalog service through the 3scale Istio Mixer adapter.
 
-. In the details of your _catalog_ service in the API Manager admin console, locate the `ID for API calls ... `:
+. In the details of your _catalog_ service in the Red Hat 3scale API Manager administration console, locate the `ID for API calls ... `:
 +
 image::images/service_id.png[]
 
 
-. Set an environment variable that captures this catalog service Id:
+. Set an environment variable that captures this catalog service ID:
 +
 -----
-$ export CATALOG_SERVICE_ID=<your catalog service Id>
+$ export CATALOG_SERVICE_ID=<your catalog service ID>
 -----
 
 . Review the `threescale-adapter-config.yaml` file :
@@ -1506,28 +1506,28 @@ $ export CATALOG_SERVICE_ID=<your catalog service Id>
 $ cat $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml | more
 -----
 
-. Modify the `threescale-adapter-config.yaml` file with id of your _catalog_ service:
+. Modify the `threescale-adapter-config.yaml` file with the ID of your catalog service:
 +
 -----
 $ sed -i "s/service_id: .*/service_id: \"$CATALOG_SERVICE_ID\"/" \
       $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml
 -----
 
-. Modify the `threescale-adapter-config.yaml` file with the URL to your API Manager tenant:
+. Modify the `threescale-adapter-config.yaml` file with the URL to your Red Hat 3scale API Manager tenant:
 +
 -----
 $ sed -i "s/system_url: .*/system_url: \"https:\/\/$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\"/" \
       $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml
 -----
 
-. Modify the `threescale-adapter-config.yaml` file with the admin access token of your API Manager admin account:
+. Modify the `threescale-adapter-config.yaml` file with the administrative access token of your Red Hat 3scale API Manager administration account:
 +
 -----
 $ sed -i "s/access_token: .*/access_token: \"$API_ADMIN_ACCESS_TOKEN\"/" \
       $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml
 -----
 
-. Load the 3scale Istio Handler configurations :
+. Load the 3scale Istio Handler configurations:
 +
 -----
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml --as=system:admin

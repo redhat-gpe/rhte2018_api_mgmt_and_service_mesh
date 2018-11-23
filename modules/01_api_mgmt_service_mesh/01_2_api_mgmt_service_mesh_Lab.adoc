@@ -1259,21 +1259,21 @@ In the above diagram, [blue]#notice the replacement of an API Gateway with the I
 Your API gateways will no longer be needed.
 Inbound traffic will flow through the Istio Ingress gateway directly to the 3scale Istio Mixer and out to the remote 3scale API Manager.
 
-Subsequently, the API gateways along with any associated routing rules can be deleted.
+Subsequently, the API gateways and any associated routing rules can be deleted.
 
-. Scale down the non-istio enabled API gateway:
+. Scale down the non-Istio-enabled API gateway:
 +
 -----
 $ oc scale deploy/prod-apicast --replicas=0 -n $GW_PROJECT
 -----
 
-. Scale down the Istio enabled API gateway:
+. Scale down the Istio-enabled API gateway:
 +
 -----
 $ oc scale deploy/$OCP_USERNAME-prod-apicast-istio --replicas=0 -n $GW_PROJECT
 -----
 
-. Remove virtual Service:
+. Remove virtual service:
 +
 -----
 $ oc delete virtualservice catalog-istio-gateway-vs -n $GW_PROJECT --as=system:admin

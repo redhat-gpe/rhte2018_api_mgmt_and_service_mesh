@@ -1694,7 +1694,7 @@ Until now, specific endpoints of a single backend _catalog_ service are being ma
 As an additional exercise, introduce a new backend business service into your service mesh.
 Have this backend business service also managed by the API Manager via the 3scale Istio Mixer adapter.
 
-What configurations need to be modified or added?
+Which configurations need to be modified or added?
 
 == Questions
 

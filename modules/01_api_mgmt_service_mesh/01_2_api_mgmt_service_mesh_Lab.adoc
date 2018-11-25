@@ -1783,9 +1783,9 @@ WARNING: [red]#Do not proceed beyond this section until this smoke test of your 
 
 Once you have smoke tested your API managed environment, proceed to the section: <<apicast_istio>>
 
-=== Delete 3scale Istio Mixer releated artifacts
+=== Delete Red Hat 3scale API Management Istio Mixer Related Artifacts
 
-For convenience, the following script is provided if/when there is a need to delete 3scale Istio Mixer related artifacts.
+For convenience, the following script is provided if there is a need to delete Red Hat 3scale API Management Istio Mixer related artifacts.
 
 . Create deletion script:
 +

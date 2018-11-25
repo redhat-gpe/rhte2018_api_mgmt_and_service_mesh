@@ -1698,7 +1698,7 @@ Which configurations need to be modified or added?
 
 == Questions
 
-. Which of the following libraries is embedded in community API gateway to support distributed tracing?
+. Which of the following libraries is embedded in the community API gateway to support distributed tracing?
 +
 -----
 a) ngx_http_opentracing_module.so
@@ -1716,9 +1716,7 @@ c) ServiceEntry
 d) EgressRoute
 -----
 
-
-
-. The Jaeger java client library provides which of the following features?
+. The Jaeger Java client library provides which of the following features?
 +
 -----
 a) Propogation of traces to the jaeger-agent via UDP on port 6831
@@ -1727,7 +1725,7 @@ c) Setting of the trace sampler type via the environment variable: JAEGER_SAMPLE
 d) All of the above
 -----
 
-. Which of the following are feature of the Red Hat 3scale product that are not found in Istio ?
+. Which of the following are feature of the Red Hat 3scale API Management product that are not found in Istio?
 +
 -----
 a) Developer portal

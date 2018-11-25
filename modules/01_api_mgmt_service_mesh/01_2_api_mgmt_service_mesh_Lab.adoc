@@ -1612,12 +1612,12 @@ $ curl -v \
 [blue]#Congratulations! The catalog service is again being managed and secured by the 3scale API Manager.#
 This time however, the 3scale Istio Mixer adapter is being utilized rather than the API gateway.
 
-=== Fine tune 3scale Istio Mixer Adapter rules
+=== Fine-tune 3scale Istio Mixer Adapter Rules
 
 At this point, *all* traffic inbound through the Istio ingress is configured to route through the 3scale Istio Mixer adapter.
 Your use case may require more fine-grained routing rules.
 
-In this last section of the lab, you specify that requests for the catalog `/products` endpoint can by-pass the 3scale Istio Mixer adapter and invoke the catalog service directly.
+In this last section of the lab, you specify that requests for the catalog `/products` endpoint can bypass the 3scale Istio Mixer adapter and invoke the catalog service directly.
 All requests to the `/product` endpoint will continue to require authentication via the 3scale Istio Mixer adapter.
 
 . Modify the existing `usethreescale` rule:
@@ -1630,17 +1630,15 @@ $ oc patch rule/usethreescale \
        --as=system:admin
 -----
 +
-This modification introduces a fine grained _match_ rule with various conditions.
-+
-Only when all of the conditions are met, will the inbound traffic be routed to the 3scale mixer adapter.
+This modification introduces a fine grained _match_ rule with several conditions. Only when all of the conditions are met, will the inbound traffic be routed to the 3scale mixer adapter.
 +
 The conditions of the rule are as follows:
 
 .. The destination service needs to be the backend catalog service.
-.. The inbound request needs to originate from outside the $MSA_PROJECT (ie: from the istio-ingress of the istio-system).
+.. The inbound request needs to originate from outside the $MSA_PROJECT (that is, from the istio-ingress of the istio-system).
 .. The target is the `/product/` endpoint (which allows for POST, DELETE and GET methods).
 
-. Re-attempt invocation of your catalog service *without* the catalog service _user_key_:
+. Try again to invoke your catalog service *without* the catalog service _user_key_:
 +
 -----
 $ curl -v \
@@ -1648,11 +1646,11 @@ $ curl -v \
 -----
 +
 This request should have now been routed directly to your backend catalog service.
-This is because the `/products` endpoint is being invoked (which fails the 3rd condition of the rule).
+This is because the `/products` endpoint is being invoked (which fails the third condition of the rule).
 Subsequently, the API _user_key_ is not needed.
 
 
-. Attempt to POST a new catalog service *without* the catalog service _user_key_:
+. Try to POST a new catalog service *without* the catalog service _user_key_:
 +
 -----
 $ curl -v \
@@ -1668,10 +1666,10 @@ $ curl -v \
 -----
 +
 This request should have been routed to the 3scale Istio Mixer adapter.
-This is because all 3 conditions of the routing rule have met.
-Subsequently, because the API _user_key_ was not applied, the response should be a 403 PERMISSION DENIED .
+This is because all three conditions of the routing rule have met.
+Subsequently, because the API _user_key_ was not applied, the response should be 403 PERMISSION DENIED.
 
-. Re-Attempt to POST a new catalog service using the catalog service _user_key_:
+. Try again to POST a new catalog service using the catalog service _user_key_:
 +
 -----
 $ curl -v \
@@ -1687,7 +1685,7 @@ $ curl -v \
 -----
 +
 This request should have been routed to the 3scale Istio Mixer adapter.
-Subsequently, because the API _user_key_ was applied, the response should be a 201 Created .
+Subsequently, because the API _user_key_ was applied, the response should be 201 Created .
 
 === Extra Credit
 

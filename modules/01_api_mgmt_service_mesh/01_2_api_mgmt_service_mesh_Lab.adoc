@@ -974,7 +974,7 @@ Jaeger defines _span_ as “a logical unit of work in the system that has an ope
 
 Another important term to understand is: _trace_. Jaeger defines _trace_ as “a data or execution path through the system, and can be thought of as a directed acyclic graph of spans".
 
-=== Procedure
+=== View Traces and Spans
 
 . If you are not already there, return to the terminal window of your lab, and use the `curl` utility to invoke your catalog service (via Istio ingress gateway -> API gateway) a few times:
 +

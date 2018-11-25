@@ -1689,12 +1689,12 @@ Subsequently, because the API _user_key_ was applied, the response should be "20
 
 === Extra Credit
 
-Thus far, specific endpoints of a single backend _catalog_ service are being managed by the API Manager via the 3scale Istio Mixer adapter.
+Until now, specific endpoints of a single backend _catalog_ service are being managed by the API Manager via the 3scale Istio Mixer adapter.
 
 As an additional exercise, introduce a new backend business service into your service mesh.
 Have this backend business service also managed by the API Manager via the 3scale Istio Mixer adapter.
 
-What configurations need to be modified or added ?
+What configurations need to be modified or added?
 
 == Questions
 

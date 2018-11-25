@@ -1743,14 +1743,14 @@ endif::showscript[]
 
 == Conclusion
 
-In this lab you where exposed to the following:
+In this lab we covered the following topics:
 
-* Injection Istio Envoy proxy configs into an API gateway
+* Injecting Istio Envoy proxy configurations into an API gateway
 * Configuration of an Istio Egress Route to allow the API gateway to communicate to the remote API Manager
-* Invocation of your backend service via the Istio Ingress gateway and 3scale API gateway
-* End-to-end distributed tracing of a MSA application using Jaeger implementation of the _OpenTracing_ specification
-* Review of the analytics dashboard provided by 3Scale
-* Introduction to the 3scale Mixer Adapter
+* Invocation of your backend service via the Istio Ingress gateway and Red Hat 3scale API Management gateway
+* End-to-end distributed tracing of an MSA application using the Jaeger implementation of the _OpenTracing_ specification
+* Review of the analytics dashboard provided by Red Hat 3scale API Management
+* Introduction to the Red Hat 3scale API Management Mixer Adapter
 
 
 == Appendix

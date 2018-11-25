@@ -1602,7 +1602,7 @@ debug   Got adapter config: &Params{ServiceId:103,SystemUrl:https://user100-3sca
 debug   Returning result: {Status:{Code:7 Message: Details:[] XXX_NoUnkeyedLiteral:{} XXX_unrecognized:[] XXX_sizecache:0} ValidDuration:1ms ValidUseCount:0}
 -----
 
-. Re-attempt invocation of your catalog service using the catalog service _user_key_:
+. Try again to invoke your catalog service using the catalog service _user_key_:
 +
 -----
 $ curl -v \

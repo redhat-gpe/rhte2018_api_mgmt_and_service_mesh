@@ -1725,7 +1725,7 @@ c) Setting of the trace sampler type via the environment variable: JAEGER_SAMPLE
 d) All of the above
 -----
 
-. Which of the following are feature of the Red Hat 3scale API Management product that are not found in Istio?
+. Which of the following are features of the Red Hat 3scale API Management product that are not found in Istio?
 +
 -----
 a) Developer portal

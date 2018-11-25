@@ -1667,7 +1667,7 @@ $ curl -v \
 +
 This request should have been routed to the 3scale Istio Mixer adapter.
 This is because all three conditions of the routing rule have met.
-Subsequently, because the API _user_key_ was not applied, the response should be 403 PERMISSION DENIED.
+Subsequently, because the API _user_key_ was not applied, the response should be "403 PERMISSION DENIED".
 
 . Try again to POST a new catalog service using the catalog service _user_key_:
 +
@@ -1685,7 +1685,7 @@ $ curl -v \
 -----
 +
 This request should have been routed to the 3scale Istio Mixer adapter.
-Subsequently, because the API _user_key_ was applied, the response should be 201 Created .
+Subsequently, because the API _user_key_ was applied, the response should be "201 Created".
 
 === Extra Credit
 

@@ -239,7 +239,7 @@ In this section, you define an _API proxy_ to manage your _catalog_ RESTful busi
 . From your `catalog_service`, select *Integration*.
 . Click *Add the base URL of your API and save the configuration*.
 +
-* This navigates to a page that allows you to associate the API gateway staging and production URLs with your new 3scale proxy service.
+* This navigates to a page that allows you to associate the API gateway staging and production URLs with your new Red Hat 3scale API Management proxy service.
 
 . Populate the *Configuration: configure & test immediately in the staging environment* form as follows:
 .. *Private Base URL*:
@@ -298,7 +298,7 @@ image::images/stage_success.png[]
 +
 image::images/stage_and_prod.png[]
 
-Your 3scale by Red Hat service is configured.
+Your Red Hat 3scale API Management service is configured.
 Next, the configuration details of your service need to be propagated to your on-premise API gateway.
 
 ==== Refresh API Gateway at Boot
@@ -416,7 +416,7 @@ You will use the definition of your existing API gateway as a template to create
 -----
 $ sed -i "s/prod-apicast/$OCP_USERNAME-prod-apicast-istio/" $HOME/lab/prod-apicast.yml
 -----
-.. The reason you have included $OCP_USERNAME in the name of your Istio enabled API gateway is because you will need to differentiate it from other Istio enabled API gateways that may be managed in the same service mesh.
+.. The reason you have included $OCP_USERNAME in the name of your Istio-enabled API gateway is because you will need to differentiate it from other Istio-enabled API gateways that may be managed in the same service mesh.
 .. Also, the _observability_ user interfaces included in Istio such as Jaeger are not currently multi-tenant.
 +
 By providing a unique identifer as a prefix to your API gateway name, you will be more easily able to identify logs and traces amongst others on the system.
@@ -455,7 +455,7 @@ Please note that the cluster administrator of the service mesh could have option
 $ cat $HOME/lab/prod-apicast-istio.yml | more
 -----
 
-. Deploy a new Istio enabled API gateway production gateway:
+. Deploy a new Istio-enabled API gateway production gateway:
 +
 -----
 $ oc create \
@@ -482,7 +482,7 @@ $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT \
 $ oc adm policy add-scc-to-user privileged -z default -n $GW_PROJECT --as=system:admin
 -----
 
-.. For your new Istio enabled API gateway pod to start, it needs the _anyuid_ sidecar container (SCC).
+.. For your new Istio-enabled API gateway pod to start, it needs the _anyuid_ sidecar container (SCC).
 +
 The reason for this is that the _envoy_ sidecar containers from Istio currently run as a specific user ID.
 Unlike most middleware containers that can run using any arbitrary user ID that is assigned to them at runtime by OCP, the _envoy_ sidecar containers would immediately fail upon startup without the _anyuid_ SCC.
@@ -553,14 +553,14 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 .. Why would this be the case ?
 ... Inspect the API gateway log file for any clues.
 ... Is the request reaching your new Istio enabled API gateway?
-... The root problem is that your Istio enabled API gateway is unable to connect to the _system-provider_ endpoint exposed by the remote multi-tenant API Manager via the value of: $THREESCALE_PORTAL_ENDPOINT.
+... The root problem is that your Istio-enabled API gateway is unable to connect to the _system-provider_ endpoint exposed by the remote multi-tenant API Manager via the value of: $THREESCALE_PORTAL_ENDPOINT.
 +
 Your API gateway needs to do this to retrieve all the policy management configuration data from the API Manager.
 The reason your API gateway can not make a connection to the API Manager is that $THREESCALE_PORTAL_ENDPOINT references an external internet URL.
 By default, Istio blocks all outbound requests to the internet.
 In the next section, you will define an _egress route_ to allow your API gateway to communicate with the API Manager.
 
-.  Isolate the problem with your new Istio enabled API gateway by testing the call to the _system-provider_ of the API Manager, from within the API gateway.
+.  Isolate the problem with your new Istio-enabled API gateway by testing the call to the _system-provider_ of the API Manager, from within the API gateway.
 
 .. Execute the following to test the call:
 +
@@ -611,7 +611,7 @@ spec:
  > $HOME/lab/catalog-apicast-egressrule.yml
 -----
 
-.. Note the value of `spec -> hosts` is set to the same value of the $THREESCALE_PORTAL_ENDPOINT specified in your 3scale API Management gateway.
+.. Note the value of `spec -> hosts` is set to the same value of the $THREESCALE_PORTAL_ENDPOINT specified in your Red Hat 3scale API Management gateway.
 .. This should allow your API gateway to connect to the route that exposes the _system-provider_ service of the multi-tenant API Manager.
 
 
@@ -633,7 +633,7 @@ WARNING:  This command also requires _cluster admin_ capabilities to execute.
 
 . Now that a custom _egress route_ has been added, your API gateway should be able to pull configuration data from the API Manager.
 +
-Use a command like the following to verify that your Istio enabled API gateway can now poll the API Manager for proxy service configuration information:
+Use a command like the following to verify that your Istio-enabled API gateway can now poll the API Manager for proxy service configuration information:
 +
 -----
 $ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
@@ -660,15 +660,15 @@ $ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
 ....
 -----
 
-. Either wait up to 5 minutes for your Istio enabled API gateway to refresh its proxy configuration (because pulling this configuration data previously failed) or restart the pod.
-. Using the curl utility, attempt again to retrieve catalog data via your Istio enabled API gateway:
+. Either wait up to 5 minutes for your Istio-enabled API gateway to refresh its proxy configuration (because pulling this configuration data previously failed) or restart the pod.
+. Using the curl utility, attempt again to retrieve catalog data via your Istio-enabled API gateway:
 +
 -----
 $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 +
 This time, you should see the catalog data in the response.
-This request now flows through your Istio enabled API gateway.
+This request now flows through your Istio-enabled API gateway.
 
 [blue]#As mentioned previously, what you have accomplished so far is of limited value on its own. However, this is a step to full utilization of API management and service mesh of your container native application.
 In the next sections of this lab you will continue to build upon this foundation.#
@@ -755,7 +755,7 @@ spec:
 $ oc create -f $HOME/lab/catalog-istio-gateway-vs.yml -n $GW_PROJECT --as=system:admin
 -----
 
-. Set environment variables that reflect the host and port of the Istio Ingress gateway service:
+. Set environment variables that reflect the host and port of the Istio ingress gateway service:
 +
 -----
 $ export INGRESS_HOST=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
@@ -763,10 +763,10 @@ $ export INGRESS_HOST=$(oc -n istio-system get service istio-ingressgateway -o j
 $ export INGRESS_PORT=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].port}')
 -----
 +
-NOTE:  This $INGRESS_HOST:$INGRESS_PORT socket is local to the OpenShift Container Platform subnet.
+NOTE:  This $INGRESS_HOST:$INGRESS_PORT socket is local to the Red Hat OpenShift Container Platform subnet.
 It only becomes available when there is an Istio gateway and virtual service present and even then it might take up to 5 minutes to become available.
 
-. Smoke test a request for catalog data via the newly configured Istio Ingress Gateway:
+. Smoke test a request for catalog data via the newly configured Istio ingress gateway:
 +
 -----
 $ curl -v \
@@ -780,14 +780,14 @@ Notice the use of the HTTP _Host_ header.
 .. What happens if this _HOST_ header is not included in the request ?
 .. What happens if this _HOST_ header is included in the request but its value (along with the _host_ attributes in the gateway and virtual service) do not match the _Production Public Base Url_ of the _catalog-service_ in the API Manager ?
 
-. The previous smoke test used an $INGRESS_HOST and $INGRESS_PORT that are made available on the local OpenShift Container Platform network subnet.
-Usage of this local $INGRESS_HOST only worked because your curl client is on the same host as OpenShift Container Platform.
+. The previous smoke test used an $INGRESS_HOST and $INGRESS_PORT that are made available on the local Red Hat OpenShift Container Platform network subnet.
+Usage of this local $INGRESS_HOST only worked because your curl client is on the same host as Red Hat OpenShift Container Platform.
 +
 The `istio-system` namespace provides a route called: `istio-ingressgateway`.
-Like all OCP routes, it is exposed to external clients.
+Like all Red Hat OpenShift Container Platform routes, it is exposed to external clients.
 +
 Try invoking the API gateway via this `istio-ingressgateway` route instead of using the internal _service-mesh_ related $INGRESS_HOST and $INGRESS_PORT.
-The results should be the same.  The curl command to use is as follows:
+The results should be the same.  The command to use is as follows:
 +
 -----
 $  curl -v \
@@ -808,19 +808,17 @@ $ oc delete route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT
 
 endif::showscript[]
 
-== API Gateway: OpenTracing enabled
+== API Gateway: OpenTracing Enabled
 
 === Overview
 
 As the next step in the journey toward utilization of API Management and Service Mesh, in this section of the lab you will begin to explore the visibility provided of your service mesh using the _OpenTracing_ implementation: _Jaeger_.
 
-You'll do so in this section by utilizing an _Opentracing_ enabled variant of the 3scale API Gateway.
+You will do so in this section by utilizing an _OpenTracing_-enabled variant of the Red Hat 3scale API Management gateway.
 
-OpenTracing is a consistent, expressive, vendor-neutral API for distributed tracing and context propagation.
+OpenTracing is a consistent, expressive, vendor-neutral API for distributed tracing and context propagation. Jaeger is one of several implementations of OpenTracing.
 
-Jaeger is one of several implementations of OpenTracing.
-
-The API gateway that you will switch to in this section of the lab includes a couple of additional _Opentracing_ and _Jaeger_ related libraries:
+The API gateway that you will switch to in this section of the lab includes several additional _OpenTracing_ and _Jaeger_ related libraries:
 
 . *ngx_http_opentracing_module_so*
 +
@@ -834,11 +832,11 @@ These libraries provide support for the _OpenTracing_ specification using _Jaege
 
 image::images/jaeger_architecture.png[]
 
-You'll configure the Opentracing client libraries in your API gateway to forward traces via UDP to the _jaeger-agent_.
+You will configure the OpenTracing client libraries in your API gateway to forward traces via UDP to the _jaeger-agent_.
 
-=== Procedure
+=== Enable OpenTracing using Jaeger
 
-. You'll be making quite a few changes to your Istio enabled API gateway.  Subsequently, put it in a paused state while those changes are being made:
+. You will be making quite a few changes to your Istio-enabled API gateway.  Subsequently, put it in a paused state while those changes are being made:
 +
 -----
 $ oc rollout pause deploy $OCP_USERNAME-prod-apicast-istio
@@ -854,12 +852,12 @@ jaeger-agent   ClusterIP   None         <none>        5775/UDP,6831/UDP,6832/UDP
 jaeger-collector   ClusterIP   172.30.95.25   <none>        14267/TCP,14268/TCP          4d
 -----
 +
-The _jaeger-agent_ receives tracing information (in the form of UDP packets on port 6831) submitted by jaeger client libraries embedded in apps and forwards in batch to the Jaeger collector.
+The Jaeger agent receives tracing information (in the form of UDP packets on port 6831) submitted by Jaeger client libraries embedded in applications. It forwards the tracing information in batches to the Jaeger collector.
 +
-Alternatively, jaeger client libraries can push tracing information via a TCP connection directly to the _jaeger-collector_ on port 14268.
+Alternatively, Jaeger client libraries can push tracing information via a TCP connection directly to the _jaeger-collector_ on port 14268.
 
 
-. Create a json config file that will instruct the opentracing and jaeger related client libraries in the API gateway how to push traces to the `jaeger-agent`:
+. Create a JSON configuration file that will instruct the OpenTracing and Jaeger related client libraries in the API gateway to push traces to the `jaeger-agent`:
 +
 -----
 $   cat <<EOF > $HOME/lab/jaeger_config.json
@@ -891,24 +889,24 @@ $   cat <<EOF > $HOME/lab/jaeger_config.json
 EOF
 -----
 
-.. Pay special attention to the value of _localAgentHostPort_ .
+.. Pay special attention to the value of _localAgentHostPort_.
 +
-Thi is the URL that your API gateway will push traces (via UDP) to the _jaeger-agent_ service host and port.
+This is the URL of your API gateway that will push traces (via UDP) to the _jaeger-agent_ service host and port.
 
 
-. Create a configmap from the opentracing json file:
+. Create a _configmap_ from the OpenTracing JSON file:
 +
 -----
 $ oc create configmap jaeger-config --from-file=$HOME/lab/jaeger_config.json -n $GW_PROJECT
 -----
 
-. Mount the configmap to your opentracing enabled API Gateway:
+. Mount the configmap to your OpenTracing-enabled API Gateway:
 +
 -----
 $ oc volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ --configmap-name jaeger-config -n $GW_PROJECT
 -----
 
-. Set environment variables that indicate to the API gateway where to read opentracing related configurations:
+. Set environment variables that indicate to the API gateway where to read OpenTracing related configurations:
 +
 -----
 $ oc env deploy/$OCP_USERNAME-prod-apicast-istio \
@@ -917,7 +915,7 @@ $ oc env deploy/$OCP_USERNAME-prod-apicast-istio \
          -n $GW_PROJECT
 -----
 
-. Update the API gateway _deployment_ to use the Opentracing and Jaeger enabled image:
+. Update the API gateway _deployment_ to use the OpenTracing and Jaeger enabled image:
 +
 -----
 $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
@@ -927,15 +925,15 @@ $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
 Notice the use of a community version of the API gateway container image available in a public _quay.io_ organization.
 This is the container image that includes the _opentracing_ and _jaeger_ client libraries.
 
-. Resume your Istio and opentracing enabled API gateway.
+. Resume your Istio-enabled and OpenTracing-enabled API gateway:
 +
 -----
 $ oc rollout resume deploy $OCP_USERNAME-prod-apicast-istio
 -----
 
-. Verify the existence of the opentracing library for NGinx in the API gateway.
+. Verify the existence of the OpenTracing library for NGinx in the API gateway.
 +
-Once your API gateway is back up and running, execute the following command :
+Once your API gateway is running again, execute the following command:
 +
 -----
 $ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
@@ -946,7 +944,7 @@ $ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /usr/local
 -rwxr-xr-x. 1 root root 1457848 Jun 11 06:29 /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
 -----
 
-. Verify the existence of the jaeger client library in the API gateway:
+. Verify the existence of the Jaeger client library in the API gateway:
 +
 -----
 $ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /opt/app-root/lib/libjaegertracing.so.0
@@ -962,26 +960,23 @@ lrwxrwxrwx. 1 root root 25 Jun 11 06:38 /opt/app-root/lib/libjaegertracing.so.0 
 
 Often the first thing to understand about your microservice architecture is specifically which microservices are involved in an end-user transaction.
 
-The _observability_ tooling (specifically either Zipkin or Jaeger) built into Istio can provide this information.
+The _observability_ tooling built into Istio, either Zipkin or Jaeger, can provide this information.
 
-In this section of the lab, you are exposed to the `Jaeger UI`.
+In this section of the lab, you are exposed to the Jaeger user interface (UI).
 
 The Jaeger UI provides a visual depiction of traces through the services that make up your application.
 
 
 === Terminology
 
-In the world of _distributed tracing_, one important term to understand is: _span_.
-Jaeger defines _span_ as: “a logical unit of work in the system that has an operation name, the start time of the operation, and the duration. Spans can be nested and ordered to model causal relationships.
-An RPC call is an example of a span.”
+An important _distributed tracing_ term to understand is: _span_.
+Jaeger defines a _span_ as “a logical unit of work in the system that has an operation name, an operation start time, and a duration. Spans can be nested and ordered to model causal relationships. An RPC call is an example of a span.”
 
-Another important term to understand is: _trace_
+Another important term to understand is: _trace_. Jaeger defines _trace_ as “a data or execution path through the system, and can be thought of as a directed acyclic graph of spans".
 
-Jaeger defines _trace_ as “adata/execution path through the system, and can be thought of as a directed acyclic graph of spans"
+=== View Traces and Spans
 
-=== Procedure
-
-. If you are not already there, return back to the terminal window of your lab, and use the `curl` utility to invoke your catalog service (via:  istio ingress gateway -> API gateway) a few times.
+. If you are not already there, return to the terminal window of your lab, and use the `curl` utility to invoke your catalog service (via Istio ingress gateway -> API gateway) a few times:
 +
 -----
 $ curl -v \
@@ -995,68 +990,68 @@ $ curl -v \
 $ echo -en "\n\nhttp://"$(oc get route/tracing -o template --template {{.spec.host}} -n istio-system)"\n\n"
 -----
 
-.. Using your browser, navigate to this URL.
-.. In this version of Istio, the `Jaeger UI` is currently not secured.
+.. In a web browser, navigate to this URL.
+.. In this version of Istio, the Jaeger UI is currently not secured.
 
 . In the _Find Traces_ panel, scroll down to locate the traces associated with your OCP user name:
 +
 image::images/trace_dropdown_selection.png[]
 
-.. In the drop down for `Service`, select the option for the API gateway associated with your username.  ie:  $OCP_USERNAME-prod-apicast-istio.
-.. In the drop down for `Operation`, there are likely only two options available: `all` and `apicast_management`.
+.. From the `Service` drop-down list, select the option for the API gateway associated with your username, such as $OCP_USERNAME-prod-apicast-istio.
+.. In the `Operation` drop-down list, there are likely only two options available: `all` and `apicast_management`.
 +
 At this time, neither of these operations are particularly relevant to our use case.
-The `apicast_management` operation pertains to the invocations made by the _readiness_ and _liveness_ probes of the deployment to the API gateway pod.
+The `apicast_management` operation relates to the invocations made by the _readiness_ and _liveness_ relates to probes of the deployment to the API gateway pod.
 
-.. Return back the Jaeger UI and notice more options present in the drop down for `Operation`.
+.. Return to the Jaeger UI and notice more options present in the `Operation` drop-down.
 +
-Select the character: '/'
+Select the character: '/'.
 +
 This corresponds to the requests flowing through the API gateway and backend catalog service.
 
-. In the `Jaeger UI`, click `Find Traces`.
+. In the Jaeger UI, click `Find Traces`.
 +
 You should see an overview with timelines of all of your traces:
 +
 image::images/trace_overview.png[]
 
-. Click on any one of the bubbles that appear.
+. Click on any one of the circles.
 Each one corresponds to an invocation to your catalog service.
 +
 image::images/individual_trace.png[]
 
-. Click the span pertaining to _@upstream_
+. Click the span relevant to _@upstream_
 +
 image::images/upstream_span.png[]
 +
-Notice that this span pertains to the invocation of the `products` endpoint of your catalog service.
+Notice that this span relates to the invocation of the `products` endpoint of your catalog service.
 
-Traces pertaining to your Istio enabled API gateway are now available .
-However, what is missing is tracing that includes the backend _catalog_ service.
+Traces relevant to your Istio-enabled API gateway are now available .
+However, tracing of the backend _catalog_ service is missing.
 
-In the next section, you'll enable your _catalog_ service to participate in this end-to-end distributed tracing .
+In the next section, you will enable your _catalog_ service to participate in this end-to-end distributed tracing.
 
-== Catalog Service: Istio enabled
+== Catalog Service: Istio-enabled
 
 image::images/deployment_catalog-istio.png[]
 
 In the above diagram, notice the introduction of a new pod: _catalog-service-istio_.
 
-Ingress requests through the _catalog-service_ are now directed to this new Istio enabled _catalog_ pod (instead of the original _catalog_ pod that is not Istio enabled).
+Ingress requests through the _catalog-service_ are now directed to this new Istio-enabled _catalog_ pod (instead of the original _catalog_ pod that is not Istio enabled).
 
-The new catalog service is enabled with _opentracing_ and _jaeger_ libraries so that it can also participate in distributed tracing .
+The new catalog service is enabled with OpenTracing and Jaeger libraries so that it can also participate in distributed tracing.
 
-=== OpenTracing libraries included in catalog_service
+=== OpenTracing Libraries Included in Catalog Service
 
-The _catalog service_ is link:https://github.com/gpe-mw-training/catalog-service[written in Java] (specifically using the _reactive_ programming framework: link:https://vertx.io/[vert.x]).
+The _catalog service_ is link:https://github.com/gpe-mw-training/catalog-service[written in Java] using the _reactive_ programming framework link:https://vertx.io/[vert.x].
 
-As such, the new catalog service used in the remainder of this course is embedded with the opentracing and jaeger Java client libraries.
+As such, the new catalog service used in the remainder of this course is embedded with the OpenTracing and Jaeger Java client libraries.
 
-Recall that when configuring the NGinx and C++ opentracing/jaeger client libraries in the API gateway, a configuration file (via a config map) was loaded.
-The opentracing and jaeger client libraries for Java are a bit easier to work with.
+Recall that when configuring the NGinx and C++ OpenTracing/Jaeger client libraries in the API gateway, a configuration file (via a config map) was loaded.
+The OpenTracing and Jaeger client libraries for Java are easier to work with.
 The Java client libraries allow for configuration via environment variables.
 
-The Dockerfile with environment variables (and their default values) utilized in building the new opentracing catalog image is as follows:
+The Dockerfile with environment variables (and their default values) utilized in building the new OpenTracing catalog image is as follows:
 
 -----
 FROM redhat-openjdk-18/openjdk18-openshift:1.5-14
@@ -1066,17 +1061,17 @@ EXPOSE 8080 8778 9779
 COPY target/catalog-service-tracing-1.0.17.jar /deployments/
 -----
 
-The source code of the OpenTracing enabled catalog service can be found link:https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht[here].
+The source code of the OpenTracing-enabled catalog service is available at link:https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht[https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht].
 
-=== Inject Envoy into _catalog_ service
+=== Inject Envoy into Catalog Service
 
-. Retrieve yaml representation of current _catalog service_ deployment:
+. Retrieve YAML representation of current _catalog service_ deployment:
 +
 -----
 $ oc get deploy catalog-service -n $MSA_PROJECT -o yaml > $HOME/lab/catalog-service.yml
 -----
 
-. Differentiate your Istio enabled catalog service from your existing catalog service:
+. Differentiate your Istio-enabled catalog service from your existing catalog service:
 +
 -----
 $ sed -i "s/ catalog-service/ $OCP_USERNAME-cat-service-istio/" $HOME/lab/catalog-service.yml
@@ -1088,8 +1083,7 @@ $ sed -i "s/ catalog-service/ $OCP_USERNAME-cat-service-istio/" $HOME/lab/catalo
 $ sed -i "s/replicas:\ 1/replicas: 1\n  paused: true/" $HOME/lab/catalog-service.yml
 -----
 
-
-. Inject Istio configs into a new catalog service deployment
+. Inject Istio configurations into a new catalog service deployment:
 +
 -----
 
@@ -1098,13 +1092,13 @@ $ istioctl kube-inject \
            > $HOME/lab/catalog-service-istio.yml
 -----
 
-. View Istio injected catalog service deployment descriptor:
+. View Istio-injected catalog service deployment descriptor:
 +
 -----
 $ cat $HOME/lab/catalog-service-istio.yml | more
 -----
 
-. Create a new configmap with parameters that configure the OpenTracing enabled Catalog Service:
+. Create a new configmap with parameters that configure the OpenTracing-enabled catalog service:
 +
 -----
 $ echo "service-name: $OCP_USERNAME-catalog-service
@@ -1119,16 +1113,14 @@ reporter-log-spans: True
 collector-endpoint: \"http://jaeger-collector.istio-system.svc:14268/api/traces\"
 " > $HOME/lab/app-config.yaml
 
-
 # Delete existing configmap
 $ oc delete configmap app-config -n $MSA_PROJECT
-
 
 # Recreate configmap using additional OpenTracing related params
 $ oc create configmap app-config --from-file=$HOME/lab/app-config.yaml -n $MSA_PROJECT
 -----
 
-. Deploy a new Istio enabled API gateway production gateway that correctly points to the Jaeger agent in your _istio-system_ namespace:
+. Deploy a new production Istio-enabled API gateway that correctly points to the Jaeger agent in your _istio-system_ namespace:
 +
 -----
 $ oc create \
@@ -1136,25 +1128,22 @@ $ oc create \
      -n $MSA_PROJECT
 -----
 
-
-. Set various environment variables on the OpenTracing enabled Catalog Service:
+. Set various environment variables on the OpenTracing-enabled catalog service:
 +
 -----
 $ oc set env deploy/$OCP_USERNAME-cat-service-istio APP_CONFIGMAP_NAME=app-config  -n $MSA_PROJECT
 
-
 $ oc set env deploy/$OCP_USERNAME-cat-service-istio APP_CONFIGMAP_KEY=app-config.yaml  -n $MSA_PROJECT
-
 
 # Allows for optionally debugging of catalog service so as to better understand how exactly it utilizes the opentracing / jaeger java libraries
 $ oc set env deploy/$OCP_USERNAME-cat-service-istio JAVA_DEBUG=true  -n $MSA_PROJECT
 $ oc set env deploy/$OCP_USERNAME-cat-service-istio JAVA_DEBUG_PORT=8787  -n $MSA_PROJECT
 -----
 
-. Inject required resource limits and requests into Istio related containers :
+. Inject required resource limits and requests into Istio-related containers :
 +
 There is a clusterquota assigned to your OCP user.
-This clusterquota requires that all containers (including the _istio-proxy_ and _istio-init_ ) specify _limits_ and _requests_.
+This clusterquota requires that all containers, including the _istio-proxy_ and _istio-init_, specify _limits_ and _requests_.
 +
 -----
 $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
@@ -1166,7 +1155,7 @@ $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
    -n $MSA_PROJECT
 -----
 
-. Update the new catalog service deployment to use the Opentracing and Jaeger enabled image:
+. Update the new catalog service deployment to use the OpenTracing-enabled and Jaeger-enabled image:
 +
 -----
 $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
@@ -1186,7 +1175,7 @@ endif::showscript[]
 $ oc rollout resume deploy/$OCP_USERNAME-cat-service-istio -n $MSA_PROJECT
 -----
 
-. Modify the _service_ to route to new Istio enabled _catalog_ service:
+. Modify the _service_ to route to the new Istio-enabled catalog service:
 +
 -----
 $ oc patch service/catalog-service \
@@ -1194,28 +1183,26 @@ $ oc patch service/catalog-service \
    -n $MSA_PROJECT
 -----
 
-. The original catalog service is no longer needed.  Go ahead and scale it down as follows:
+. The original catalog service is no longer needed.  Scale it down as follows:
 +
 -----
 $ oc scale deploy/catalog-service --replicas=0 -n $MSA_PROJECT
 -----
 
-. Make sure that your `$CATALOG_USER_KEY` and $CATALOG_API_GW_HOST environment variables remains set:
+. Ensure your `$CATALOG_USER_KEY` and `$CATALOG_API_GW_HOST` environment variables remain set:
 +
 -----
 $ echo $CATALOG_USER_KEY
 
 d59904ad4515522ecccb8b81c761a283
 
-
-
 $ echo $CATALOG_API_GW_HOST
 
 catalog-prod-apicast-developer.apps.clientvm.b902.rhte.opentlc.com
 -----
 
-. From the terminal, use the curl utility as you've done so in the past to invoke your catalog service several times via the Istio ingress.
-.. Review the log file of your istio enabled catalog service.
+. From the terminal, use the `curl` utility as you have done previously to invoke your catalog service several times via the Istio ingress.
+.. Review the log file of your Istio-enabled catalog service:
 +
 -----
 $ oc logs -f `oc get pod -n $MSA_PROJECT | grep "istio" | awk '{print $1}'` -c $OCP_USERNAME-cat-service-istio -n $MSA_PROJECT
@@ -1227,8 +1214,8 @@ $ oc logs -f `oc get pod -n $MSA_PROJECT | grep "istio" | awk '{print $1}'` -c $
 INFO: getProducts() started span ...
 -----
 
-. Return back to the Jaeger UI and locate your traces.
-.. Notice that there is now a new `service` corresponding to your istio enabled catalog service:
+. Return to the Jaeger UI and locate your traces.
+.. Notice that there is now a new `service` corresponding to your Istio-enabled catalog service:
 +
 image::images/new_istio_cat_trace.png[]
 
@@ -1238,55 +1225,55 @@ image::images/spans_with_catalog.png[]
 
 
 
-== 3scale API Manager Analytics
+== Red Hat 3scale API Management Analytics
 
-Return back to your API Manager as the domain admin and navigate to the _Analytics_ tab at the top.
+Return to your API Manager as the domain administrator and navigate to the _Analytics_ tab.
 
 image::images/3scale_analytics.png[]
 
 Notice that the _hits_ metric for your _catalog_service_ API is automatically depicted.
-3scale analytics can depict the total count of _hits_ on both the API as well as the API method level graphed over time.
+3scale analytics can depict the total count of _hits_ on both the API and the API method level graphed over time.
 
-Your API analytics are currently course grained in that the _hits_ are the sum of invocations on all methods of your catalog service.
-Defining of fine grained _methods_ and _mappings_ for your catalog API will subsequently provide for more fine grained analytics at the method level.
+Your API analytics are currently course-grained in that the _hits_ are the sum of invocations on all methods of your catalog service.
+Defining fine-grained _methods_ and _mappings_ for your catalog API will subsequently provide for more fine-grained analytics at the method level.
 
-The analytics provided by the 3scale API Manager compliment the distributed tracing capabilities of Jaeger.
+The analytics provided by Red Hat 3scale API Management complement the distributed tracing capabilities of Jaeger.
 
-Prometheus is an analytics tool that comes out of the box with Istio and is also being tightly integrated with OpenShift.
-The analytics and observability provided by Prometheus are conceptually similar to the analytics provided by the 3scale API Manager.
-It is possible that a future version of the 3scale API Manager provides support for Prometheus for API data analytics.
+Prometheus is an analytics tool that comes by default with Istio and is being closely integrated with Red Hat OpenShift.
+The analytics and observability provided by Prometheus are conceptually similar to the analytics provided by the Red Hat 3scale API Management.
+It is possible that a future version of Red Hat 3scale API Management will provide support for Prometheus for API data analytics.
 
 == 3scale Mixer Adapter
 
 === Overview
 
-The Red Hat 3scale engineering team is actively working on an Istio _mixer_ adapter.
-This Istio _mixer_ adapter will allow 3scale API Management policies to be applied directly to the _service mesh_ .
+The Red Hat 3scale API Management engineering team is actively working on an Istio _mixer_ adapter.
+This Istio mixer adapter will allow Red Hat 3scale API Management policies to be applied directly to the _service mesh_.
 
 image::images/3scale_mixer_adapter.png[]
 
-In the above diagram, [blue]#notice the replacement of an API Gateway with the Istio 3scale Mixer Adapter#
+In the above diagram, [blue]#notice the replacement of an API Gateway with the Istio 3scale Mixer Adapter#.
 
-=== Disable existing API gateways
+=== Disable Existing API Gateways
 
 Your API gateways will no longer be needed.
-Inbound traffic will flow through the Istio Ingress gateway directly to the 3scale Istio Mixer and out to the remote 3scale API Manager.
+Inbound traffic will flow through the Istio ingress gateway directly to the 3scale Istio Mixer and out to the remote Red Hat 3scale API Management manager.
 
-Subsequently, the API gateways along with any associated routing rules can be deleted.
+Subsequently, the API gateways and any associated routing rules can be deleted.
 
-. Scale down the non-istio enabled API gateway:
+. Scale down the non-Istio-enabled API gateway:
 +
 -----
 $ oc scale deploy/prod-apicast --replicas=0 -n $GW_PROJECT
 -----
 
-. Scale down the Istio enabled API gateway:
+. Scale down the Istio-enabled API gateway:
 +
 -----
 $ oc scale deploy/$OCP_USERNAME-prod-apicast-istio --replicas=0 -n $GW_PROJECT
 -----
 
-. Remove virtual Service:
+. Remove virtual service:
 +
 -----
 $ oc delete virtualservice catalog-istio-gateway-vs -n $GW_PROJECT --as=system:admin
@@ -1298,11 +1285,11 @@ $ oc delete virtualservice catalog-istio-gateway-vs -n $GW_PROJECT --as=system:a
 $ oc delete gateway catalog-istio-gateway -n $GW_PROJECT --as=system:admin
 -----
 
-=== New Virtual Service to catalog service
+=== New Virtual Service to Catalog Service
 
-Let's create a routing rule to invoke the backend catalog service directly via the Istio _ingress_ gateway.
+You will create a routing rule to invoke the backend catalog service directly via the Istio _ingress_ gateway.
 
-Later, more complex routing rules will modify the flow to re-direct through the 3scale Istio Mixer adapter.
+Later, more complex routing rules will modify the flow to redirect through the Red Hat 3scale API Management Istio Mixer adapter.
 
 . Ensure the $NAKED_CATALOG_ROUTE environment variable still remains in your shell:
 +
@@ -1312,7 +1299,7 @@ $ echo $NAKED_CATALOG_ROUTE
 catalog-unsecured-rhte-mw-api-mesh-a1001.apps.clientvm.b902.rhte.opentlc.com
 -----
 
-. Define a gateway and virtual service that routes inbound traffic (with a web context of _/path_) directly to your backend _catalog_ service.
+. Define a gateway and virtual service that routes inbound traffic (with a web context of _/path_) directly to your backend catalog service.
 +
 -----
 $ echo \
@@ -1362,9 +1349,9 @@ Notice that a match is made for all context paths exposed by the catalog service
 $ oc create -f ~/lab/catalog-direct-gw-vs.yml -n $MSA_PROJECT --as=system:admin
 -----
 
-. Bounce the istio _policy_ pod:
-.. With the 1.0.0 version of community Istio,  sometimes the Istio policy can get itself in an unstable state.
-Before progressing with management of more sophisticated routing rules to support the 3scale Istio Mixer, its a good idea to bounce the _policy_ pod.
+. Bounce the Istio _policy_ pod:
+.. With the 1.0.0 version of community Istio, the Istio policy may get into an unstable state.
+Before progressing with management of more sophisticated routing rules to support the Red Hat 3scale API Management Istio Mixer, it is recommended to bounce the _policy_ pod.
 
 .. Execute:
 +
@@ -1398,10 +1385,9 @@ Starting gRPC server on port 9091
 info    ControlZ available at 172.17.0.10:9876
 -----
 
-
 . From the terminal, conduct a smoke test to validate traffic to the catalog service directly from the Istio ingress gateway.
 .. For all of the following smoke tests, notice that the API _user_key_ is not being specified.
-It's not needed in these smoke tests because this inbound traffic is no longer flowing through your API gateway.
+It is not needed in these smoke tests because this inbound traffic is no longer flowing through your API gateway.
 
 .. POST a new catalog item:
 +
@@ -1414,7 +1400,7 @@ $ curl -v -X POST -H "Content-Type: application/json" `echo "http://"$(oc get ro
 }'
 -----
 
-.. View details of that recently posted catalog item:
+.. View details of the recently posted catalog item:
 +
 -----
 $ curl -v `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/product/822222"`
@@ -1431,15 +1417,15 @@ $ curl -v `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o 
 
 In this section of the lab, you provision the community 3scale Istio Mixer in your _istio-system_ namespace.
 
-The Istio Mixer that will be utilized will originate from the following community image in Red Hat's _quay_ container image registry:
+The Istio Mixer that will be utilized will originate from the following community image in Red Hat's _Quay_ container image registry:
 
 -----
 quay.io/3scale/apicast:3scale-http-plugin
 -----
 
-. Clone the source code to the 3scale Istio Mixer to your lab environment:
+. Clone the source code of the 3scale Istio Mixer to your lab environment:
 
-.. For the purpose of this lab, the source code utilized is an unmodified fork of the upstream community at:  `https://github.com/3scale/istio-integration`
+.. For the purpose of this lab, the source code utilized is an unmodified fork of the upstream community at link:https://github.com/3scale/istio-integration[].
 .. Execute:
 +
 -----
@@ -1449,13 +1435,13 @@ $ git clone \
       $HOME/lab/istio-integration
 -----
 
-. Load the Istio Mixer Adapter deployment (found in the 3scale istio integration project you just cloned ) into the istio-system namesapce:
+. Load the Istio Mixer Adapter deployment (found in the 3scale Istio integration project you just cloned) into the istio-system namespace:
 +
 -----
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/openshift -n istio-system --as=system:admin
 -----
 
-. Set the 2 containers at the debug log level:
+. Set the 2 containers to debug log level:
 +
 -----
 $ oc set env dc/3scale-istio-adapter --containers="3scale-istio-adapter" -e "THREESCALE_LOG_LEVEL=debug" -n istio-system --as=system:admin
@@ -1477,13 +1463,13 @@ As per the diagram above, the two containers are as follows:
 
 .. *3scale-istio-adapter*
 +
-Accepts gRPC invocations from Istio Ingress and routes to the other side car in the pod:  _3scale-istio-httpclient_
+Accepts gRPC invocations from Istio ingress and routes to the other side car in the pod:  _3scale-istio-httpclient_
 
 .. *3scale-istio-httpclient*
 +
-Accepts invocations from _3scale-istio-adapter_ and invokes the _system-provider_ and _backend-listener_ endpoints of the remote 3scale API Manager.
+Accepts invocations from _3scale-istio-adapter_ and invokes the _system-provider_ and _backend-listener_ endpoints of the remote Red Hat 3scale API Management manager.
 
-. Inject 3scale handler into Istio Mixer Adapter:
+. Inject the 3scale handler into the Istio Mixer Adapter:
 +
 -----
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/authorization-template.yaml --as=system:admin
@@ -1492,26 +1478,26 @@ $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/authorization-tem
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter.yaml --as=system:admin
 -----
 +
-Embedded in these yaml files is the 3scale handler that gets injected into the Istio Mixer.
-The (less then ideal) alternative to injecting a mixer adapter would have been to develop the 3scale handler directly in the Istio mixer source code and then compile and deploy this entire modified Istio mixer.
+Embedded in these YAML files is the 3scale handler that is injected into the Istio Mixer.
+The discouraged alternative to injecting a mixer adapter would be to develop the 3scale handler directly in the Istio mixer source code and then compile and deploy this entire modified Istio mixer.
 
 
 
-=== 3scale mixer adapter configs
+=== Red Hat 3scale Mixer Adapter Configurations
 
 Now that the 3scale Istio mixer adapter is running, various configurations need to be added to the service mesh.
 
 In particular, you will create routing logic that directs ingress traffic destined for your backend catalog service through the 3scale Istio Mixer adapter.
 
-. In the details of your _catalog_ service in the API Manager admin console, locate the `ID for API calls ... `:
+. In the details of your _catalog_ service in the Red Hat 3scale API Manager administration console, locate the `ID for API calls ... `:
 +
 image::images/service_id.png[]
 
 
-. Set an environment variable that captures this catalog service Id:
+. Set an environment variable that captures this catalog service ID:
 +
 -----
-$ export CATALOG_SERVICE_ID=<your catalog service Id>
+$ export CATALOG_SERVICE_ID=<your catalog service ID>
 -----
 
 . Review the `threescale-adapter-config.yaml` file :
@@ -1520,28 +1506,28 @@ $ export CATALOG_SERVICE_ID=<your catalog service Id>
 $ cat $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml | more
 -----
 
-. Modify the `threescale-adapter-config.yaml` file with id of your _catalog_ service:
+. Modify the `threescale-adapter-config.yaml` file with the ID of your catalog service:
 +
 -----
 $ sed -i "s/service_id: .*/service_id: \"$CATALOG_SERVICE_ID\"/" \
       $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml
 -----
 
-. Modify the `threescale-adapter-config.yaml` file with the URL to your API Manager tenant:
+. Modify the `threescale-adapter-config.yaml` file with the URL to your Red Hat 3scale API Management manager tenant:
 +
 -----
 $ sed -i "s/system_url: .*/system_url: \"https:\/\/$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\"/" \
       $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml
 -----
 
-. Modify the `threescale-adapter-config.yaml` file with the admin access token of your API Manager admin account:
+. Modify the `threescale-adapter-config.yaml` file with the administrative access token of your Red Hat 3scale API Management manager administration account:
 +
 -----
 $ sed -i "s/access_token: .*/access_token: \"$API_ADMIN_ACCESS_TOKEN\"/" \
       $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml
 -----
 
-. Load the 3scale Istio Handler configurations :
+. Load the Red Hat 3scale API Management Istio Handler configurations:
 +
 -----
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml --as=system:admin
@@ -1599,10 +1585,11 @@ $ curl -v \
 PERMISSION_DENIED:threescalehandler.handler.istio-system:
 -----
 
-.. Notice a 403 error response of `PERMISSION_DENIED:threescalehandler.handler.istio-system:`
-.. This is to be expected.
-Inbound requests through the Istio Ingress are now correctly flowing through the mixer to the 3scale adapter.
-In the above request however, the API _user_key_ associated with your catalog service _application_ has been ommitted.
+.. Notice a 403 error response of `PERMISSION_DENIED:threescalehandler.handler.istio-system:`. This is to be expected.
++
+Inbound requests through the Istio ingress are now correctly flowing through the mixer to the 3scale adapter.
++
+In the above request however, the API _user_key_ associated with your catalog service _application_ has been omitted.
 .. View the log file of the 3scale adapter:
 +
 -----
@@ -1615,22 +1602,22 @@ debug   Got adapter config: &Params{ServiceId:103,SystemUrl:https://user100-3sca
 debug   Returning result: {Status:{Code:7 Message: Details:[] XXX_NoUnkeyedLiteral:{} XXX_unrecognized:[] XXX_sizecache:0} ValidDuration:1ms ValidUseCount:0}
 -----
 
-. Re-attempt invocation of your catalog service using the catalog service _user_key_:
+. Try again to invoke your catalog service using the catalog service _user_key_:
 +
 -----
 $ curl -v \
        `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
-[blue]#Congratulations! The catalog service is backed to being managed and secured by the 3scale API Manager.#
+[blue]#Congratulations! The catalog service is again being managed and secured by the Red Hat 3scale API Management manager.#
 This time however, the 3scale Istio Mixer adapter is being utilized rather than the API gateway.
 
-=== Fine tune 3scale Istio Mixer Adapter rules
+=== Fine-tune 3scale Istio Mixer Adapter Rules
 
 At this point, *all* traffic inbound through the Istio ingress is configured to route through the 3scale Istio Mixer adapter.
 Your use case may require more fine-grained routing rules.
 
-In this last section of the lab, you specify that requests for the catalog `/products` endpoint can by-pass the 3scale Istio Mixer adapter and invoke the catalog service directly.
+In this last section of the lab, you specify that requests for the catalog `/products` endpoint can bypass the 3scale Istio Mixer adapter and invoke the catalog service directly.
 All requests to the `/product` endpoint will continue to require authentication via the 3scale Istio Mixer adapter.
 
 . Modify the existing `usethreescale` rule:
@@ -1643,17 +1630,15 @@ $ oc patch rule/usethreescale \
        --as=system:admin
 -----
 +
-This modification introduces a fine grained _match_ rule with various conditions.
-+
-Only when all of the conditions are met, will the inbound traffic be routed to the 3scale mixer adapter.
+This modification introduces a fine grained _match_ rule with several conditions. Only when all of the conditions are met, will the inbound traffic be routed to the 3scale mixer adapter.
 +
 The conditions of the rule are as follows:
 
 .. The destination service needs to be the backend catalog service.
-.. The inbound request needs to originate from outside the $MSA_PROJECT (ie: from the istio-ingress of the istio-system).
+.. The inbound request needs to originate from outside the $MSA_PROJECT (that is, from the istio-ingress of the istio-system).
 .. The target is the `/product/` endpoint (which allows for POST, DELETE and GET methods).
 
-. Re-attempt invocation of your catalog service *without* the catalog service _user_key_:
+. Try again to invoke your catalog service *without* the catalog service _user_key_:
 +
 -----
 $ curl -v \
@@ -1661,11 +1646,11 @@ $ curl -v \
 -----
 +
 This request should have now been routed directly to your backend catalog service.
-This is because the `/products` endpoint is being invoked (which fails the 3rd condition of the rule).
+This is because the `/products` endpoint is being invoked (which fails the third condition of the rule).
 Subsequently, the API _user_key_ is not needed.
 
 
-. Attempt to POST a new catalog service *without* the catalog service _user_key_:
+. Try to POST a new catalog service *without* the catalog service _user_key_:
 +
 -----
 $ curl -v \
@@ -1681,10 +1666,10 @@ $ curl -v \
 -----
 +
 This request should have been routed to the 3scale Istio Mixer adapter.
-This is because all 3 conditions of the routing rule have met.
-Subsequently, because the API _user_key_ was not applied, the response should be a 403 PERMISSION DENIED .
+This is because all three conditions of the routing rule have met.
+Subsequently, because the API _user_key_ was not applied, the response should be "403 PERMISSION DENIED".
 
-. Re-Attempt to POST a new catalog service using the catalog service _user_key_:
+. Try again to POST a new catalog service using the catalog service _user_key_:
 +
 -----
 $ curl -v \
@@ -1700,20 +1685,20 @@ $ curl -v \
 -----
 +
 This request should have been routed to the 3scale Istio Mixer adapter.
-Subsequently, because the API _user_key_ was applied, the response should be a 201 Created .
+Subsequently, because the API _user_key_ was applied, the response should be "201 Created".
 
 === Extra Credit
 
-Thus far, specific endpoints of a single backend _catalog_ service are being managed by the API Manager via the 3scale Istio Mixer adapter.
+Until now, specific endpoints of a single backend _catalog_ service are being managed by the API Manager via the 3scale Istio Mixer adapter.
 
 As an additional exercise, introduce a new backend business service into your service mesh.
 Have this backend business service also managed by the API Manager via the 3scale Istio Mixer adapter.
 
-What configurations need to be modified or added ?
+Which configurations need to be modified or added?
 
 == Questions
 
-. Which of the following libraries is embedded in community API gateway to support distributed tracing?
+. Which of the following libraries is embedded in the community API gateway to support distributed tracing?
 +
 -----
 a) ngx_http_opentracing_module.so
@@ -1731,9 +1716,7 @@ c) ServiceEntry
 d) EgressRoute
 -----
 
-
-
-. The Jaeger java client library provides which of the following features?
+. The Jaeger Java client library provides which of the following features?
 +
 -----
 a) Propogation of traces to the jaeger-agent via UDP on port 6831
@@ -1742,7 +1725,7 @@ c) Setting of the trace sampler type via the environment variable: JAEGER_SAMPLE
 d) All of the above
 -----
 
-. Which of the following are feature of the Red Hat 3scale product that are not found in Istio ?
+. Which of the following are features of the Red Hat 3scale API Management product that are not found in Istio?
 +
 -----
 a) Developer portal
@@ -1760,22 +1743,22 @@ endif::showscript[]
 
 == Conclusion
 
-In this lab you where exposed to the following:
+In this lab we covered the following topics:
 
-* Injection Istio Envoy proxy configs into an API gateway
+* Injecting Istio Envoy proxy configurations into an API gateway
 * Configuration of an Istio Egress Route to allow the API gateway to communicate to the remote API Manager
-* Invocation of your backend service via the Istio Ingress gateway and 3scale API gateway
-* End-to-end distributed tracing of a MSA application using Jaeger implementation of the _OpenTracing_ specification
-* Review of the analytics dashboard provided by 3Scale
-* Introduction to the 3scale Mixer Adapter
+* Invocation of your backend service via the Istio Ingress gateway and Red Hat 3scale API Management gateway
+* End-to-end distributed tracing of an MSA application using the Jaeger implementation of the _OpenTracing_ specification
+* Review of the analytics dashboard provided by Red Hat 3scale API Management
+* Introduction to the Red Hat 3scale API Management Mixer Adapter
 
 
 == Appendix
 
 [[configuretestapi]]
-=== Configure and Test API Mgmt : Experienced
+=== Configure and Test API Management: Experienced
 
-If you are already proficient with 3scale, then configure and test the management of your _catalog_ RESTful API as per the following :
+If you are already proficient with Red Hat 3scale API Management, then configure and test the management of your _catalog_ RESTful API as per the following instructions:
 
 . Ensure your API gateways started correctly and the value of the _THREESCALE_ENDPOINT_ makes sense.
 . Create an API proxy service called _catalog_service_ and configure it to use the API gateway and an API key for security.
@@ -1786,7 +1769,7 @@ If you are already proficient with 3scale, then configure and test the managemen
 .. Create mapping rules for the GET, POST and DELETE verbs.
 . Test the _/products_ endpoint of your _catalog_ RESTful service via both your staging and production API gateways.
 +
-You'll likely want to use the curl utility in a manner similar to the following:
+Use the curl utility as in the following example:
 +
 -----
 $ curl -v -k \
@@ -1796,13 +1779,13 @@ $ curl -v -k \
         -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 +
-WARNING: [red]#Don't proceed beyond this section until this smoke test of your non istio enabled environment passes and the response from your production API gateway is a listing of catalog data#
+WARNING: [red]#Do not proceed beyond this section until this smoke test of your non-Istio-enabled environment passes this test, and the response from your production API gateway is a listing of catalog data.#
 
-Once you've smoke tested your API managed environment, proceed to the section: <<apicast_istio>>
+Once you have smoke tested your API managed environment, proceed to the section: <<apicast_istio>>
 
-=== Delete 3scale Istio Mixer releated artifacts
+=== Delete Red Hat 3scale API Management Istio Mixer Related Artifacts
 
-For convenience, the following script is provided if/when there is a need to delete 3scale Istio Mixer related artifacts.
+For convenience, the following script is provided if there is a need to delete Red Hat 3scale API Management Istio Mixer related artifacts.
 
 . Create deletion script:
 +

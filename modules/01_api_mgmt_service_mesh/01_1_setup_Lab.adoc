@@ -156,7 +156,7 @@ The user of your API Management tenant is associated with an _access token_.
 .... View the access token
 +
 -----
-$ sudo more /root/provisioning_output/clientvm.$API_REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '3q;d' | cut -f7 -d$'\t'
+$ sudo less /home/opentlc-mgr/provisioning_output/clientvm.$API_REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '/API admin access token/d' | cut -f6 -d$'\t'
 
 eb7de2cc123e9061c787ebaed3856d91f12e7d6227cf0e9ce479e10e5bf4d028
 -----
@@ -166,7 +166,7 @@ Later in this lab, you will make use of this access token to interact with the a
 .... Set the access token as an environment variable
 +
 -----
-$ echo "export API_ADMIN_ACCESS_TOKEN=`sudo more /root/provisioning_output/clientvm.$API_REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '3q;d' | cut -f7 -d$'\t'`" >> ~/.bashrc
+$ echo "export API_ADMIN_ACCESS_TOKEN=`sudo more /home/opentlc-mgr/provisioning_output/clientvm.$API_REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '/API admin access token/d' | cut -f6 -d$'\t'`" >> ~/.bashrc
 -----
 
 .. *Shared Multi-tenant API Management environment*
@@ -181,14 +181,12 @@ NOTE:  Select this approach only if you've been explicitly instructed to do so b
 -----
 echo 'export API_PASSWD=r3dh4t1!' >> ~/.bashrc
 echo 'export OCP_PASSWD=r3dh4t1!' >> ~/.bashrc
-echo "export OCP_USERNAME=developer" >> ~/.bashrc
-
-echo "export LAB_CODE=a1001" >> ~/.bashrc
+echo "export OCP_USERNAME=user1" >> ~/.bashrc
 
 echo "export OCP_REGION=`echo $HOSTNAME | cut -d'.' -f2`" >> ~/.bashrc
 echo "export OCP_DOMAIN=clientvm.\$OCP_REGION.openshift.opentlc.com" >> ~/.bashrc
 echo "export OCP_WILDCARD_DOMAIN=apps.\$OCP_DOMAIN" >> ~/.bashrc
-echo "export MSA_PROJECT=rhte-mw-api-mesh-\$LAB_CODE" >> ~/.bashrc
+echo "export MSA_PROJECT=rhte-mw-api-mesh-\$OCP_REGION" >> ~/.bashrc
 echo "export API_WILDCARD_DOMAIN=apps.\$API_DOMAIN" >> ~/.bashrc
 echo "export TENANT_NAME=\$API_USERNAME-\$API_TENANT_SUFFIX" >> ~/.bashrc
 echo "export THREESCALE_PORTAL_ENDPOINT=https://\${API_ADMIN_ACCESS_TOKEN}@\$TENANT_NAME-admin.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
@@ -216,17 +214,17 @@ $ source ~/.bashrc
 .. Verify the total memory available:
 +
 -----
-$ cat /proc/meminfo | grep MemTotal
+$ less /proc/meminfo | grep MemTotal
 
-MemTotal:        16016680 kB
+MemTotal:       32779928 kB
 -----
 
 .. Verify the number of CPUs:
 +
 -----
-$ cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l
+$ less /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l
 
-4
+8
 -----
 
 == OpenShift Container Platform
@@ -265,13 +263,12 @@ $ oc login https://$HOSTNAME:8443 -u $OCP_USERNAME -p $OCP_PASSWD
 -----
 $ oc version
 
-oc v3.10.14
-kubernetes v1.10.0+b81c8f8
+oc v3.11.43
+kubernetes v1.11.0+d4cacc0
 features: Basic-Auth GSSAPI Kerberos SPNEGO
 
-Server https://master.8091.openshift.opentlc.com:443
-openshift v3.10.14
-kubernetes v1.10.0+b81c8f8
+Server https://clientvm.69bb.openshift.opentlc.com:8443
+kubernetes v1.11.0+d4cacc0
 -----
 
 .. In the above example, notice that the version of the `oc` client is the same release as the remote OCP master API.
@@ -284,10 +281,16 @@ $ oc get projects
 
 ...
 
+3scale-mt-api0            3scale-mt-api0          Active
 istio-system                                      Active
-rhte-mw-api-mesh-1       rhte-mw-api-mesh-1       Active
+rhte-mw-api-mesh-13e6    rhte-mw-api-mesh-13e6    Active
 user1-gw                                          Active
 -----
+
+.. *3scale-mt-api0*
++
+If you ordered your lab environment from RHPDS or OPENTLC, then it will include 3scale API Manager.
+If not, then your instructor will provide details.
 
 .. *istio-system*
 +
@@ -313,7 +316,7 @@ $ oc project $MSA_PROJECT
 . View details of the ClusterQuota that the _cluster-admin_ has assigned to your OpenShift user:
 +
 -----
-$ oc describe AppliedClusterResourceQuota clusterquota-rhte-mw-api-mesh-developer
+$ oc describe AppliedClusterResourceQuota clusterquota-rhte-mw-api-mesh-user1
 
 ....
 
@@ -639,7 +642,7 @@ $ curl -o $HOME/lab/3scale-apicast.yml \
 . Review the API gateway template:
 +
 -----
-$ cat $HOME/lab/3scale-apicast.yml | more
+$ less $HOME/lab/3scale-apicast.yml | more
 -----
 
 . Create API gateway staging related resources in OpenShift:

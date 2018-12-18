@@ -164,18 +164,9 @@ The activities in this section are also found in the prerequisite courses but ar
 
 ==== Define Catalog Service
 
-. From the API Manager Admin Portal home page, navigate to the *API* tab.
+. From the API Manager Admin Portal home page, navigate to : `Dashboard -> APIS` 
 . On the far right, click image:images/create_service_icon.png[].
-. Enter `catalog_service` for the *Name* and *System Name*.
-. Select *NGINX API gateway self-managed* *Gateway* type and not a plugin:
-+
-image::images/apicast_gw.png[]
-
-. Scroll down the page and for the *Authentication* type, select *API Key (user_key)*:
-+
-image::images/select_api_key.png[]
-
-. Click *Create Service*.
+. Enter `catalog_service` for the *Name*,  *System Name* and *Description*.  Click *Add API*.
 
 ==== Create Application Plan
 
@@ -199,7 +190,7 @@ In this section, you associate an application with an API consumer account.
 This generates a _user key_ for the application based on the details previously defined in the application plan.
 The user key is used as a query parameter to the HTTP request to invoke your business services via the on-premise API gateway.
 
-. Navigate to the *Developers* tab.
+. Navigate to the *Audience -> Accounts -> Listing* .
 . Select the `Developer` account.
 . Create Application
 .. Click the *0 Applications* link at the top:
@@ -235,8 +226,8 @@ $ source ~/.bashrc
 
 In this section, you define an _API proxy_ to manage your _catalog_ RESTful business service.
 
-. In the API Manager Admin Portal, navigate to the *APIs* tab.
-. From your `catalog_service`, select *Integration*.
+. In the top panel of the API Manager Admin Portal, navigate to _catalog_service_ API.
+. In the left panel, select *Integration -> Configuration*.
 . Click *Add the base URL of your API and save the configuration*.
 +
 * This navigates to a page that allows you to associate the API gateway staging and production URLs with your new Red Hat 3scale API Management proxy service.
@@ -350,7 +341,7 @@ $ echo $CATALOG_USER_KEY
 . From the terminal, execute the following:
 +
 -----
-$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 +
 .Sample Output

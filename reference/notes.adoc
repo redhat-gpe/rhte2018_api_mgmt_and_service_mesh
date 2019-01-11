@@ -1,5 +1,21 @@
 = Reference
 
+Nov, 2018
+    For those of you who have asked or didn't know about this yet, I'd like to share our plans to release a 3scale Istio Mixer Adapter in H1 2019. More details below.
+
+    The 3scale Istio Mixer Adapter will extend API management capabilities (developer access via developer portal and documentation, access control and plans, usage analytics, billing and invoicing) to services exposed within the service mesh. Instead of APIcast being the traffic manager agent, the control point will be Envoy sidecars (deployed with each service) which go through the adapter to perform policy checks against the 3scale API Manager.
+
+    The 3scale Istio Mixer Adapter is going to be bundled with Red Hat's Service Mesh, which will be part of OpenShift and will come at no additional cost.
+
+    More details about background, functionality trade-offs of using APIcast or Envoy sidecars, deployment, what policies will be configured where, etc. can be found in this internal slide deck (it's work in progress, feedback welcome!).[1]
+
+    Meanwhile, if you have any customers potentially interested in getting early access to the adapter, please add them to the list here [2]. At this stage we will heavily prioritize customers who can provide valuable feedback based on a good understanding of their use cases for Service Mesh and API Management. Ideally they will already be a user of either 3scale or Istio.
+
+    [1] https://docs.google.com/presentation/d/1tq_1h80YDqvykLmUW0vOMXKxA9fjmqfbGhXlRx3Yggc/edit#slide=id.g17a49862ec_0_0
+    [2] https://docs.google.com/spreadsheets/d/1xpXzp98T5f1RP_2pgC1f2yrmBvZb9i9SsAVMZrPKTgE/edit#gid=0
+
+
+
 . https://gist.github.com/jmprusi/8e7369376e42ffe1cd5278e919b50cd4#file-istio-adapter-md
 
 . https://docs.google.com/presentation/d/1PaE3RqyKoadllKHlPg0-kHcUrTuCeIdAe81CMk12iWw/

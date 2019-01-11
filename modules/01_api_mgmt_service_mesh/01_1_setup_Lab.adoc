@@ -616,13 +616,16 @@ In a later section of this course, you will switch to the use of a community var
 
 . In your course lab environment, ensure you are the same non-root user in which you previously set lab related environment variables.
 
-. Using the `oc` utility, ensure you are authenticated:
+. Set a new environment variable that defines the name of the OCP project where your API gateway will reside:
 +
 -----
-$ echo "export GW_PROJECT=\$API_USERNAME-gw" >> $HOME/.bashrc
-$ source ~/.bashrc
+echo "export GW_PROJECT=\$API_USERNAME-gw" >> $HOME/.bashrc
+source ~/.bashrc
+-----
 
 . Using the `oc` utility, create a new project where your API gateways will reside:
++
+-----
 $ oc new-project $GW_PROJECT --description=$GW_PROJECT
 -----
 

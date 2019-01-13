@@ -149,14 +149,21 @@ echo "export GW_PROJECT=\$API_USERNAME-gw" >> $HOME/.bashrc
 source ~/.bashrc
 -----
 
+ifdef::showscript[]
+This is now all being handled by 3scale_multitenant ansible
+
+
+
 ... Set your API Admin access token
 +
 The user of your API Management tenant is associated with an _access token_.
+You'll reference this access token later in this lab when configuring your API Gateways to communicate with the API Manager.
+
 
 .... View the access token
 +
 -----
-$ sudo less /home/opentlc-mgr/provisioning_output/clientvm.$API_REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '/API admin access token/d' | cut -f6 -d$'\t'
+$ sudo less /home/opentlc-mgr/provisioning_output/clientvm.$API_REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '/API admin access token/d' | cut -f5 -d$'\t'
 
 eb7de2cc123e9061c787ebaed3856d91f12e7d6227cf0e9ce479e10e5bf4d028
 -----
@@ -166,8 +173,9 @@ Later in this lab, you will make use of this access token to interact with the a
 .... Set the access token as an environment variable
 +
 -----
-$ echo "export API_ADMIN_ACCESS_TOKEN=`sudo more /home/opentlc-mgr/provisioning_output/clientvm.$API_REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '/API admin access token/d' | cut -f6 -d$'\t'`" >> ~/.bashrc
+$ echo "export API_ADMIN_ACCESS_TOKEN=`sudo more /home/opentlc-mgr/provisioning_output/clientvm.$API_REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '/API admin access token/d' | cut -f5 -d$'\t'`" >> ~/.bashrc
 -----
+endif::showscript[]
 
 .. *Shared Multi-tenant API Management environment*
 +
@@ -179,7 +187,7 @@ NOTE:  Select this approach only if you've been explicitly instructed to do so b
 . For all students, copy and paste the following commands in the same terminal:
 +
 -----
-echo 'export API_PASSWD=r3dh4t1!' >> ~/.bashrc
+echo 'export API_PASSWD=admin' >> ~/.bashrc
 echo 'export OCP_PASSWD=r3dh4t1!' >> ~/.bashrc
 echo "export OCP_USERNAME=user1" >> ~/.bashrc
 
@@ -313,10 +321,24 @@ This namespace includes an API gateway pre-configured to interact with your API 
 $ oc project $MSA_PROJECT
 -----
 
+. Validate the ability to _impersonate_ cluster admin:
++
+-----
+$ oc get nodes --as=system:admin
+
+NAME        STATUS    ROLES     AGE       VERSION
+localhost   Ready     <none>    16h       v1.10.0+b81c8f8
+-----
++
+For the purpose of this lab, the cluster-admin of your OCP environment has provided you with the ability to _impersonate_ the _cluster-admin_.
+You would not have had the ability to execute the above command (by specifying `--as=system:admin`) if the cluster-admin had not already done so.
+In the next lab you will use this ability to impersonate the cluster admin.
+
+
 . View details of the ClusterQuota that the _cluster-admin_ has assigned to your OpenShift user:
 +
 -----
-$ oc describe AppliedClusterResourceQuota clusterquota-rhte-mw-api-mesh-user1
+$ oc describe clusterquota clusterquota-rhte-mw-api-mesh-$OCP_USERNAME --as=system:admin
 
 ....
 
@@ -333,19 +355,6 @@ requests.storage        1Gi     50Gi
 secrets                 24      150
 services                4       150
 -----
-
-. Validate the ability to _impersonate_ cluster admin:
-+
------
-$ oc get nodes --as=system:admin
-
-NAME        STATUS    ROLES     AGE       VERSION
-localhost   Ready     <none>    16h       v1.10.0+b81c8f8
------
-+
-For the purpose of this lab, the cluster-admin of your OCP environment has provided you with the ability to _impersonate_ the _cluster-admin_.
-You would not have had the ability to execute the above command (by specifying `--as=system:admin`) if the cluster-admin had not already done so.
-In the next lab you will use this ability to impersonate the cluster admin.
 
 . Log into OpenShift Web Console
 .. Many OpenShift related tasks found in this lab can be completed in the Web Console (as an alternative to using the `oc` CLI utility.
@@ -370,9 +379,11 @@ Your lab assets consist of a mix of OpenShift _Deployment_ and _DeploymentConfig
 
 The _Deployment_ construct is a more recent Kubernetes equivalent of what has always been in OpenShift:  _DeploymentConfig_.
 
+ifdef::showscript[]
 The _istioctl_ utility (introduced later in this lab) of Istio requires the use of the Kubernetes _Deployment_ resource.
 Subsequently, for the purpose of this lab, we'll use the Kubernetes _Deployment_ type (instead of DeploymentConfig) for most of the functionality.
 One exception to this is the MongoDB.
+endif::showscript[]
 
 In your lab environment, the CoolStore catalog service connects to a MongoDB database.
 Kubernetes is used to manage the MongoDB database, using an OpenShift DeploymentConfig instead of a Kubernetes Deployment.

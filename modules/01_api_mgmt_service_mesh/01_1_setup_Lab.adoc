@@ -208,6 +208,13 @@ echo "export BACKEND_ENDPOINT_OVERRIDE=https://backend-\$API_TENANT_SUFFIX.\$API
 $ source ~/.bashrc
 -----
 
+. Create a directory to store files related to this lab:
++
+-----
+$ mkdir -p $HOME/lab
+-----
+
+
 == Utilities and resources
 
 . Validate that the following exists in the $PATH of the remote virtual machine:
@@ -638,12 +645,6 @@ source ~/.bashrc
 +
 -----
 $ oc new-project $GW_PROJECT --description=$GW_PROJECT
------
-
-. Create a directory to store files related to this lab:
-+
------
-$ mkdir -p $HOME/lab
 -----
 
 . Retrieve the API gateway template:

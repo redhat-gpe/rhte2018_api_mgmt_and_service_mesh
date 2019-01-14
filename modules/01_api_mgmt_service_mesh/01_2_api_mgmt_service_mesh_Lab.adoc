@@ -540,7 +540,7 @@ d59904ad4515522ecccb8b81c761a283
 $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
-.. The response should be an HTTP 404.
+.. [red]#The response should be an HTTP 404.#
 .. Why would this be the case ?
 ... Inspect the API gateway log file for any clues.
 ... Is the request reaching your new Istio enabled API gateway?
@@ -679,7 +679,9 @@ image::images/api_and_ingress_gateway.png[]
 . Create an environment variable that reflects the _Production Public Base URL_ of the _catalog-service_ configured in the API Manager:
 +
 -----
-$ export CATALOG_API_GW_HOST=`oc get route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT -o template --template {{.spec.host}}`
+$ echo "export CATALOG_API_GW_HOST=`oc get route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT -o template --template {{.spec.host}}`" >> ~/.bashrc
+
+$ source ~/.bashrc
 -----
 +
 The value of $CATALOG_API_GW_HOST will be specified in the request to the Istio ingress gateway as an HTTP _HOST_ header.
@@ -749,9 +751,11 @@ $ oc create -f $HOME/lab/catalog-istio-gateway-vs.yml -n $GW_PROJECT --as=system
 . Set environment variables that reflect the host and port of the Istio ingress gateway service:
 +
 -----
-$ export INGRESS_HOST=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+$ echo "export INGRESS_HOST=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> ~/.bashrc
 
-$ export INGRESS_PORT=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].port}')
+$ echo "export INGRESS_PORT=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].port}')" >> ~/.bashrc
+
+source ~/.bashrc
 -----
 +
 NOTE:  This $INGRESS_HOST:$INGRESS_PORT socket is local to the Red Hat OpenShift Container Platform subnet.
@@ -785,6 +789,10 @@ $  curl -v \
        -HHost:$CATALOG_API_GW_HOST \
       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
++
+NOTE: [red]#There is currently a bug in your student lab environment that is causing this step to fail.  
+Specifically, the _istio-ingressgateway_ service of the _istio-system_ namespace makes use of OCP _nodeport_ features.
+The _nodeports_ defined in the _istio-ingressgateway_ service are currently blocked by the cloud provider of your VM#
 
 ifdef::showscript[]
 
@@ -830,7 +838,7 @@ You will configure the OpenTracing client libraries in your API gateway to forwa
 . You will be making quite a few changes to your Istio-enabled API gateway.  Subsequently, put it in a paused state while those changes are being made:
 +
 -----
-$ oc rollout pause deploy $OCP_USERNAME-prod-apicast-istio
+$ oc rollout pause deploy $OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT
 -----
 
 .. Verify that the _jaeger-agent_ and _jaeger-collector_ both exist in the _istio-system_ namespace :
@@ -972,7 +980,7 @@ Another important term to understand is: _trace_. Jaeger defines _trace_ as “a
 -----
 $ curl -v \
        -HHost:$CATALOG_API_GW_HOST \
-       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+       http://$INGRESS_HOST:$INGRESS_PORT/products?user_key=$CATALOG_USER_KEY
 -----
 
 . Identify the URL to the Jaeger UI:

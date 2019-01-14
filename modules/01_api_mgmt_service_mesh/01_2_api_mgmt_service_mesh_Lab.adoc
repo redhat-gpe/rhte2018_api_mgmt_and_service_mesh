@@ -792,7 +792,7 @@ $  curl -v \
 +
 NOTE: [red]#There is currently a bug in your student lab environment that is causing this step to fail.  
 Specifically, the _istio-ingressgateway_ service of the _istio-system_ namespace makes use of OCP _nodeport_ features.
-The _nodeports_ defined in the _istio-ingressgateway_ service are currently blocked by the cloud provider of your VM#
+The _nodeports_ defined in the _istio-ingressgateway_ service are currently blocked by the cloud provider hosting your VM#
 
 ifdef::showscript[]
 
@@ -902,13 +902,13 @@ $ oc create configmap jaeger-config --from-file=$HOME/lab/jaeger_config.json -n 
 . Mount the configmap to your OpenTracing-enabled API Gateway:
 +
 -----
-$ oc volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ --configmap-name jaeger-config -n $GW_PROJECT
+$ oc set volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ -t configmap --configmap-name jaeger-config -n $GW_PROJECT
 -----
 
 . Set environment variables that indicate to the API gateway where to read OpenTracing related configurations:
 +
 -----
-$ oc env deploy/$OCP_USERNAME-prod-apicast-istio \
+$ oc set env deploy/$OCP_USERNAME-prod-apicast-istio \
          OPENTRACING_TRACER=jaeger \
          OPENTRACING_CONFIG=/tmp/jaeger/jaeger_config.json \
          -n $GW_PROJECT
@@ -918,7 +918,8 @@ $ oc env deploy/$OCP_USERNAME-prod-apicast-istio \
 +
 -----
 $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-prod-apicast-istio", "image": "quay.io/3scale/apicast:master" }]}}}}'
+   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-prod-apicast-istio", "image": "quay.io/3scale/apicast:master" }]}}}}' \
+   -n $GW_PROJECT
 -----
 +
 Notice the use of a community version of the API gateway container image available in a public _quay.io_ organization.
@@ -927,15 +928,17 @@ This is the container image that includes the _opentracing_ and _jaeger_ client 
 . Resume your Istio-enabled and OpenTracing-enabled API gateway:
 +
 -----
-$ oc rollout resume deploy $OCP_USERNAME-prod-apicast-istio
+$ oc rollout resume deploy $OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT
 -----
 
 . Verify the existence of the OpenTracing library for NGinx in the API gateway.
 +
-Once your API gateway is running again, execute the following command:
+Once your API gateway is running again, execute the following commands:
 +
 -----
-$ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
+$ oc project $GW_PROJECT
+
+$ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` ls -l /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
 
 ...
 

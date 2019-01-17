@@ -69,7 +69,7 @@ image::images/catalog_item.png[]
 . Click `Order` on the next page.
 
 . In the subsequent order form, select the following:
-.. *OpenShift Container Platform version*: `3.10.34`
+.. *OpenShift Container Platform version*: `3.11.43`
 .. *Region*: Select the region you currently reside in
 .. Click `Submit`.
 
@@ -599,14 +599,14 @@ The lab environment can be provisioned via the following Ansible roles:
 +
 The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-3scale-multitenant[ocp-workload-3scale-multitenant] Ansible role will provision a multi-tenant 3scale API Manager.
 +
-This role needs to be executed only once (to provision only one multi-tenant API Manager) on a pre-existing OCP 3.10 environment.
+This role needs to be executed only once (to provision only one multi-tenant API Manager) on a pre-existing OCP 3.11 environment.
 +
 The role also offers the ability to provision a configurable number of _tenants_ in that multi-tenant API Manager environment.
 If provisioning tenants, the role also provides the ability to automatically provision API gateways for each tenant (co-located in the same OCP cluster as the API Manager but in their own namespaces).
 
 . *ocp-workload-istio-community*
 +
-The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-istio-community[ocp-workload-istio-community] Ansible role will layer Istio on a pre-existing OCP 3.10 environment.
+The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-istio-community[ocp-workload-istio-community] Ansible role will layer Istio on a pre-existing OCP 3.11 environment.
 +
 This role should be executed on an OCP environment dedicated to a student (that is, using `oc cluster up`).
 This role is applied to the same OCP environment utilized by the _ocp-workload-rhte-mw-api-mesh_ role.

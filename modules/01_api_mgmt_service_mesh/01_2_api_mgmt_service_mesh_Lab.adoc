@@ -418,6 +418,12 @@ By providing a unique identifer as a prefix to your API gateway name, you will b
 $ sed -i "s/replicas:\ 1/replicas: 1\n  paused: true/" $HOME/lab/prod-apicast.yml
 -----
 
+. Specify to the gateway that it should pull API service configuration information from the API Manager upon first request:
++
+-----
+$ sed -i "s/boot/lazy/" $HOME/lab/prod-apicast.yml
+-----
+
 . View the configmap in the `istio-system` project:
 +
 -----

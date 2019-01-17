@@ -312,7 +312,7 @@ For the purpose of this lab, you can delete your API gateway pods instead of wai
 . Delete API gateway related pods:
 +
 -----
-$ for i in `oc get pod -n $GW_PROJECT | grep "apicast" | awk '{print $1}'`; do oc delete pod $i; done
+$ for i in `oc get pod -n $GW_PROJECT | grep "apicast" | awk '{print $1}'`; do oc delete pod $i -n $GW_PROJECT; done
 -----
 +
 Because the value of the _APICAST_CONFIGURATION_LOADER_ environment variable in the pod is set to `boot`, the service proxy configuration from the API Manager will automatically be pulled upon restart.

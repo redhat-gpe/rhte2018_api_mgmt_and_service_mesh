@@ -661,12 +661,14 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 This time, you should see the catalog data in the response.
 This request now flows through your Istio-enabled API gateway.
 
-[blue]#As mentioned previously, what you have accomplished so far is of limited value on its own. However, this is a step to full utilization of API management and service mesh of your container native application.
+[blue]#As mentioned previously, what you have accomplished so far is of limited value on its own. 
+However, this is a step to full utilization of API management and service mesh of your container native application.
 In the next sections of this lab you will continue to build upon this foundation.#
+
 
 == Istio Ingress Gateway
 
-Until now, traffic into the production API gateway has been directly via the standard _HAProxy_-based Kubernetes or OCP _router_.
+Until now, traffic into the production API gateway has been directly via the standard _HAProxy_-based OCP _router_.
 
 This has worked, but what is missing is the ability to apply more sophisticated route rules and integration with service mesh _observability_ tools such as _Jaeger_ and _Prometheus_.
 Istio includes an _Ingress_ gateway that implements these additional features.
@@ -807,6 +809,7 @@ $ oc delete route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT
 
 endif::showscript[]
 
+
 == API Gateway: OpenTracing Enabled
 
 === Overview
@@ -832,6 +835,7 @@ These libraries provide support for the _OpenTracing_ specification using _Jaege
 image::images/jaeger_architecture.png[]
 
 You will configure the OpenTracing client libraries in your API gateway to forward traces via UDP to the _jaeger-agent_.
+
 
 === Enable OpenTracing using Jaeger
 
@@ -1301,7 +1305,7 @@ $ echo $NAKED_CATALOG_ROUTE
 catalog-unsecured-rhte-mw-api-mesh-a1001.apps.clientvm.b902.rhte.opentlc.com
 -----
 
-. Define a gateway and virtual service that routes inbound traffic (with a web context of _/path_) directly to your backend catalog service.
+. Define a gateway and virtual service that routes inbound traffic from the _ingressgateway_ on port 80 directly to your backend catalog service on port 8080.
 +
 -----
 $ echo \
@@ -1388,8 +1392,9 @@ info    ControlZ available at 172.17.0.10:9876
 -----
 
 . From the terminal, conduct a smoke test to validate traffic to the catalog service directly from the Istio ingress gateway.
-.. For all of the following smoke tests, notice that the API _user_key_ is not being specified.
+.. For the next few smoke tests, notice that the API _user_key_ is not being specified.
 It is not needed in these smoke tests because this inbound traffic is no longer flowing through your API gateway.
+Later in the lab, you'll re-introduce the use of the API _user_key_ .
 
 .. POST a new catalog item:
 +
@@ -1400,7 +1405,14 @@ $ curl -v -X POST -H "Content-Type: application/json" `echo "http://"$(oc get ro
   "desc" : "Oculus Rift 2",
   "price" : 102.0
 }'
+
+...
+
+< HTTP/1.1 201 Created
 -----
++
+The reponse status back should be an HTTP 201 .
+
 
 .. View details of the recently posted catalog item:
 +
@@ -1414,6 +1426,8 @@ $ curl -v `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o 
 $ curl -v `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products"`
 -----
 
+[blue]#You have successully routed traffic through the _istio-ingressgateway_ directly to your backend business service#.
+Next step is to inject the 3scale Istio Mixer into this request path and subsequently begin to apply API Management.
 
 === 3scale Istio Mixer
 
@@ -1443,7 +1457,7 @@ $ git clone \
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/openshift -n istio-system --as=system:admin
 -----
 
-. Set the 2 containers to debug log level:
+. Set the 2 containers that make up the 3scale Adapter to debug log level:
 +
 -----
 $ oc set env dc/3scale-istio-adapter --containers="3scale-istio-adapter" -e "THREESCALE_LOG_LEVEL=debug" -n istio-system --as=system:admin
@@ -1481,15 +1495,15 @@ $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapte
 -----
 +
 Embedded in these YAML files is the 3scale handler that is injected into the Istio Mixer.
-The discouraged alternative to injecting a mixer adapter would be to develop the 3scale handler directly in the Istio mixer source code and then compile and deploy this entire modified Istio mixer.
-
-
+This handler is written in Golang by the 3scale engineering team as per the link:https://github.com/istio/istio/wiki/Mixer-Out-Of-Process-Adapter-Dev-Guide[Mixer Out of Process Adapter Dev Guide].
+Much of these files consists of the adapter's configuration link:https://developers.google.com/protocol-buffers/docs/proto3[proto].
 
 === Red Hat 3scale Mixer Adapter Configurations
 
 Now that the 3scale Istio mixer adapter is running, various configurations need to be added to the service mesh.
 
-In particular, you will create routing logic that directs ingress traffic destined for your backend catalog service through the 3scale Istio Mixer adapter.
+In particular, you will specify the URL of the _system-provider_ endpoint of your 3scale tenant along with the corresponding access token.
+This is needed so that the Istio Mixer can pull API proxy details from the 3scale API Manager (similar to what a API Gateway does).
 
 . In the details of your _catalog_ service in the Red Hat 3scale API Manager administration console, locate the `ID for API calls ... `:
 +
@@ -1499,7 +1513,9 @@ image::images/service_id.png[]
 . Set an environment variable that captures this catalog service ID:
 +
 -----
-$ export CATALOG_SERVICE_ID=<your catalog service ID>
+$ echo "export CATALOG_SERVICE_ID=<your catalog service ID>" >> ~/.bashrc
+
+$ source ~/.bashrc
 -----
 
 . Review the `threescale-adapter-config.yaml` file :
@@ -1668,7 +1684,7 @@ $ curl -v \
 -----
 +
 This request should have been routed to the 3scale Istio Mixer adapter.
-This is because all three conditions of the routing rule have met.
+This is because all three conditions of the routing rule have been met.
 Subsequently, because the API _user_key_ was not applied, the response should be "403 PERMISSION DENIED".
 
 . Try again to POST a new catalog service using the catalog service _user_key_:

@@ -73,6 +73,7 @@ image::images/catalog_item.png[]
 .. *Region*: Select the region you currently reside in
 .. Click `Submit`.
 
+ifdef::showscript[]
 ==== Access VM via GUID Grabber
 
 NOTE: [blue]#This section is only applicable if you are a participant in a Red Hat conference such as Red Hat Tech Exchange (RHTE)#.
@@ -101,6 +102,7 @@ If you fail to do this, you will be locked into the GUID from the previous lab.
 +
 [NOTE]
 Clicking *Reset Workstation* will not stop or delete the lab environment.
+endif::showscript[]
 
 === Confirmation Emails and SSH access
 

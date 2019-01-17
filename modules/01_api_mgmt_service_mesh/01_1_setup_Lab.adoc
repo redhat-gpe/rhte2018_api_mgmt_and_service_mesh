@@ -151,11 +151,6 @@ echo "export GW_PROJECT=\$API_USERNAME-gw" >> $HOME/.bashrc
 source ~/.bashrc
 -----
 
-ifdef::showscript[]
-This is now all being handled by 3scale_multitenant ansible
-
-
-
 ... Set your API Admin access token
 +
 The user of your API Management tenant is associated with an _access token_.
@@ -177,7 +172,8 @@ Later in this lab, you will make use of this access token to interact with the a
 -----
 $ echo "export API_ADMIN_ACCESS_TOKEN=`sudo more /home/opentlc-mgr/provisioning_output/clientvm.$API_REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '/API admin access token/d' | cut -f5 -d$'\t'`" >> ~/.bashrc
 -----
-endif::showscript[]
+
+ifdef::showscript[]
 
 .. *Shared Multi-tenant API Management environment*
 +
@@ -185,6 +181,7 @@ NOTE:  Select this approach only if you've been explicitly instructed to do so b
 
 ... Execute the steps discussed in the section <<api_spreadsheet>>.
 ... Return to this section after completion.
+endif::showscript[]
 
 . For all students, copy and paste the following commands in the same terminal:
 +

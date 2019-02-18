@@ -75,7 +75,7 @@ The following table provides a broad feature comparison of API Management and MS
 |Distributed tracing|
 |========================
 +
-Links to articles pertaining to Istio and Service Mesh are provided in <<Reference> section of the Appendix of this lab.
+Links to articles pertaining to Istio and Service Mesh are provided in <<Reference>> section of the Appendix of this lab.
 
 
 [blue]#Note that the primary purpose of Istio and service mesh management is assigning identity for the benefit of traffic control into and within the cluster/mesh.

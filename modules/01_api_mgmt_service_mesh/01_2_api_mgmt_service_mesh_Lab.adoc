@@ -53,9 +53,9 @@ _Gartner's Magic Quadrant for Full Life Cycle API Management_ names Red Hat a le
 With MSAs, the need for a _service mesh_ becomes critical.
 As such, Red Hat is contributing to the Istio community project.
 Red Hat is also working to productize Istio as a supported product on Red Hat's OpenShift Container Platform (OCP).
-
++
 The following table provides a broad feature comparison of API Management and MSA _service mesh_ :
-
++
 [width="100%",cols="1,1",options="header"]
 |========================
 |*Service Mesh* | *API Management*
@@ -74,30 +74,12 @@ The following table provides a broad feature comparison of API Management and MS
 |Metrics|
 |Distributed tracing|
 |========================
++
+Links to references pertaining to Istio and Service Mesh are provided in the Appendix of this lab.
 
 Note that the primary purpose of Istio and service mesh management is assigning identity for the benefit of traffic control into and within the cluster/mesh.
 
 Also note that the focus of API Management is fostering business relationships between API consumers and producers.
-
-=== Reference
-
-. Istio / Service Mesh:
-.. link:https://docs.google.com/presentation/d/1PaE3RqyKoadllKHlPg0-kHcUrTuCeIdAe81CMk12iWw/edit#slide=id.g17a49862ec_0_0[3scale Next.Gen and Istio]
-.. link:https://istio.io/docs/concepts/what-is-istio/[Community Istio Documentation]
-.. link:https://github.com/Maistra/istio-operator[Red Hat community Istio (Maistra) operator]
-.. link:https://maistra.io/[OpenShift Service Mesh (Maistra) project]
-
-. Distributed Tracing:
-.. link:https://github.com/opentracing[GitHub organization for OpenTracing]
-+
-Includes the OpenTracing specification and the OpenTracing client libraries for many languages.
-
-.. link:https://www.jaegertracing.io/[jaegertracing.io]
-.. link:https://github.com/jaegertracing/[GitHub organization for community Jaeger]
-+
-Includes source code of community Jaeger, and Jaeger client libraries for many languages that implement the corresponding OpenTracing client libraries.
-
-.. link:https://istio.io/blog/2018/v1alpha3-routing/[Overview of Istio v1alpha3 routing API]
 
 === Alternatives
 
@@ -1781,6 +1763,30 @@ In this lab we covered the following topics:
 
 
 == Appendix
+
+[[Reference]]
+=== Reference
+
+This section provides link to reference material pertaining to Istio and Service Mesh.
+
+. Istio / Service Mesh:
+.. link:https://docs.google.com/presentation/d/1PaE3RqyKoadllKHlPg0-kHcUrTuCeIdAe81CMk12iWw/edit#slide=id.g17a49862ec_0_0[3scale Next.Gen and Istio]
+.. link:https://istio.io/docs/concepts/what-is-istio/[Community Istio Documentation]
+.. link:https://github.com/Maistra/istio-operator[Red Hat community Istio (Maistra) operator]
+.. link:https://maistra.io/[OpenShift Service Mesh (Maistra) project]
+
+. Distributed Tracing:
+.. link:https://github.com/opentracing[GitHub organization for OpenTracing]
++
+Includes the OpenTracing specification and the OpenTracing client libraries for many languages.
+
+.. link:https://www.jaegertracing.io/[jaegertracing.io]
+.. link:https://github.com/jaegertracing/[GitHub organization for community Jaeger]
++
+Includes source code of community Jaeger, and Jaeger client libraries for many languages that implement the corresponding OpenTracing client libraries.
+
+.. link:https://istio.io/blog/2018/v1alpha3-routing/[Overview of Istio v1alpha3 routing API]
+
 
 [[configuretestapi]]
 === Configure and Test API Management: Experienced

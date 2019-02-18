@@ -15,6 +15,7 @@ Nov, 2018
     [2] https://docs.google.com/spreadsheets/d/1xpXzp98T5f1RP_2pgC1f2yrmBvZb9i9SsAVMZrPKTgE/edit#gid=0
 
 
+. https://docs.google.com/presentation/d/1tq_1h80YDqvykLmUW0vOMXKxA9fjmqfbGhXlRx3Yggc/edit#slide=id.g3962282dea_0_182   :   3scale Istio Mixer Adapter ( Jan. 2019 )
 
 . https://gist.github.com/jmprusi/8e7369376e42ffe1cd5278e919b50cd4#file-istio-adapter-md
 

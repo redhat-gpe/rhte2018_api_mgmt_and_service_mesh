@@ -11,11 +11,11 @@ Nov, 2018
     More details about background, functionality trade-offs of using APIcast or Envoy sidecars, deployment, what policies will be configured where, etc. can be found in this internal slide deck (it's work in progress, feedback welcome!).[1]
 
     Meanwhile, if you have any customers potentially interested in getting early access to the adapter, please add them to the list here [2]. At this stage we will heavily prioritize customers who can provide valuable feedback based on a good understanding of their use cases for Service Mesh and API Management. Ideally they will already be a user of either 3scale or Istio.
------
 
     [1] https://docs.google.com/presentation/d/1tq_1h80YDqvykLmUW0vOMXKxA9fjmqfbGhXlRx3Yggc/edit#slide=id.g17a49862ec_0_0
     [2] https://docs.google.com/spreadsheets/d/1xpXzp98T5f1RP_2pgC1f2yrmBvZb9i9SsAVMZrPKTgE/edit#gid=0
 
+-----
 
 . https://docs.google.com/presentation/d/1tq_1h80YDqvykLmUW0vOMXKxA9fjmqfbGhXlRx3Yggc/edit#slide=id.g3962282dea_0_182   :   3scale Istio Mixer Adapter ( Jan. 2019 )
 

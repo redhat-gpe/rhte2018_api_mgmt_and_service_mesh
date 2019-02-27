@@ -283,79 +283,11 @@ $ mkdir -p $HOME/lab
 -----
 
 
-== Utilities and resources
-
-. Validate that the following exists in the $PATH of the remote virtual machine:
-
-.. _git_
-.. _curl_
-.. _sed_
-.. _istioctl_
-.. _oc_
-
-. Validate that your virtual machine consists of at least 16GB RAM and 4 CPUs.
-.. Verify the total memory available:
-+
------
-$ less /proc/meminfo | grep MemTotal
-
-MemTotal:       32779928 kB
------
-
-.. Verify the number of CPUs:
-+
------
-$ less /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l
-
-8
------
-
 == OpenShift Container Platform
 
 Your lab environment is built on Red Hat's OpenShift Container Platform (OCP).
 
 Access to your OCP resources can be gained via both the `oc` CLI utility and the OCP web console.
-
-. Verify that OCP has started:
-+
------
-$ sudo systemctl status oc-cluster
-
-...
-
-Aug 31 21:58:27 clientvm.a4f6.rhte.opentlc.com occlusterup[20544]: Server Information ...
-Aug 31 21:58:27 clientvm.a4f6.rhte.opentlc.com occlusterup[20544]: OpenShift server started.
-Aug 31 21:58:27 clientvm.a4f6.rhte.opentlc.com occlusterup[20544]: The server is accessible via web console at:
-Aug 31 21:58:27 clientvm.a4f6.rhte.opentlc.com occlusterup[20544]: https://clientvm.a4f6.rhte.opentlc.com:8443
-Aug 31 21:58:27 clientvm.a4f6.rhte.opentlc.com occlusterup[20544]: You are logged in as:
-Aug 31 21:58:27 clientvm.a4f6.rhte.opentlc.com occlusterup[20544]: User:     developer
-Aug 31 21:58:27 clientvm.a4f6.rhte.opentlc.com occlusterup[20544]: Password: <any value>
-Aug 31 21:58:27 clientvm.a4f6.rhte.opentlc.com occlusterup[20544]: To login as administrator:
-Aug 31 21:58:27 clientvm.a4f6.rhte.opentlc.com occlusterup[20544]: oc login -u system:admin
-Aug 31 21:58:27 clientvm.a4f6.rhte.opentlc.com systemd[1]: Started OpenShift oc cluster up Service.
------
-
-. Using the `oc` utility, log into OpenShift:
-+
------
-$ oc login https://$HOSTNAME:8443 -u $OCP_USERNAME -p $OCP_PASSWD
------
-
-. Ensure that your `oc` client is the same minor release version as the server:
-+
------
-$ oc version
-
-oc v3.11.43
-kubernetes v1.11.0+d4cacc0
-features: Basic-Auth GSSAPI Kerberos SPNEGO
-
-Server https://clientvm.69bb.openshift.opentlc.com:8443
-kubernetes v1.11.0+d4cacc0
------
-
-.. In the above example, notice that the version of the `oc` client is the same release as the remote OCP master API.
-.. There are known subtle problems with using a version of the `oc` client that is different from your target OpenShift server.
 
 . View existing projects:
 +
@@ -366,7 +298,7 @@ $ oc get projects
 
 3scale-mt-api0            3scale-mt-api0          Active
 istio-system                                      Active
-rhte-mw-api-mesh-13e6    rhte-mw-api-mesh-13e6    Active
+rhte-mw-api-mesh-user1   rhte-mw-api-mesh-13e6    Active
 user1-gw                                          Active
 -----
 
@@ -401,8 +333,9 @@ $ oc project $MSA_PROJECT
 -----
 $ oc get nodes --as=system:admin
 
-NAME        STATUS    ROLES     AGE       VERSION
-localhost   Ready     <none>    16h       v1.10.0+b81c8f8
+NAME                      STATUS    ROLES            AGE       VERSION
+infranode00.example.com   Ready     infra            4d        v1.11.0+d4cacc0
+master00.example.com      Ready     compute,master   4d        v1.11.0+d4cacc0
 -----
 +
 For the purpose of this lab, the cluster-admin of your OCP environment has provided you with the ability to _impersonate_ the _cluster-admin_.
@@ -431,16 +364,6 @@ secrets                 24      150
 services                4       150
 -----
 
-. Log into OpenShift Web Console
-.. Many OpenShift related tasks found in this lab can be completed in the Web Console (as an alternative to using the `oc` CLI utility.
-.. To access the OCP web console, use the output of the following command as the web address:
-+
------
-$ echo -en "\n\nhttps://$OCP_DOMAIN:8443\n\n"
------
-
-.. Authenticate using the values of $OCP_USERNAME and $OCP_PASSWD
-
 
 == Catalog Service
 
@@ -454,11 +377,11 @@ Your lab assets consist of a mix of OpenShift _Deployment_ and _DeploymentConfig
 
 The _Deployment_ construct is a more recent Kubernetes equivalent of what has always been in OpenShift:  _DeploymentConfig_.
 
-ifdef::showscript[]
+/////
 The _istioctl_ utility (introduced later in this lab) of Istio requires the use of the Kubernetes _Deployment_ resource.
 Subsequently, for the purpose of this lab, we'll use the Kubernetes _Deployment_ type (instead of DeploymentConfig) for most of the functionality.
 One exception to this is the MongoDB.
-endif::showscript[]
+/////
 
 In your lab environment, the CoolStore catalog service connects to a MongoDB database.
 Kubernetes is used to manage the MongoDB database, using an OpenShift DeploymentConfig instead of a Kubernetes Deployment.

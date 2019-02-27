@@ -1,5 +1,6 @@
 = Reference
 
+-----
 Nov, 2018
     For those of you who have asked or didn't know about this yet, I'd like to share our plans to release a 3scale Istio Mixer Adapter in H1 2019. More details below.
 
@@ -14,6 +15,7 @@ Nov, 2018
     [1] https://docs.google.com/presentation/d/1tq_1h80YDqvykLmUW0vOMXKxA9fjmqfbGhXlRx3Yggc/edit#slide=id.g17a49862ec_0_0
     [2] https://docs.google.com/spreadsheets/d/1xpXzp98T5f1RP_2pgC1f2yrmBvZb9i9SsAVMZrPKTgE/edit#gid=0
 
+-----
 
 . https://docs.google.com/presentation/d/1tq_1h80YDqvykLmUW0vOMXKxA9fjmqfbGhXlRx3Yggc/edit#slide=id.g3962282dea_0_182   :   3scale Istio Mixer Adapter ( Jan. 2019 )
 

@@ -181,6 +181,7 @@ $ https://<master node URL as listed in 1st confirmation email>
 The instructions in this course require use of environment variables.
 Now that you have a lab environment, in this section, you set these environment variables in your remote client environment.
 
+/////
 . Set lab environment specific variables.
 +
 Select one of the following:
@@ -188,9 +189,10 @@ Select one of the following:
 .. *Dedicated API Management environment*
 +
 NOTE: OPEN, RHSE students and users of RHPDS should utilize this approach.
+/////
 
-... Log in to your remote lab environment via SSH.
-... As the non-root operating system user, execute the following commands:
+. Log in to your remote lab environment via SSH.
+. As the non-root operating system user, execute the following commands:
 +
 -----
 echo "export API_REGION=`echo $HOSTNAME | cut -d'.' -f1 | cut -d'-' -f2`" >> ~/.bashrc
@@ -201,7 +203,7 @@ echo "export GW_PROJECT=\$API_USERNAME-gw" >> $HOME/.bashrc
 source ~/.bashrc
 -----
 
-... Set your API Admin access token
+. Set your API Admin access token
 +
 The user of your API Management tenant is associated with an _access token_.
 You'll reference this access token later in this lab when configuring your API Gateways to communicate with the API Manager.
@@ -225,7 +227,7 @@ $ echo "export API_ADMIN_ACCESS_TOKEN=`sudo more /home/opentlc-mgr/provisioning_
 -----
 /////
 
-.... View the access token
+.. View the access token
 +
 -----
 $ oc get deploy prod-apicast -n $GW_PROJECT -o json | grep system-master | cut -d'@' -f1 | cut -d'/' -f3 
@@ -235,7 +237,7 @@ eb7de2cc123e9061c787ebaed3856d91f12e7d6227cf0e9ce479e10e5bf4d028
 +
 Later in this lab, you will make use of this access token to interact with the admin API of the 3scale API Manager tenant.
 
-.... Set the access token as an environment variable
+.. Set the access token as an environment variable
 +
 -----
 $ echo "export API_ADMIN_ACCESS_TOKEN=`oc get deploy prod-apicast -n $GW_PROJECT -o json | grep system-master | cut -d'@' -f1 | cut -d'/' -f3`" >> ~/.bashrc

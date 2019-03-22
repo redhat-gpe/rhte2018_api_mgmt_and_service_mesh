@@ -29,7 +29,7 @@ Your lab environment consists of the following:
 . *Remote Virtual Machine*
 +
 Accessible via the SSH protocol.
-It is pre-installed with _OpenShift Container Platform_ and _Istio_.
+It is pre-installed with _OpenShift Container Platform_ and _Red Hat Service Mesh_.
 
 . *Red Hat 3scale API Manager*
 +
@@ -311,7 +311,7 @@ If not, then your instructor will provide details.
 
 .. *istio-system*
 +
-Your OCP user has been provided with _view_ and _edit_ access to the central _istio-system_ namespace with all _control plane_ Istio functionality.
+Your OCP user has been provided with _view_ and _edit_ access to the central _istio-system_ namespace with all _control plane_ Service Mesh functionality.
 +
 Later in this lab, you will use a utility called _istioctl_ .
 This utility will need both view and edit privileges to the _istio-system_ namespace.

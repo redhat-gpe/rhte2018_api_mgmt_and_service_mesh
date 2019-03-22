@@ -41,9 +41,9 @@ More details in the following sections.
 === Order Virtual Machine
 This section guides you through the procedure to order a virtual machine (VM) for this course.
 
+/////
 There are three methods for ordering a VM. [red]#Use only one of these methods.#
 
-/////
 ==== Access VM via RHPDS
 
 NOTE: [blue]#This section is only applicable if you want to utilize a lab environment in Red Hat's _Partner Demo System_ (RHPDS)#.
@@ -199,9 +199,10 @@ NOTE: OPEN, RHSE students and users of RHPDS should utilize this approach.
 -----
 echo "export API_REGION=`echo $HOSTNAME | cut -d'.' -f1 | cut -d'-' -f2`" >> ~/.bashrc
 echo "export API_DOMAIN=\$API_REGION.generic.opentlc.com" >> ~/.bashrc
-echo "export API_USERNAME=user1" >> ~/.bashrc
+echo "export API_USERNAME=api1" >> ~/.bashrc
 echo "export API_MANAGER_NS=3scale-mt-api0" >> ~/.bashrc
-echo "export GW_PROJECT=\$API_USERNAME-gw" >> $HOME/.bashrc
+echo "export OCP_USERNAME=user1" >> ~/.bashrc
+echo "export GW_PROJECT=\$OCP_USERNAME-gw" >> $HOME/.bashrc
 source ~/.bashrc
 -----
 
@@ -259,7 +260,6 @@ NOTE:  Select this approach only if you've been explicitly instructed to do so b
 -----
 echo 'export API_PASSWD=admin' >> ~/.bashrc
 echo 'export OCP_PASSWD=r3dh4t1!' >> ~/.bashrc
-echo "export OCP_USERNAME=user1" >> ~/.bashrc
 
 echo "export OCP_REGION=`echo $HOSTNAME | cut -d'.' -f1 | cut -d'-' -f2`" >> ~/.bashrc
 echo "export OCP_DOMAIN=\$API_REGION.generic.opentlc.com" >> ~/.bashrc
@@ -386,7 +386,7 @@ One exception to this is the MongoDB.
 /////
 
 In your lab environment, the CoolStore catalog service connects to a MongoDB database.
-Kubernetes is used to manage the MongoDB database, using an OpenShift DeploymentConfig instead of a Kubernetes Deployment.
+OpenShift is used to manage the MongoDB database, using an OpenShift DeploymentConfig instead of a Kubernetes Deployment.
 The OpenShift _DeploymentConfig_ provides more features than a Kubernetes _Deployment_.
 For example, the MongoDB database is pre-seeded using life-cycle hooks, and these are only available in a DeploymentConfig.
 The _post deployment_ life-cycle hook is ignored if added to a Kubernetes Deployment.

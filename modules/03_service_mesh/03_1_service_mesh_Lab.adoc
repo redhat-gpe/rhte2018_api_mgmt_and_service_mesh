@@ -18,21 +18,20 @@
 
 == Overview
 
-_API Management_ facilitates relationships between API consumers and producers, lowering {transaction costs} such as search costs, price discovery, policing and enforcement costs, and so on. These would otherwise hinder mutually beneficial exchanges between API consumers and producers.
+_API Management_ facilitates relationships between API consumers and producers, lowering link:https://en.wikipedia.org/wiki/Transaction_cost[transaction costs] such as search costs, price discovery, policing and enforcement costs, and so on. 
+These would otherwise hinder mutually beneficial exchanges between API consumers and producers.
 
 A _service mesh_ provides the technical resilience and _observability_ needed to facilitate a Microservice Architecture (MSA).
 
 _API Management_ and a _service mesh_ target different use cases, although there is some overlap.
 
 The purpose of this lab is to discover how these technologies can complement each other.
-You do this by applying both a _service mesh_ and an _API Management_ solution to an existing _cloud-native_ application running on Red Hat's Openshift Container Platform.
+You do this by gradually applying features of a _service mesh_ to the existing API Managed _catalog_ application.
 
-
-[blue]#In this lab you gradually apply more and more features of both _API Management_ and _service mesh_ to your cloud-native application.#
 
 === Alternatives
 
-In regards to API Management and a MSA service mesh, the following are related community initiatives that are not covered in this lab.
+In regards a MSA service mesh, the following are related community initiatives that are not covered in this lab.
 
 ==== Standalone community Jaeger
 

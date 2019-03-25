@@ -323,7 +323,7 @@ echo "export OCP_DOMAIN=\$API_REGION.generic.opentlc.com" >> ~/.bashrc
 echo "export OCP_WILDCARD_DOMAIN=apps-\$OCP_DOMAIN" >> ~/.bashrc
 echo "export MSA_PROJECT=rhte-mw-api-mesh-\$OCP_USERNAME" >> ~/.bashrc
 echo "export API_WILDCARD_DOMAIN=apps-\$API_DOMAIN" >> ~/.bashrc
-echo "export TENANT_NAME=\$API_USERNAME-\$API_MANAGER_NS" >> ~/.bashrc
+echo "export TENANT_NAME=\$OCP_USERNAME-\$API_MANAGER_NS" >> ~/.bashrc
 echo "export THREESCALE_PORTAL_ENDPOINT=https://\${API_ADMIN_ACCESS_TOKEN}@\$TENANT_NAME-admin.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
 echo "export BACKEND_ENDPOINT_OVERRIDE=https://backend-\$API_MANAGER_NS.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
 -----
@@ -452,7 +452,7 @@ The _post deployment_ life-cycle hook is ignored if added to a Kubernetes Deploy
 To learn more about the differences between Kubernetes _Deployments_ and OCP _DeploymentConfigurations_, see
 link:https://docs.openshift.com/container-platform/3.10/dev_guide/deployments/kubernetes_deployments.html#kubernetes-deployments-vs-deployment-configurations[Kubernetes Deployments Versus Deployment Configurations].
 
-==== OpenShift objects
+=== OpenShift objects
 
 . Review DeploymentConfig:
 +
@@ -537,6 +537,10 @@ $ echo "http://$NAKED_CATALOG_ROUTE"
 * Expect to see the Swagger docs for the REST endpoints:
 +
 image::images/swagger-ui-coolstore-catalog.png[]
++
+Notice that the RESTful API exposes various resources that can be invoked via the HTTP _GET method.
+It also exposes one resource that can be invoked via the _POST method.
+Throughout this lab, you will invoke this RESTful API using both HTTP _GET_ and _POST_ methods.
 
 . Click *GET /products Get a list of products* to expand the item.
 . Click the *Try it out* button, click *Execute* and view the response.
@@ -584,11 +588,28 @@ $ oc create route edge catalog-prod-apicast-$OCP_USERNAME --service=prod-apicast
 +
 You will reference these route names in the next section of the lab.
 
+. Ensure value of THREESCALE_PORTAL_ENDPOINT environment variable in both API stage and production gateways is correct:
++
+-----
+$ oc patch deploy/stage-apicast --patch \
+     '{"spec":{"template":{"spec":{"containers":[{"name":"stage-apicast", "env": [{"name":"THREESCALE_PORTAL_ENDPOINT","value":"'$THREESCALE_PORTAL_ENDPOINT'" }]}]}}}}' \
+     -n $GW_PROJECT
+
+
+
+$ oc patch deploy/prod-apicast --patch \
+     '{"spec":{"template":{"spec":{"containers":[{"name":"prod-apicast", "env": [{"name":"THREESCALE_PORTAL_ENDPOINT","value":"'$THREESCALE_PORTAL_ENDPOINT'" }]}]}}}}' \
+     -n $GW_PROJECT
+-----
++
+The gateways use the value of $THREESCALE_PORTAL_ENDPOINT to retrieve configuration information about your APIs from the _system-provider_ service of the 3scale API Manager.
+
 . Resume the paused deploy objects:
 +
 -----
 $ oc rollout resume deploy stage-apicast prod-apicast -n $GW_PROJECT
 -----
+
 
 [blue]#Congratulations!#
 Your lab environment is now ready to use.  Please proceed to the next lab:  link:01_2_api_mgmt_service_mesh_Lab.html[*01_2 API Mgmt Service Mesh Lab*]

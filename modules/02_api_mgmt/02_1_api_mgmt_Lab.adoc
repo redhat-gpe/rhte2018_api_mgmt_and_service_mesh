@@ -136,7 +136,7 @@ $ echo -en "\n`oc get route catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT --
 
 .. *MAPPING RULES*:
 +
-Add an additional `Mapping Rule` for the HTTP POST method. You'll use the POST method in the last section in this lab.
+Add an additional `Mapping Rule` for the HTTP POST method. You'll use the POST method in a later lab of this course.
 
 ... In the `MAPPING RULES` section, click *Add Mapping Rule*.
 ... In the new mapping rule, change the *Verb* to `POST` and enter `/` as the Pattern.

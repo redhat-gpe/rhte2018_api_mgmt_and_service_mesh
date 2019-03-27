@@ -387,8 +387,8 @@ Among other benefits, you will be able to trace inbound traffic as it initially 
 
 You will do so using the following two approaches:
 
-. Route inbound request directly to the service mesh Ingress Gateway via an OCP _NodePort_.
-. Route inbound request to the service mesh Ingress Gateway via its _route_ configuration in OCP's HA-Proxy router.
+. Direct inbound request directly to the service mesh Ingress Gateway via an OCP _NodePort_.
+. Direct inbound request to the service mesh Ingress Gateway via its _route_ configuration in OCP's HA-Proxy router.
 
 
 === Define Gateway and VirtualService
@@ -465,17 +465,28 @@ spec:
 $ oc create -f $HOME/lab/catalog-istio-gateway-vs.yml -n $GW_PROJECT 
 -----
 
+. View the _istio-ingressgateway_ related resources in the _istio-system_ namespace:
++
+-----
+$ oc get all -l app=istio-ingressgateway -n istio-system
+-----
++
+The response back should list the _istio-ingressgateway_ pod, service, deployment, replicaset and route.
+
+
+. As an OCP cluster-admin, verify the existence of the new route configurations in the _istio-ingressgateweay_ pod.
++
 -----
 # sudo -i
 
 
+# Execute the following and review the response:
 # oc project istio-system && \
          oc rsh `oc get pod | grep "istio-ingressgateway" | awk '{print $1}'` \
          curl http://localhost:15000/config_dump \
          > /tmp/config_dump \
          && less /tmp/config_dump \
-         | jq ".configs | last | .dynamic_route_configs"
-
+         | /usr/local/bin/jq ".configs | last | .dynamic_route_configs"
 
 
 # exit
@@ -485,24 +496,19 @@ $ oc create -f $HOME/lab/catalog-istio-gateway-vs.yml -n $GW_PROJECT
 
 image::images/ingress_gateway_via_node_port.png[]
 
-. Set environment variables that reflect the host and port of the Red Hat Service Mesh ingress gateway service:
+. Set an environment variable that reflects the nodeport of the Red Hat Service Mesh ingress gateway service:
 +
 -----
-$ echo "export INGRESS_HOST=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> ~/.bashrc
-
-$ echo "export INGRESS_PORT=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].port}')" >> ~/.bashrc
+$ echo "export INGRESS_PORT=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')" >> ~/.bashrc
 
 source ~/.bashrc
 -----
-+
-NOTE:  This $INGRESS_HOST:$INGRESS_PORT socket is local to the Red Hat OpenShift Container Platform subnet.
-It only becomes available when there is an Red Hat Service Mesh gateway and virtual service present and even then it might take up to 5 minutes to become available.
 
 . Smoke test a request for catalog data via the newly configured Red Hat Service Mesh ingress gateway:
 +
 -----
 $ curl -v \
-       http://$INGRESS_HOST:$INGRESS_PORT/products?user_key=$CATALOG_USER_KEY
+       http://master00.example.com:$INGRESS_PORT/products?user_key=$CATALOG_USER_KEY
 -----
 
 .. The response back should be a 404.  Why ?
@@ -511,59 +517,79 @@ $ curl -v \
 -----
 host_based_finder.lua:20: find_service(): service not found for host istio-ingressgateway-istio-system.apps-326b.generic.opentlc.com, client: 127.0.0.1, server: _, request: "GET /products?user_key=95706a476fcf08a95322084a8f5632b4 HTTP/1.1", host: "istio-ingressgateway-istio-system.apps-326b.generic.opentlc.com"
 -----
-.. The HTTP request was routed from the istio ingressgateway to the istio enabled API gateway.
-The API gateway is not able to deduce from the request the _Production Base URL_ that corresponds to a API Managed service (such as your catalog service).
 
-. Smoke test a request for catalog data via the newly configured Red Hat Service Mesh ingress gateway:
+.. The HTTP request (sent to master00.example.com:$INGRESS_PORT) was successfully routed from the istio ingressgateway to the istio enabled API gateway.
+However, the problem is that the API gateway is not able to deduce from the request which API Managed service (such as your catalog service) this request correspondes to.
+The API Gateway requires a request where the HTTP _Host_ header matches that of the _Production Base URL_ of the API.
+
+. Re-send the request for catalog data explicitly specifying the _Host_ header in the HTTP request:
 +
 -----
 $ curl -v \
-       -HHost:$CATALOG_API_GW_HOST \
-       http://$INGRESS_HOST:$INGRESS_PORT/products?user_key=$CATALOG_USER_KEY
+       -H"Host: $CATALOG_API_GW_HOST" \
+       http://master00.example.com:$INGRESS_PORT/products?user_key=$CATALOG_USER_KEY
 -----
 +
-Notice the use of the HTTP _Host_ header.
-
-.. Why is it needed ?
-.. What happens if this _HOST_ header is not included in the request ?
-.. What happens if this _HOST_ header is included in the request but its value (along with the _host_ attributes in the gateway and virtual service) do not match the _Production Public Base Url_ of the _catalog-service_ in the API Manager ?
+Notice the value of the HTTP _Host_ header now matches that of the _Production Base URL_ of your API.
+Subsequently, the API Gateway should have authorized the request.
 
 
 === Direct inbound traffic via OCP Route
 
 image::images/ingress_gateway_via_node_port.png[]
 
-. The previous smoke test used an $INGRESS_HOST and $INGRESS_PORT that are made available on the local Red Hat OpenShift Container Platform network subnet.
-Usage of this local $INGRESS_HOST only worked because your curl client is on the same host as Red Hat OpenShift Container Platform.
-+
-The `istio-system` namespace provides a route called: `istio-ingressgateway`.
+The previous test used an OCP NodePort to route inbound traffic directly to the service mesh via the _istio ingressgateway_.
+This approach by-passed the OCP HA-Proxy.
+
+The `istio-system` namespace also provides a route called: `istio-ingressgateway`.
 Like all Red Hat OpenShift Container Platform routes, it is exposed to external clients.
-+
-Try invoking the API gateway via this `istio-ingressgateway` route instead of using the internal _service-mesh_ related $INGRESS_HOST and $INGRESS_PORT.
-The results should be the same.  The command to use is as follows:
+
+In this section of the lab, you direct traffic to the mesh via the OCP HA-Proxy.
+This approach introduces an extra hop in the network but could be useful in scenarious where creating a NodePort is not feasible.
+
+. Begin by executing a request to the istio-ingressgateway route such that it gets routed to your API gateway:
 +
 -----
 $  curl -v \
-       -HHost:$CATALOG_API_GW_HOST \
+      `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"` \
+      -o /dev/null
+-----
+
+.. Did you receive back an HTTP 404 ?   If so, why ?
+.. Maybe the fix is to explicitly over-ride the _Host_ header as you did in the previous section ?  Try it out.
++
+-----
+$ curl -v \
+       -H"Host: $CATALOG_API_GW_HOST" \
+      `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"` \
+      -o /dev/null
+-----
++
+By over-riding the Host header with the value of $CATALOG_API_GW_HOST, the HA-Proxy of OCP will reject the request with a 503.
+The request will not even be forwarded to the istio-ingressgateway pod.
+The reason for this is that the HA-Proxy of OCP routes traffic based on the value of the HTTP _Host_ header.
+It is not able to route to a host given that hostname and the default port 80.
+
+. To direct inbound traffic through the _istio-ingressgateway_ route, the solution is to modify the _Public Base URL_ of the 3scale API to match the hostname of the _istio-ingressgateway_ hostname.
+Do so as follows:
+
+.. Point your browser to the Admin Console of 3scale and navigate to the `APIcast configuration` page of the catalog_service.
+.. Change the value of the _Production Base URL_ to the value of the following:
++
+-----
+$ echo -en "\nhttp://`oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}}:80`\n\n"
+-----
++
+image::images/istioingress_public_url.png[]
+
+.. Save the APIcast configuration change and promote the change to production.
+.. Wait 5 minutes or so for the config changes to propogate to the production API gateway or refresh the production API gateway (by deleting the pod and letting kubernetes re-create it).
+.. Send a new request to your production API Gatway via the istio ingressgateway:
++
+-----
+$  curl -v \
       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
-+
-NOTE: [red]#There is currently a bug in your student lab environment that is causing this step to fail.  
-Specifically, the _istio-ingressgateway_ service of the _istio-system_ namespace makes use of OCP _nodeport_ features.
-The _nodeports_ defined in the _istio-ingressgateway_ service are currently blocked by the cloud provider hosting your VM#
-
-ifdef::showscript[]
-
-Deletion of the route causes the curl command (using the HOST) to no longer work.  not sure why.
-
-. The original route to the product API Gateway specific to the _catalog_ service can optionally be deleted.
-Going forward all incoming traffic will flow through the Red Hat Service Mesh Ingress Gateway.
-+
------
-$ oc delete route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT
------
-
-endif::showscript[]
 
 
 

@@ -20,9 +20,9 @@ This lab provides instructions for the management of your _catalog_ RESTful API 
 Instructions are provided for both experienced and inexperienced 3scale users.
 [red]#Follow only one set of instructions.#
 
-If you are an experienced user of Red Hat 3scale API Management, complete the instructions in section <<configuretestapi>>, then continue with section <<apicast_istio>>.
+If you are an experienced user of Red Hat 3scale API Management, complete the instructions in section <<configuretestapi>>, then continue with section <<test>>.
 
-If you are not an experienced user of Red Hat 3scale API Management, complete the instructions in section <<configuretestapi_stepbystep>>, then continue with section <<apicast_istio>>.
+If you are not an experienced user of Red Hat 3scale API Management, complete the instructions in section <<configuretestapi_stepbystep>>, then continue with section <<test>>.
 
 
 The following deployment topology diagram illustrates the components of this API managed environment, and the data flow from an external request through them:
@@ -205,6 +205,7 @@ View the latest entries in the new API gateway production pod's log file with th
 [lua] configuration_store.lua:103: configure(): added service 2555417742084 configuration with hosts: prod-apicast-user1.apps.7777.thinkpadratwater.com, catalog-stage-apicast-user1.apps.7777.thinkpadratwater.com ttl: 300
 -----
 
+[[test]]
 == Test Catalog Business Service
 
 In this section, you invoke your Catalog business service via your production API gateway.
@@ -299,7 +300,7 @@ $ curl -v -k \
 +
 WARNING: [red]#Do not proceed beyond this section until this smoke test of your non-Istio-enabled environment passes this test, and the response from your production API gateway is a listing of catalog data.#
 
-Once you have smoke tested your API managed environment, proceed to the section: <<apicast_istio>>
+Once you have smoke tested your API managed environment, proceed to the section: <<test>>
 
 
 ifdef::showscript[]

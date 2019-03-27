@@ -8,70 +8,48 @@
 = Service Mesh Routing Lab
 
 .Goals
-* Inject Istio Envoy proxy configurations into an API gateway
-* Configure an Istio Egress Route for an API gateway
-* Invocation of your backend service via the Istio Ingress gateway and Red Hat 3scale API Management gateway
+* Inject Red Hat Service Mesh Envoy proxy configurations into an API gateway
+* Configure an Red Hat Service Mesh Egress Route for an API gateway
+* Invocation of your backend service via the Red Hat Service Mesh Ingress gateway and Red Hat 3scale API Management gateway
 
 :numbered:
 
 == Overview
 
-_API Management_ facilitates relationships between API consumers and producers, lowering link:https://en.wikipedia.org/wiki/Transaction_cost[transaction costs] such as search costs, price discovery, policing and enforcement costs, and so on. 
-These would otherwise hinder mutually beneficial exchanges between API consumers and producers.
+Traffic routing can occur in several locations of the software stack:
 
-A _service mesh_ provides the technical resilience and _observability_ needed to facilitate a Microservice Architecture (MSA).
+. *OpenShift Container Platform*:
++
+Provides routing functionality via either the HA-Proxy router and the traditional Kubernetes _Ingress_ controller.
+Both of these components provide the ability to handle the traffic that enters the cluster from the outside.
++
+OCP also provides the ability to completely by-pass these controllers via the use of a _NodePort_. 
++
+Once traffic is in the OCP cluster, OCP also provides traffic routing features at the _service_ layer.
 
-_API Management_ and a _service mesh_ target different use cases, although there is some overlap.
+. *Red Hat Service Mesh*:
++
+Red Hat Service Mesh replaces the Kubernetes Ingress controller with a new _Gateway_ and _Virtual Service_ that work in tandem to route the traffic into the mesh.
 
-The purpose of this lab is to discover how these technologies can complement each other.
-You do this by gradually applying features of a _service mesh_ to the existing API Managed _catalog_ application.
+. *3scale API Management*:
++
+The API Gateway is configured with policies that (among other capabilities) will route traffic to backend business services given the _Host_ header of the request.
 
+In this lab, you work through various scenarios with the goal of gaining appreciation for the traffic routing features of each of these mentioned tools and how they complement each other.
 
-=== Alternatives
+=== Reference
 
-In regards a MSA service mesh, the following are related community initiatives that are not covered in this lab.
-
-==== Standalone community Jaeger
-
-_Jaeger_ is a tool that provides distributed tracing.
-
-Available in the open source community is the _all-in-one_ community Jaeger that includes a jaeger-agent and jaeger-collector.
-This link:https://medium.com/@jmprusi_49013/adding-opentracing-support-to-apicast-api-gateway-a8e0a38347d2[OpenTracing tutorial] details the use of an OpenTracing-enabled API gateway with the _all-in-one_ community Jaeger.
-
-
-As an alternative to the _all-in-one_ standalone Jaeger, Istio also comes included with Jaeger.
-In this lab, the Jaeger-based tracing functionality provided by Istio is utilized instead of a standalone Jaeger installation.
-
-==== Istio API Management Working Group
-
-Istio activity is organized into _working groups_.
-
-One of these Istio working groups is focused on link:https://github.com/istio/community/blob/master/WORKING-GROUPS.md#api-management[API Management].
-
-Members of the  Red Hat engineering team are currently participating in this Istio API Management working group.
-
-Outcomes of this working group may potentially guide the development and roadmap of future releases of the Red Hat 3scale API Management product.
-
-In the future, this lab may demonstrate initiatives that may come out of this Istio API Management Working Group.
-
-==== API Gateway Side car
-
-link:https://github.com/nginxinc/nginmesh[nginMesh] is a community initiative that injects the NGinx server as a side-car to your services.
-The NGinx side-car acts as a service proxy to an Istio service-mesh (conceptually similar to the _Envoy_ proxy that you will be exposed to in this lab).
-
-Because the API Gateway of 3scale is also built on Nginx, the 3scale API gateway could also be potentially extended to serve as a side car to a service running in a service mesh.
-
-In fact, in an upcoming release of the 3scale API Gateway, it will have the capability to operate independantly of the 3scale API Manager.
-It could be injected as a sidecar to an application.
-
-This approach is not covered in this lab.
+. link:https://blog.jayway.com/2018/10/22/understanding-istio-ingress-gateway-in-kubernetes/[Understanding Red Hat Service Mesh Ingress Gateway]
+. link:https://itnext.io/how-to-access-your-app-behind-an-openshift-router-87cbae3e7185[Accessing apps behind OCP Router]
 
 == Lock down Red Hat Service Mesh
-This first section of the lab involves you impersonating the role of a cluster admin to lock down the Service Mesh in several ways.
+This first section of the lab involves you impersonating the role of a cluster admin to lock down the pre-installed Red Hat Service Mesh.
 
-. Service Mesh has an installation option that configures the Istio proxy to pass through, instead of block, calls to external services on any ports. 
+. Service Mesh has an installation option that configures the Red Hat Service Mesh proxy to pass through, instead of block, calls to external services on any ports. 
 This option is enabled by default so that one can start evaluating Red Hat Service Mesh quickly, without controlling access to external services.
-For the purpose of this lab, modify this default behavior such that apps can not make requests to external services by default:
+For the purpose of this lab, modify this default behavior such that apps can not make requests to external services by default
++
+Do so by executing one of the following:
 +
 -----
 $ oc get configmap istio -n istio-system --export -o yaml \
@@ -80,24 +58,23 @@ $ oc get configmap istio -n istio-system --export -o yaml \
 -----
 
 
-[[apicast_istio]]
-== API Gateway: Istio enabled
+== API Gateway: Red Hat Service Mesh enabled
 
 === Overview
 
-As the next step in the journey toward API management and service mesh, in this section of the lab you will inject your API gateway with the _Envoy_ sidecar proxy from Istio.
+As the next step in the journey toward API management and service mesh, in this section of the lab you will inject your API gateway with the _Envoy_ sidecar proxy from Red Hat Service Mesh.
 A service mesh enabled API Gateway is of limited value on its own, but you will continue to build upon the foundations set here in later sections of this lab.
 
 image::images/deployment_apicast-istio.png[]
 
 In the above diagram, notice the introduction of a new pod: _prod-apicast-istio_.
-Inbound requests through the API gateway production route are now directed to this new API gateway pod injected with Istio's _envoy_ sidecar.
+Inbound requests through the API gateway production route are now directed to this new API gateway pod injected with the  _envoy_ sidecar.
 
 The _Envoy_ sidecar in your _prod-apicast-istio_ pod will interoperate with _service mesh control plane_ functionality found in the _istio-system_ namespace.
 
 Your API gateway will continue to pull _service proxy_ configurations from the pre-provisioned multi-tenant API Manager using the value of their  _$THREESCALE_PORTAL_ENDPOINT_ environment variable.
 
-=== Inject Istio proxy side-car
+=== Inject Red Hat Service Mesh proxy side-car
 
 . Install community _istioctl_ utility
 +
@@ -115,15 +92,15 @@ $ mkdir -p $HOME/bin/ && \
 $ oc get deploy prod-apicast -n $GW_PROJECT -o yaml > $HOME/lab/prod-apicast.yml
 -----
 +
-You will use the definition of your existing API gateway as a template to create a new _Istio_ enabled API gateway.
+You will use the definition of your existing API gateway as a template to create a new Red Hat Service Mesh enabled API gateway.
 
-. Differentiate your Istio enabled API gateway from your existing API gateway:
+. Differentiate your Red Hat Service Mesh enabled API gateway from your existing API gateway:
 +
 -----
 $ sed -i "s/prod-apicast/$OCP_USERNAME-prod-apicast-istio/" $HOME/lab/prod-apicast.yml
 -----
-.. The reason you have included $OCP_USERNAME in the name of your Istio-enabled API gateway is because you will need to differentiate it from other Istio-enabled API gateways that may be managed in the same service mesh.
-.. Also, the _observability_ user interfaces included in Istio such as Jaeger are not currently multi-tenant.
+.. The reason you have included $OCP_USERNAME in the name of your  service mesh enabled API gateway is because you will need to differentiate it from other service mesh enabled API gateways that may be managed in the same service mesh.
+.. Also, the _observability_ user interfaces included in Red Hat Service Mesh such as Jaeger are not currently multi-tenant.
 +
 By providing a unique identifer as a prefix to your API gateway name, you will be more easily able to identify logs and traces amongst others on the system.
 
@@ -147,9 +124,9 @@ $ oc describe configmap istio -n istio-system | more
 +
 Your OCP user has already been enabled with _view_ access to the _istio-system_ namespace.
 This provides access to the _istio_ configuration map.
-The _istio_ configmap was generated by a cluster administrator when the Istio control plane was installed on OCP.
+The _istio_ configmap was generated by a cluster administrator when the Red Hat Service Mesh control plane was installed on OCP.
 
-. Inject Istio configs (from the _istio_ configmap) into a new API gateway deployment:
+. Inject Red Hat Service Mesh configs (from the _istio_ configmap) into a new API gateway deployment:
 +
 -----
 
@@ -158,16 +135,16 @@ $ istioctl kube-inject \
            > $HOME/lab/prod-apicast-istio.yml
 -----
 +
-NOTE:  For the purpose of this lab, you have now manually injected Istio related configs into a _deployment_ definition.
+NOTE:  For the purpose of this lab, you have now manually injected Red Hat Service Mesh related configs into a _deployment_ definition.
 An alternative approach which involves adding a special annotation to your deployment definition will be introduced later in this lab.
 
-. View the Istio injected API gateway deployment descriptor:
+. View the Red Hat Service Mesh injected API gateway deployment descriptor:
 +
 -----
 $ less $HOME/lab/prod-apicast-istio.yml | more
 -----
 
-. Deploy a new Istio-enabled API gateway production gateway:
+. Deploy a new Red Hat Service Mesh enabled API gateway production gateway:
 +
 -----
 $ oc create \
@@ -175,7 +152,10 @@ $ oc create \
      -n $GW_PROJECT
 -----
 
-. Inject required resource limits and requests into Istio related containers :
+/////
+Appears that with Red Hat Service Mesh, these limits and requests on istio containers are included out of the box
+
+. Inject required resource limits and requests into Red Hat Service Mesh related containers :
 +
 There is a cluster quota assigned to your OCP user.
 This cluster quota requires that all containers, including the _istio-proxy_ and _istio-init_, specify _limits_ and _requests_.
@@ -187,6 +167,7 @@ $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT\
 $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT \
    --patch '{"spec":{"template":{"spec":{"initContainers":[{"name":"istio-init", "resources": {   "limits":{"cpu": "500m","memory": "128Mi"},"requests":{"cpu":"50m","memory":"32Mi"}   }}]}}}}'
 -----
+/////
 
 . Allow pods in the $GW_PROJECT to run using any user, including root:
 +
@@ -194,9 +175,9 @@ $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT \
 $ oc adm policy add-scc-to-user anyuid -z default -n $GW_PROJECT --as=system:admin
 -----
 
-.. For your new Istio-enabled API gateway pod to start, it needs the _anyuid_ sidecar container (SCC).
+.. For your new Red Hat Service Mesh enabled API gateway pod to start, it needs the _anyuid_ sidecar container (SCC).
 +
-The reason for this is that the _envoy_ sidecar containers from Istio currently run as a specific user ID.
+The reason for this is that the _envoy_ sidecar containers from Red Hat Service Mesh currently run as a specific user ID.
 Unlike most middleware containers that can run using any arbitrary user ID that is assigned to them at runtime by OCP, the _envoy_ sidecar containers would immediately fail upon startup without the _anyuid_ SCC.
 If you attempted to do so, you would see an error similiar to the following:
 +
@@ -222,7 +203,7 @@ This SCC is required to ensure changes to the pod’s networking configuration i
 $ oc rollout resume deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT
 -----
 
-.. Notice the presence of an additional container in your new pod.  This additional container is the Istio proxy sidecar.
+.. Notice the presence of an additional container in your new pod.  This additional container is the Red Hat Service Mesh proxy sidecar.
 .. Both containers in the new pod should have started and the pod should be in a _Running_ state:
 +
 -----
@@ -239,12 +220,12 @@ user50-prod-apicast-istio-784dc96c75-gvh5f   2/2       Running   0          5m
 +
 If either of the containers did not start up and the _READY_ column indicates anything other than _2/2_, this indicates a problem.
 It's likely that _liveness_ and/or _readiness_ probes on the API gateway are failing.
-It's possible that this is due to a misconfiguration of Istio.
+It's possible that this is due to a misconfiguration of Red Hat Service Mesh.
 As an initial troubleshooting step, remove the _liveness_ and _readiness_ probes defined in the deployment.
 After doing so, do both containers start ?
 If so, you'll need to troubleshoot the root cause of why either the _liveness_ probe, _readiness_ probe, or both probes are failing.
 
-. Modify the _prod-apicast_ service to route inbound requests to the new Istio enabled _apicast_:
+. Modify the _prod-apicast_ service to route inbound requests to the new Red Hat Service Mesh enabled _apicast_:
 +
 -----
 $ oc patch service/prod-apicast -n $GW_PROJECT \
@@ -252,9 +233,9 @@ $ oc patch service/prod-apicast -n $GW_PROJECT \
 -----
 +
 Notice that the _service_ to your backend catalog application is being modified instead of the OpenShift _route_.
-You have essentially conducted a simple _A / B Deployment_ at the _service_ layer where 100% of all traffic through the existing unmodified route will flow to this new Istio enabled pod.
+You have essentially conducted a simple _A / B Deployment_ at the _service_ layer where 100% of all traffic through the existing unmodified route will flow to this new Red Hat Service Mesh enabled pod.
 As an alternative, _A / B Deployment_ could have occured at the _route_ layer.
-This latter approach would have required you to create an additional _service_ associated with the new Istio enabled pod.
+This latter approach would have required you to create an additional _service_ associated with the new Red Hat Service Mesh enabled pod.
 
 
 === Test 
@@ -275,15 +256,15 @@ $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -
 .. [red]#The response should be an HTTP 404.#
 .. Why would this be the case ?
 ... Inspect the API gateway log file for any clues.
-... Is the request reaching your new Istio enabled API gateway?
-... The root problem is that your Istio-enabled API gateway is unable to connect to the _system-provider_ endpoint exposed by the remote multi-tenant API Manager via the value of: $THREESCALE_PORTAL_ENDPOINT.
+... Is the request reaching your new Red Hat Service Mesh enabled API gateway?
+... The root problem is that your service mesh enabled API gateway is unable to connect to the _system-provider_ endpoint exposed by the remote multi-tenant API Manager via the value of: $THREESCALE_PORTAL_ENDPOINT.
 +
 Your API gateway needs to do this to retrieve all the policy management configuration data from the API Manager.
 The reason your API gateway can not make a connection to the API Manager is that $THREESCALE_PORTAL_ENDPOINT references an external internet URL.
-By default, Istio blocks all outbound requests to the internet.
+By default, Red Hat Service Mesh blocks all outbound requests to the internet.
 In the next section, you will define an _egress route_ to allow your API gateway to communicate with the API Manager.
 
-.  Isolate the problem with your new Istio-enabled API gateway by testing the call to the _system-provider_ of the API Manager, from within the API gateway.
+.  Isolate the problem with your new  service mesh enabled API gateway by testing the call to the _system-provider_ of the API Manager, from within the API gateway.
 
 .. Execute the following to test the call:
 +
@@ -312,9 +293,9 @@ command terminated with exit code 35
 
 === Apply Custom _Egress Route_
 
-In this section, you create a custom Istio _ServiceEntry_ that allows your API gateway to connect to the _system-provider_ of the multi-tenant API Manager.
+In this section, you create a custom Red Hat Service Mesh _ServiceEntry_ that allows your API gateway to connect to the _system-provider_ of the multi-tenant API Manager.
 
-. Create a custom Istio _Egress Route_ for API gateway configuration file:
+. Create a custom Red Hat Service Mesh _Egress Route_ for API gateway configuration file:
 +
 -----
 $ echo \
@@ -352,7 +333,7 @@ $ oc describe serviceentry $OCP_USERNAME-catalog-apicast-egress-rule -n $GW_PROJ
 
 . Now that a custom _egress route_ has been added, your API gateway should be able to pull configuration data from the API Manager.
 +
-Use a command like the following to verify that your Istio-enabled API gateway can now poll the API Manager for proxy service configuration information:
+Use a command like the following to verify that your service mesh enabled API gateway can now poll the API Manager for proxy service configuration information:
 +
 -----
 $ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
@@ -379,32 +360,38 @@ $ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
 ....
 -----
 
-. Either wait up to 5 minutes for your Istio-enabled API gateway to refresh its proxy configuration (because pulling this configuration data previously failed) or restart the pod.
-. Using the curl utility, attempt again to retrieve catalog data via your Istio-enabled API gateway:
+. Either wait up to 5 minutes for your service mesh enabled API gateway to refresh its proxy configuration (because pulling this configuration data previously failed) or restart the pod.
+. Using the curl utility, attempt again to retrieve catalog data via your service mesh enabled API gateway:
 +
 -----
 $ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 +
 This time, you should see the catalog data in the response.
-This request now flows through your Istio-enabled API gateway.
+This request now flows through your service mesh enabled API gateway.
 
 [blue]#As mentioned previously, what you have accomplished so far is of limited value on its own. 
 However, this is a step to full utilization of API management and service mesh of your container native application.
 In the next sections of this lab you will continue to build upon this foundation.#
 
 
-== Istio Ingress Gateway
+== Red Hat Service Mesh Ingress Gateway
 
 Until now, traffic into the production API gateway has been directly via the standard _HAProxy_-based OCP _router_.
 
-This has worked, but what is missing is the ability to apply more sophisticated route rules and integration with service mesh _observability_ tools such as _Jaeger_ and _Prometheus_.
-Istio includes an _Ingress_ gateway that implements these additional features.
+This has worked, however what is missing is the ability to apply more sophisticated route rules and capture improved _observability_ as soon as the request enters the OCP cluster.
+Red Hat Service Mesh includes an _Ingress_ gateway that implements these additional features.
 
-In this section of the lab, you will modify the flow of inbound traffic so that it also flows through the _Ingress_ gateway of Istio.
+In this section of the lab, you will modify the flow of inbound traffic so that it flows through the _Ingress_ gateway of Red Hat Service Mesh.
 Among other benefits, you will be able to trace inbound traffic as it initially enters your solution.
 
-image::images/api_and_ingress_gateway.png[]
+You will do so using the following two approaches:
+
+. Route inbound request directly to the service mesh Ingress Gateway via an OCP _NodePort_.
+. Route inbound request to the service mesh Ingress Gateway via its _route_ configuration in OCP's HA-Proxy router.
+
+
+=== Define Gateway and VirtualService
 
 . Create an environment variable that reflects the _Production Public Base URL_ of the _catalog-service_ configured in the API Manager:
 +
@@ -414,7 +401,7 @@ $ echo "export CATALOG_API_GW_HOST=`oc get route/catalog-prod-apicast-$OCP_USERN
 $ source ~/.bashrc
 -----
 +
-The value of $CATALOG_API_GW_HOST will be specified in the request to the Istio ingress gateway as an HTTP _HOST_ header.
+The value of $CATALOG_API_GW_HOST will be specified in the request to the Red Hat Service Mesh ingress gateway as an HTTP _HOST_ header.
 It should match what has been configured in the _catalog-service_ in your API Manager.
 +
 image::images/recall_prod_base.png[]
@@ -494,7 +481,11 @@ $ oc create -f $HOME/lab/catalog-istio-gateway-vs.yml -n $GW_PROJECT
 # exit
 -----
 
-. Set environment variables that reflect the host and port of the Istio ingress gateway service:
+=== Direct inbound traffic via OCP Node Port
+
+image::images/ingress_gateway_via_node_port.png[]
+
+. Set environment variables that reflect the host and port of the Red Hat Service Mesh ingress gateway service:
 +
 -----
 $ echo "export INGRESS_HOST=$(oc -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> ~/.bashrc
@@ -505,9 +496,9 @@ source ~/.bashrc
 -----
 +
 NOTE:  This $INGRESS_HOST:$INGRESS_PORT socket is local to the Red Hat OpenShift Container Platform subnet.
-It only becomes available when there is an Istio gateway and virtual service present and even then it might take up to 5 minutes to become available.
+It only becomes available when there is an Red Hat Service Mesh gateway and virtual service present and even then it might take up to 5 minutes to become available.
 
-. Smoke test a request for catalog data via the newly configured Istio ingress gateway:
+. Smoke test a request for catalog data via the newly configured Red Hat Service Mesh ingress gateway:
 +
 -----
 $ curl -v \
@@ -523,7 +514,7 @@ host_based_finder.lua:20: find_service(): service not found for host istio-ingre
 .. The HTTP request was routed from the istio ingressgateway to the istio enabled API gateway.
 The API gateway is not able to deduce from the request the _Production Base URL_ that corresponds to a API Managed service (such as your catalog service).
 
-. Smoke test a request for catalog data via the newly configured Istio ingress gateway:
+. Smoke test a request for catalog data via the newly configured Red Hat Service Mesh ingress gateway:
 +
 -----
 $ curl -v \
@@ -536,6 +527,11 @@ Notice the use of the HTTP _Host_ header.
 .. Why is it needed ?
 .. What happens if this _HOST_ header is not included in the request ?
 .. What happens if this _HOST_ header is included in the request but its value (along with the _host_ attributes in the gateway and virtual service) do not match the _Production Public Base Url_ of the _catalog-service_ in the API Manager ?
+
+
+=== Direct inbound traffic via OCP Route
+
+image::images/ingress_gateway_via_node_port.png[]
 
 . The previous smoke test used an $INGRESS_HOST and $INGRESS_PORT that are made available on the local Red Hat OpenShift Container Platform network subnet.
 Usage of this local $INGRESS_HOST only worked because your curl client is on the same host as Red Hat OpenShift Container Platform.
@@ -561,7 +557,7 @@ ifdef::showscript[]
 Deletion of the route causes the curl command (using the HOST) to no longer work.  not sure why.
 
 . The original route to the product API Gateway specific to the _catalog_ service can optionally be deleted.
-Going forward all incoming traffic will flow through the Istio Ingress Gateway.
+Going forward all incoming traffic will flow through the Red Hat Service Mesh Ingress Gateway.
 +
 -----
 $ oc delete route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT

@@ -28,9 +28,8 @@ A _service mesh_ provides the technical resilience and _observability_ needed to
 
 _API Management_ and a _service mesh_ target different use cases, although there is some overlap.
 
-The purpose of this lab is to discover how these technologies can complement each other.
+The purpose of this course is to discover how these technologies can complement each other.
 You do this by applying both a _service mesh_ and an _API Management_ solution to an existing _cloud-native_ application running on Red Hat's Openshift Container Platform.
-
 
 [blue]#In this lab you gradually apply more and more features of both _API Management_ and _service mesh_ to your cloud-native application.#
 
@@ -618,6 +617,44 @@ Your lab environment is now ready to use.  Please proceed to the next lab:  link
 
 == Appendix
 
+=== Alternative approaches
+In regards a MSA service mesh, the following are related community initiatives that are not covered in this lab.
+
+==== Standalone community Jaeger
+
+_Jaeger_ is a tool that provides distributed tracing.
+
+Available in the open source community is the _all-in-one_ community Jaeger that includes a jaeger-agent and jaeger-collector.
+This link:https://medium.com/@jmprusi_49013/adding-opentracing-support-to-apicast-api-gateway-a8e0a38347d2[OpenTracing tutorial] details the use of an OpenTracing-enabled API gateway with the _all-in-one_ community Jaeger.
+
+
+As an alternative to the _all-in-one_ standalone Jaeger, Istio also comes included with Jaeger.
+In this lab, the Jaeger-based tracing functionality provided by Istio is utilized instead of a standalone Jaeger installation.
+
+==== Istio API Management Working Group
+
+Istio activity is organized into _working groups_.
+
+One of these Istio working groups is focused on link:https://github.com/istio/community/blob/master/WORKING-GROUPS.md#api-management[API Management].
+
+Members of the  Red Hat engineering team are currently participating in this Istio API Management working group.
+
+Outcomes of this working group may potentially guide the development and roadmap of future releases of the Red Hat 3scale API Management product.
+
+In the future, this lab may demonstrate initiatives that may come out of this Istio API Management Working Group.
+
+==== API Gateway Side car
+
+link:https://github.com/nginxinc/nginmesh[nginMesh] is a community initiative that injects the NGinx server as a side-car to your services.
+The NGinx side-car acts as a service proxy to an Istio service-mesh (conceptually similar to the _Envoy_ proxy that you will be exposed to in this lab).
+
+Because the API Gateway of 3scale is also built on Nginx, the 3scale API gateway could also be potentially extended to serve as a side car to a service running in a service mesh.
+
+In fact, in an upcoming release of the 3scale API Gateway, it will have the capability to operate independantly of the 3scale API Manager.
+It could be injected as a sidecar to an application.
+
+This approach is not covered in this lab.
+
 === Optional:  Administrative Access
 
 . On your remote lab environment, you can optionally gain access to the `root` operating system user by executing:
@@ -653,12 +690,6 @@ $ yum install telnet bind-utils
 === Optional:  Lab Environment Provisioning
 
 This section is offered to those that are interested in setting up an environment to support this lab using their own resources.
-
-==== RHPDS
-
-Lab environments will soon be available in the _Red Hat Partner Demo System_ (RHPDS).
-
-More information about this will provided here within the month (October 2018)
 
 ==== Ansible Roles
 

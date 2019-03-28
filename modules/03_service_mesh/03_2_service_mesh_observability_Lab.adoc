@@ -13,9 +13,7 @@
 :numbered:
 
 
-== API Gateway: OpenTracing Enabled
-
-=== Overview
+== Overview
 
 As the next step in the journey toward utilization of API Management and Service Mesh, in this section of the lab you will begin to explore the visibility provided of your service mesh using the _OpenTracing_ implementation: _Jaeger_.
 
@@ -39,19 +37,57 @@ image::images/jaeger_architecture.png[]
 
 You will configure the OpenTracing client libraries in your API gateway to forward traces via UDP to the _jaeger-agent_.
 
+In order for Istio to trace a request between services, a set of headers are injected by Istio's Ingress Controller when a request enters the cluster. It then gets prapagated arond Envoy sidecars and each one reports the associated span to Jaeger. This helps connecting the spans to a single trace. Our application code takes advantage of these headers to collapse the inter-service with inner-service spans.
 
-=== Enable OpenTracing using Jaeger
 
-. You will be making quite a few changes to your Istio-enabled API gateway.  Subsequently, put it in a paused state while those changes are being made:
+== Jaeger UI
+
+Often the first thing to understand about your microservice architecture is specifically which microservices are involved in an end-user transaction.
+
+The _observability_ tooling built into Istio, either Zipkin or Jaeger, can provide this information.
+
+In this section of the lab, you are exposed to the Jaeger user interface (UI).
+
+The Jaeger UI provides a visual depiction of traces through the services that make up your application.
+
+
+=== Terminology
+
+An important _distributed tracing_ term to understand is: _span_.
+Jaeger defines a _span_ as “a logical unit of work in the system that has an operation name, an operation start time, and a duration. Spans can be nested and ordered to model causal relationships. An RPC call is an example of a span.”
+
+Another important term to understand is: _trace_. Jaeger defines _trace_ as “a data or execution path through the system, and can be thought of as a directed acyclic graph of spans".
+
+
+== View Initial Traces and Spans
+
+. If you are not already there, return to the terminal window of your lab, and use the `curl` utility to invoke your catalog service (via Istio ingress gateway -> API gateway) a few times:
 +
 -----
-$ oc rollout pause deploy $OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT
+$ curl -v \
+      `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
+
+. Identify the URL to the Jaeger UI:
++
+-----
+$ echo -en "\n\nhttps://"$(oc get route/tracing -o template --template {{.spec.host}} -n istio-system)"\n\n"
+-----
+
+. In a web browser, navigate to this URL.
+.. You should see your initial traces similar to the following:
++
+image::images/jaeger_initial_ui.png[]
+.. Notice the existance of only one _span_ per trace.
+This _span_ begins with the istio ingressgateway and ends at the service mesh enabled API Gateway.
+
+
+== Service Mesh _Control Plane_ Observability
 
 .. Verify that the _jaeger-agent_ and _jaeger-collector_ both exist in the _istio-system_ namespace :
 +
 -----
-$  oc get service jaeger-agent jaeger-collector -n istio-system --as=system:admin
+$  oc get service nt jaeger-collector -n istio-system --as=system:admin
 
 NAME           TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                      AGE
 jaeger-agent   ClusterIP   None         <none>        5775/UDP,6831/UDP,6832/UDP   4d
@@ -61,6 +97,55 @@ jaeger-collector   ClusterIP   172.30.95.25   <none>        14267/TCP,14268/TCP 
 The Jaeger agent receives tracing information (in the form of UDP packets on port 6831) submitted by Jaeger client libraries embedded in applications. It forwards the tracing information in batches to the Jaeger collector.
 +
 Alternatively, Jaeger client libraries can push tracing information via a TCP connection directly to the _jaeger-collector_ on port 14268.
+
+
+== API Gateway using OpenTracing
+
+=== Current Limitations
+As you know, Openresty is Nginx + luaJIT, and right now, we only get OpenTracing information for the “Nginx” part of it, there aren’t any OpenTracing libraries for lua.
+
+We are working on being able to use the OpenTracing C++ libraries so we can create traces directly from LUA, and gain even more visibility into APIcast internals. 
+For example, this could help debug if a custom policy you just installed is making things slower.
+
+
+=== View Nginx related OpenTracing and Jaeger libraries
+
+In this section you verify that your API Gateway is already injected with appropriate libraries to participate in service mesh observability.
+
+. Verify the existence of the OpenTracing library for NGinx in the API gateway.
++
+-----
+$ oc project $GW_PROJECT
+
+$ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` ls -l /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
+
+...
+
+
+-rwxr-xr-x. 1 root root 1457848 Jun 11 06:29 /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
+-----
+
+. Verify the existence of the Jaeger client library in the API gateway:
++
+-----
+$ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /opt/app-root/lib/libjaegertracing.so.0
+
+...
+
+
+lrwxrwxrwx. 1 root root 25 Jun 11 06:38 /opt/app-root/lib/libjaegertracing.so.0 -> libjaegertracing.so.0.3.0
+-----
+
+
+=== Configure and Enable OpenTracing in API Gateway
+
+Although your API Gateway comes injected with needed OpenTracing libraries, those libraries need to be configured and enabled.
+
+. You will be making quite a few changes to your Istio-enabled API gateway.  Subsequently, put it in a paused state while those changes are being made:
++
+-----
+$ oc rollout pause deploy $OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT
+-----
 
 
 . Create a JSON configuration file that will instruct the OpenTracing and Jaeger related client libraries in the API gateway to push traces to the `jaeger-agent`:
@@ -121,87 +206,15 @@ $ oc set env deploy/$OCP_USERNAME-prod-apicast-istio \
          -n $GW_PROJECT
 -----
 
-. Update the API gateway _deployment_ to use the OpenTracing and Jaeger enabled image:
-+
------
-$ oc patch deploy/$OCP_USERNAME-prod-apicast-istio \
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-prod-apicast-istio", "image": "quay.io/3scale/apicast:master" }]}}}}' \
-   -n $GW_PROJECT
------
-+
-Notice the use of a community version of the API gateway container image available in a public _quay.io_ organization.
-This is the container image that includes the _opentracing_ and _jaeger_ client libraries.
-
 . Resume your Istio-enabled and OpenTracing-enabled API gateway:
 +
 -----
 $ oc rollout resume deploy $OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT
 -----
 
-. Verify the existence of the OpenTracing library for NGinx in the API gateway.
-+
-Once your API gateway is running again, execute the following commands:
-+
------
-$ oc project $GW_PROJECT
-
-$ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` ls -l /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
-
-...
 
 
--rwxr-xr-x. 1 root root 1457848 Jun 11 06:29 /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
------
-
-. Verify the existence of the Jaeger client library in the API gateway:
-+
------
-$ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /opt/app-root/lib/libjaegertracing.so.0
-
-...
-
-
-lrwxrwxrwx. 1 root root 25 Jun 11 06:38 /opt/app-root/lib/libjaegertracing.so.0 -> libjaegertracing.so.0.3.0
------
-
-
-== Jaeger UI
-
-Often the first thing to understand about your microservice architecture is specifically which microservices are involved in an end-user transaction.
-
-The _observability_ tooling built into Istio, either Zipkin or Jaeger, can provide this information.
-
-In this section of the lab, you are exposed to the Jaeger user interface (UI).
-
-The Jaeger UI provides a visual depiction of traces through the services that make up your application.
-
-
-=== Terminology
-
-An important _distributed tracing_ term to understand is: _span_.
-Jaeger defines a _span_ as “a logical unit of work in the system that has an operation name, an operation start time, and a duration. Spans can be nested and ordered to model causal relationships. An RPC call is an example of a span.”
-
-Another important term to understand is: _trace_. Jaeger defines _trace_ as “a data or execution path through the system, and can be thought of as a directed acyclic graph of spans".
-
-=== View Traces and Spans
-
-. If you are not already there, return to the terminal window of your lab, and use the `curl` utility to invoke your catalog service (via Istio ingress gateway -> API gateway) a few times:
-+
------
-$ curl -v \
-       -HHost:$CATALOG_API_GW_HOST \
-       http://$INGRESS_HOST:$INGRESS_PORT/products?user_key=$CATALOG_USER_KEY
------
-
-. Identify the URL to the Jaeger UI:
-+
------
-$ echo -en "\n\nhttp://"$(oc get route/tracing -o template --template {{.spec.host}} -n istio-system)"\n\n"
------
-
-.. In a web browser, navigate to this URL.
-.. In this version of Istio, the Jaeger UI is currently not secured.
-
+=== View _NGinx_ Spans in Jaeger UI
 . In the _Find Traces_ panel, scroll down to locate the traces associated with your OCP user name:
 +
 image::images/trace_dropdown_selection.png[]
@@ -239,6 +252,7 @@ Traces relevant to your Istio-enabled API gateway are now available .
 However, tracing of the backend _catalog_ service is missing.
 
 In the next section, you will enable your _catalog_ service to participate in this end-to-end distributed tracing.
+
 
 == Catalog Service: Istio-enabled
 

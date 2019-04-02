@@ -493,10 +493,9 @@ catalog-service-1-dqb28       1/1       Running     0          11m
 +
 ----
 $ echo "export NAKED_CATALOG_ROUTE=$(oc get route catalog-unsecured -o template --template='{{.spec.host}}' -n $MSA_PROJECT)" >> ~/.bashrc
-
 ----
 +
-NOTE:  You will use the $NAKED_CATALOG_ROUTE environment variable during the lab.
+This environment variable will be used throughout the labs in this course.
 
 . Reload the `.bashrc` file to enable the new environment variable:
 +

@@ -114,11 +114,11 @@ Notice that a match is made for all context paths exposed by the catalog service
 . Create the gateway and virtual service in your $MSA_PROJECT :
 +
 -----
-$ oc create -f ~/lab/catalog-direct-gw-vs.yml -n $MSA_PROJECT --as=system:admin
+$ oc create -f ~/lab/catalog-direct-gw-vs.yml -n $MSA_PROJECT
 -----
 
 . Bounce the Istio _policy_ pod:
-.. With the 1.0.0 version of community Istio, the Istio policy may get into an unstable state.
+.. The Istio policy of Red Hat Service Mesh may sometime get into an unstable state.
 Before progressing with management of more sophisticated routing rules to support the Red Hat 3scale API Management Istio Mixer, it is recommended to bounce the _policy_ pod.
 
 .. Execute:
@@ -195,22 +195,24 @@ Next step is to inject the 3scale Istio Mixer into this request path and subsequ
 
 In this section of the lab, you provision the community 3scale Istio Mixer in your _istio-system_ namespace.
 
-The Istio Mixer that will be utilized will originate from the following community image in Red Hat's _Quay_ container image registry:
-
------
-quay.io/3scale/apicast:3scale-http-plugin
------
-
 . Clone the source code of the 3scale Istio Mixer to your lab environment:
 
-.. For the purpose of this lab, the source code utilized is an unmodified fork of the upstream community at link:https://github.com/3scale/istio-integration[].
+.. For the purpose of this lab, the source code utilized is a fork of the upstream community at link:https://github.com/3scale/istio-integration[].
 .. Execute:
 +
 -----
 $ git clone \
-      --branch rhte-2018 \
+      --branch rhsm-tp \
       https://github.com/gpe-mw-training/istio-integration.git \
       $HOME/lab/istio-integration
+-----
+
+
+/////
+The Istio Mixer that will be utilized will originate from the following community image in Red Hat's _Quay_ container image registry:
+
+-----
+quay.io/3scale/apicast:3scale-http-plugin
 -----
 
 . Load the Istio Mixer Adapter deployment (found in the 3scale Istio integration project you just cloned) into the istio-system namespace:
@@ -218,26 +220,25 @@ $ git clone \
 -----
 $ oc create -f $HOME/lab/istio-integration/3scaleAdapter/openshift -n istio-system --as=system:admin
 -----
+/////
 
-. Set the 2 containers that make up the 3scale Adapter to debug log level:
+. Set the 3scale Adapter to debug log level:
 +
 -----
-$ oc set env dc/3scale-istio-adapter --containers="3scale-istio-adapter" -e "THREESCALE_LOG_LEVEL=debug" -n istio-system --as=system:admin
-
-$ oc set env dc/3scale-istio-adapter --containers="3scale-istio-httpclient" -e "APICAST_LOG_LEVEL=debug" -n istio-system --as=system:admin
+$ oc patch deploy/3scale-istio-adapter -e "THREESCALE_LOG_LEVEL=debug" -n istio-system --as=system:admin
 -----
 
-. Verify that the 3scale Istio Mixer Adapter pod has started with 2 containers:
+. Verify that the 3scale Istio Mixer Adapter pod has started :
 +
 -----
 $ oc get pods -n istio-system | grep 3scale-istio-adapter
 
-3scale-istio-adapter-1-t9kj2                2/2       Running     0          47s
+3scale-istio-adapter-1-t9kj2                1/1       Running     0          47s
 -----
 +
 image::images/mixer_architecture.png[]
 +
-As per the diagram above, the two containers are as follows:
+As per the diagram above, the container provides the following two components:
 
 .. *3scale-istio-adapter*
 +
@@ -247,18 +248,26 @@ Accepts gRPC invocations from Istio ingress and routes to the other side car in 
 +
 Accepts invocations from _3scale-istio-adapter_ and invokes the _system-provider_ and _backend-listener_ endpoints of the remote Red Hat 3scale API Management manager.
 
-. Inject the 3scale handler into the Istio Mixer Adapter:
+. View listing of configs that support the 3scale Mixer Adapter:
 +
------
-$ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/authorization-template.yaml --as=system:admin
-
-
-$ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter.yaml --as=system:admin
------
-+
-Embedded in these YAML files is the 3scale handler that is injected into the Istio Mixer.
+Embedded in the following YAML files is the 3scale handler that is injected into the Istio Mixer.
 This handler is written in Golang by the 3scale engineering team as per the link:https://github.com/istio/istio/wiki/Mixer-Out-Of-Process-Adapter-Dev-Guide[Mixer Out of Process Adapter Dev Guide].
 Much of these files consists of the adapter's configuration link:https://developers.google.com/protocol-buffers/docs/proto3[proto].
+
+.. Adapters:
++
+-----
+$ oc get adapters.config.istio.io -n istio-system
+threescale   7d
+-----
+
+.. Template:
++
+-----
+$ oc get templates.config.istio.io -n istio-system
+
+threescale-authorization   7d
+-----
 
 == Red Hat 3scale Mixer Adapter Configurations
 
@@ -283,38 +292,37 @@ $ source ~/.bashrc
 . Review the `threescale-adapter-config.yaml` file :
 +
 -----
-$ less $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml | more
+$ less $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml | more
 -----
 
 . Modify the `threescale-adapter-config.yaml` file with the ID of your catalog service:
 +
 -----
 $ sed -i "s/service_id: .*/service_id: \"$CATALOG_SERVICE_ID\"/" \
-      $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml
+      $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml
 -----
 
 . Modify the `threescale-adapter-config.yaml` file with the URL to your Red Hat 3scale API Management manager tenant:
 +
 -----
 $ sed -i "s/system_url: .*/system_url: \"https:\/\/$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\"/" \
-      $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml
+      $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml
 -----
 
 . Modify the `threescale-adapter-config.yaml` file with the administrative access token of your Red Hat 3scale API Management manager administration account:
 +
 -----
 $ sed -i "s/access_token: .*/access_token: \"$API_ADMIN_ACCESS_TOKEN\"/" \
-      $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml
+      $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml
 -----
 
 . Load the Red Hat 3scale API Management Istio Handler configurations:
 +
 -----
-$ oc create -f $HOME/lab/istio-integration/3scaleAdapter/istio/threescale-adapter-config.yaml --as=system:admin
+$ oc create -f $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml --as=system:admin
 
 ...
 
-handler.config.istio.io "threescalehandler" created
 instance.config.istio.io "threescaleauthorizationtemplate" created
 rule.config.istio.io "usethreescale" created
 -----
@@ -322,7 +330,7 @@ rule.config.istio.io "usethreescale" created
 . Verify that the Istio Handler configurations were created in the istio-system namespace:
 +
 -----
-$ oc get handler -n istio-system --as=system:admin -o yaml
+$ oc get handler threescale -n istio-system --as=system:admin -o yaml
 
 apiVersion: v1
 items:
@@ -338,7 +346,7 @@ items:
     params:
       access_token: fa16cd9ebd66jd07c7bd5511be4b78ecf6d58c30daa940ff711515ca7de1194a
       service_id: "103"
-      system_url: https://user50-3scale-mt-admin.apps.4a64.openshift.opentlc.com
+      system_url: https://user1-3scale-mt-admin.apps.4a64.openshift.opentlc.com
 
 -----
 

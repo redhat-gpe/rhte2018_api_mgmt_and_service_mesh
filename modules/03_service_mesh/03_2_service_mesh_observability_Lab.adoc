@@ -84,29 +84,33 @@ This _span_ begins with the istio ingressgateway and ends at the service mesh en
 
 == Service Mesh _Control Plane_ Observability
 
-.. Verify that the _jaeger-agent_ and _jaeger-collector_ both exist in the _istio-system_ namespace :
+. View the various _jaeger_ related components in the _istio-system_ namespace :
 +
 -----
-$  oc get service nt jaeger-collector -n istio-system --as=system:admin
+$ oc get service -l app=jaeger -n istio-system
+NAME               TYPE           CLUSTER-IP       EXTERNAL-IP                     PORT(S)                        AGE
+jaeger-collector   ClusterIP      172.30.255.137   <none>                          14267/TCP,14268/TCP,9411/TCP   7d
+jaeger-query       LoadBalancer   172.30.6.215     172.29.105.9,172.29.105.9       80:32050/TCP                   7d
+tracing            LoadBalancer   172.30.207.62    172.29.118.171,172.29.118.171   80:31568/TCP                   7d
+zipkin             ClusterIP      172.30.110.244   <none>                          9411/TCP                       7d
+-----
 
-NAME           TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                      AGE
-jaeger-agent   ClusterIP   None         <none>        5775/UDP,6831/UDP,6832/UDP   4d
-jaeger-collector   ClusterIP   172.30.95.25   <none>        14267/TCP,14268/TCP          4d
------
-+
-The Jaeger agent receives tracing information (in the form of UDP packets on port 6831) submitted by Jaeger client libraries embedded in applications. It forwards the tracing information in batches to the Jaeger collector.
-+
-Alternatively, Jaeger client libraries can push tracing information via a TCP connection directly to the _jaeger-collector_ on port 14268.
+* *jaeger-collector*
+* *jaeger-query*
+* *tracing*
+* *zipkin*
 
 
 == API Gateway using OpenTracing
 
 === Current Limitations
-As you know, Openresty is Nginx + luaJIT, and right now, we only get OpenTracing information for the “Nginx” part of it, there aren’t any OpenTracing libraries for lua.
+The API Gateway is based on an open-source project called: _Openresty_.
+Openrest is Nginx + luaJIT.
+Currenty, only the OpenTracing information for the “Nginx” is captured.
+There are not yet any OpenTracing libraries for lua.
 
-We are working on being able to use the OpenTracing C++ libraries so we can create traces directly from LUA, and gain even more visibility into APIcast internals. 
+Red Hat is working on being able to use the OpenTracing C++ libraries so we can create traces directly from LUA, and gain even more visibility into APIcast internals. 
 For example, this could help debug if a custom policy you just installed is making things slower.
-
 
 === View Nginx related OpenTracing and Jaeger libraries
 
@@ -268,7 +272,7 @@ The new catalog service is enabled with OpenTracing and Jaeger libraries so that
 
 The _catalog service_ is link:https://github.com/gpe-mw-training/catalog-service[written in Java] using the _reactive_ programming framework link:https://vertx.io/[vert.x].
 
-As such, the new catalog service used in the remainder of this course is embedded with the OpenTracing and Jaeger Java client libraries.
+The new catalog service used in the remainder of this course is embedded with the OpenTracing and Jaeger Java client libraries.
 
 Recall that when configuring the NGinx and C++ OpenTracing/Jaeger client libraries in the API gateway, a configuration file (via a config map) was loaded.
 The OpenTracing and Jaeger client libraries for Java are easier to work with.
@@ -284,46 +288,120 @@ EXPOSE 8080 8778 9779
 COPY target/catalog-service-tracing-1.0.17.jar /deployments/
 -----
 
-The source code of the OpenTracing-enabled catalog service is available at link:https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht[https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht].
+The source code of the OpenTracing-enabled catalog service is available in the link:https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht[jaeger-rht branch].
 
 === Inject Envoy into Catalog Service
 
-. Retrieve YAML representation of current _catalog service_ deployment:
+. Create a new Deployment that includes automatic injection of the istio sidecar proxy and utilizes a OpenTracing enabled catalog service: 
 +
 -----
-$ oc get deploy catalog-service -n $MSA_PROJECT -o yaml > $HOME/lab/catalog-service.yml
+$   cat <<EOF > $HOME/lab/catalog-service-istio.yml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  labels:
+    app: coolstore-catalog-mongodb
+    application: $OCP_USERNAME-cat-service-istio
+  name: $OCP_USERNAME-cat-service-istio
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 0
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      application: $OCP_USERNAME-cat-service-istio
+      deployment: $OCP_USERNAME-cat-service-istio
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        application: $OCP_USERNAME-cat-service-istio
+        deployment: $OCP_USERNAME-cat-service-istio
+
+      # Automatic Istio sidecar injection
+      annotation:
+        sidecar.istio.io/inject: "true"
+
+      name: $OCP_USERNAME-cat-service-istio
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTIONS
+          value: -Dswarm.project.stage.file=file:///app/config/project-defaults.yml
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+
+        # Use OpenTracing enabled image
+        image: docker.io/rhtgptetraining/catalog-service-tracing:1.0.17
+
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 2
+          httpGet:
+            path: /health/liveness
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: $OCP_USERNAME-cat-service-istio
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health/readiness
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 250m
+            memory: 500Mi
+          requests:
+            cpu: 125m
+            memory: 500Mi
+        securityContext:
+          privileged: false
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /app/config
+          name: config
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: app-config
+        name: config
+
+EOF
 -----
 
-. Differentiate your Istio-enabled catalog service from your existing catalog service:
+. Re-create a new configmap with parameters that configure the OpenTracing-enabled catalog service:
 +
 -----
-$ sed -i "s/ catalog-service/ $OCP_USERNAME-cat-service-istio/" $HOME/lab/catalog-service.yml
------
+# Delete existing application configmap
+$ oc delete configmap app-config -n $MSA_PROJECT
 
-. Place the deployment in a paused state:
-+
------
-$ sed -i "s/replicas:\ 1/replicas: 1\n  paused: true/" $HOME/lab/catalog-service.yml
------
 
-. Inject Istio configurations into a new catalog service deployment:
-+
------
 
-$ istioctl kube-inject \
-           -f $HOME/lab/catalog-service.yml \
-           > $HOME/lab/catalog-service-istio.yml
------
-
-. View Istio-injected catalog service deployment descriptor:
-+
------
-$ less $HOME/lab/catalog-service-istio.yml | more
------
-
-. Create a new configmap with parameters that configure the OpenTracing-enabled catalog service:
-+
------
 $ echo "service-name: $OCP_USERNAME-catalog-service
 catalog.http.port: 8080
 connection_string: mongodb://catalog-mongodb:27017
@@ -336,8 +414,6 @@ reporter-log-spans: True
 collector-endpoint: \"http://jaeger-collector.istio-system.svc:14268/api/traces\"
 " > $HOME/lab/app-config.yaml
 
-# Delete existing configmap
-$ oc delete configmap app-config -n $MSA_PROJECT
 
 # Recreate configmap using additional OpenTracing related params
 $ oc create configmap app-config --from-file=$HOME/lab/app-config.yaml -n $MSA_PROJECT
@@ -351,14 +427,18 @@ $ oc create \
      -n $MSA_PROJECT
 -----
 
-. Set various environment variables on the OpenTracing-enabled catalog service:
+/////
+. Indicate to the application where to locate its app specific configurations:
 +
 -----
 $ oc set env deploy/$OCP_USERNAME-cat-service-istio APP_CONFIGMAP_NAME=app-config  -n $MSA_PROJECT
 
 $ oc set env deploy/$OCP_USERNAME-cat-service-istio APP_CONFIGMAP_KEY=app-config.yaml  -n $MSA_PROJECT
+-----
 
-# Allows for optionally debugging of catalog service so as to better understand how exactly it utilizes the opentracing / jaeger java libraries
+. Allow for optionally debugging of catalog service so as to better understand how exactly it utilizes the opentracing / jaeger java libraries
++
+-----
 $ oc set env deploy/$OCP_USERNAME-cat-service-istio JAVA_DEBUG=true  -n $MSA_PROJECT
 $ oc set env deploy/$OCP_USERNAME-cat-service-istio JAVA_DEBUG_PORT=8787  -n $MSA_PROJECT
 -----
@@ -378,25 +458,12 @@ $ oc patch deploy/$OCP_USERNAME-cat-service-istio \
    -n $MSA_PROJECT
 -----
 
-. Update the new catalog service deployment to use the OpenTracing-enabled and Jaeger-enabled image:
-+
------
-$ oc patch deploy/$OCP_USERNAME-cat-service-istio \
-   --patch '{"spec":{"template":{"spec":{"containers":[{"name":"'$OCP_USERNAME'-cat-service-istio", "image": "docker.io/rhtgptetraining/catalog-service-tracing:1.0.17" }]}}}}' \
-   -n $MSA_PROJECT
------
-
-ifdef::showscript[]
-
-    based on:  https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht
-
-endif::showscript[]
-
 . Resume the paused deployment:
 +
 -----
 $ oc rollout resume deploy/$OCP_USERNAME-cat-service-istio -n $MSA_PROJECT
 -----
+/////
 
 . Modify the _service_ to route to the new Istio-enabled catalog service:
 +
@@ -412,6 +479,7 @@ $ oc patch service/catalog-service \
 $ oc scale deploy/catalog-service --replicas=0 -n $MSA_PROJECT
 -----
 
+=== Test
 . Ensure your `$CATALOG_USER_KEY` and `$CATALOG_API_GW_HOST` environment variables remain set:
 +
 -----
@@ -425,7 +493,13 @@ catalog-prod-apicast-developer.apps.clientvm.b902.rhte.opentlc.com
 -----
 
 . From the terminal, use the `curl` utility as you have done previously to invoke your catalog service several times via the Istio ingress.
-.. Review the log file of your Istio-enabled catalog service:
++
+-----
+$ curl -v \
+      `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+-----
+
+. Review the log file of your Istio-enabled catalog service:
 +
 -----
 $ oc logs -f `oc get pod -n $MSA_PROJECT | grep "istio" | awk '{print $1}'` -c $OCP_USERNAME-cat-service-istio -n $MSA_PROJECT

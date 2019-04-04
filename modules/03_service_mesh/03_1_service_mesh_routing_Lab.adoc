@@ -591,6 +591,7 @@ $  curl -v \
       `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
+Please continue on to the next lab:  link:03_2_service_mesh_observability_Lab.html[Service Mesh Observability]
 
 
 ifdef::showscript[]

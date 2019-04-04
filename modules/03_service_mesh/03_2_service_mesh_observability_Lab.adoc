@@ -484,6 +484,8 @@ image::images/new_istio_cat_trace.png[]
 +
 image::images/spans_with_catalog.png[]
 
+Please continue on to the next lab:  link:03_3_api_mixer_Lab.html[3scale API Mixer]
+
 
 ifdef::showscript[]
 endif::showscript[]

@@ -614,7 +614,7 @@ $ oc rollout resume deploy stage-apicast prod-apicast -n $GW_PROJECT
 
 
 [blue]#Congratulations!#
-Your lab environment is now ready to use.  Please proceed to the next lab:  link:../02_api_mgmt/02_1_api_mgmt_Lab.adoc[*API Management Lab*]
+Your lab environment is now ready to use.  Please proceed to the next lab:  link:../02_api_mgmt/02_1_api_mgmt_Lab.html[*API Management Lab*]
 
 
 

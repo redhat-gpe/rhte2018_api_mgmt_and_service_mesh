@@ -258,7 +258,7 @@ However, tracing of the backend _catalog_ service is missing.
 In the next section, you will enable your _catalog_ service to participate in this end-to-end distributed tracing.
 
 
-== Catalog Service: Istio-enabled
+== Catalog Service: OpenTracing-enabled
 
 image::images/deployment_catalog-istio.png[]
 
@@ -270,7 +270,7 @@ The new catalog service is enabled with OpenTracing and Jaeger libraries so that
 
 === OpenTracing Libraries Included in Catalog Service
 
-The _catalog service_ is link:https://github.com/gpe-mw-training/catalog-service[written in Java] using the _reactive_ programming framework link:https://vertx.io/[vert.x].
+The _catalog service_ is link:https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht[written in Java] using the _reactive_ programming framework link:https://vertx.io/[vert.x].
 
 The new catalog service used in the remainder of this course is embedded with the OpenTracing and Jaeger Java client libraries.
 
@@ -290,7 +290,7 @@ COPY target/catalog-service-tracing-1.0.17.jar /deployments/
 
 The source code of the OpenTracing-enabled catalog service is available in the link:https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht[jaeger-rht branch].
 
-=== Inject Envoy into Catalog Service
+=== Deploy
 
 . Create a new Deployment that includes automatic injection of the istio sidecar proxy and utilizes a OpenTracing enabled catalog service: 
 +
@@ -307,7 +307,6 @@ metadata:
   name: $OCP_USERNAME-cat-service-istio
 spec:
   progressDeadlineSeconds: 600
-  replicas: 0
   revisionHistoryLimit: 10
   selector:
     matchLabels:
@@ -320,19 +319,22 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-      creationTimestamp: null
       labels:
         application: $OCP_USERNAME-cat-service-istio
         deployment: $OCP_USERNAME-cat-service-istio
 
       # Automatic Istio sidecar injection
-      annotation:
+      annotations:
         sidecar.istio.io/inject: "true"
 
       name: $OCP_USERNAME-cat-service-istio
     spec:
       containers:
       - env:
+        - name: APP_CONFIGMAP_NAME
+          value: app-config
+        - name: APP_CONFIGMAP_KEY
+          value: app-config.yaml
         - name: JAVA_OPTIONS
           value: -Dswarm.project.stage.file=file:///app/config/project-defaults.yml
         - name: KUBERNETES_NAMESPACE
@@ -394,7 +396,7 @@ spec:
 EOF
 -----
 
-. Re-create a new configmap with parameters that configure the OpenTracing-enabled catalog service:
+. Re-create the application configmap with parameters that configure the OpenTracing-enabled catalog service:
 +
 -----
 # Delete existing application configmap
@@ -427,7 +429,7 @@ $ oc create \
      -n $MSA_PROJECT
 -----
 
-. Modify the _service_ to route to the new Istio-enabled catalog service:
+. Modify the OCP _service_ to route to the new Istio-enabled catalog service:
 +
 -----
 $ oc patch service/catalog-service \

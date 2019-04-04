@@ -568,9 +568,9 @@ $ echo -en "\n\nhttps://$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\n\n"
 image::images/3scale_login.png[]
 
 == API Gateways
-In this section you will create two OCP routes for your API Gateways whose names are consistent with your backend business service.
+Your lab environment comes with API Gateways for both staging and production.
 
-NOTE: If you don't already have API Gateways deployed in your environment, please provision them as per the section: <<gw_provisioning>>.
+In this section you will create two OCP routes for your API Gateways whose names are consistent with your backend business service.
 
 . Add a new route for staging:
 +
@@ -585,6 +585,9 @@ $ oc create route edge catalog-prod-apicast-$OCP_USERNAME --service=prod-apicast
 -----
 +
 You will reference these route names in the next section of the lab.
+
+/////
+Not needed
 
 . Ensure the value of the THREESCALE_PORTAL_ENDPOINT environment variable in both API stage and production gateways is correct:
 +
@@ -601,6 +604,7 @@ $ oc patch deploy/prod-apicast --patch \
 -----
 +
 The gateways use the value of $THREESCALE_PORTAL_ENDPOINT to retrieve configuration information about your APIs from the _system-provider_ service of the 3scale API Manager.
+/////
 
 . Resume the paused deploy objects:
 +
@@ -615,6 +619,54 @@ Your lab environment is now ready to use.  Please proceed to the next lab:  link
 
 
 == Appendix
+
+
+=== Optional:  Administrative Access
+
+. On your remote lab environment, you can optionally gain access to the `root` operating system user by executing:
++
+----
+$ `sudo -i`
+----
+
+. As the `root` operating system user, you can gain `cluster admin` access to your OCP environment by executing:
++
+-----
+# oc login -u system:admin
+-----
+
+
+ifdef::showscript[]
+=== Optional:  Lab Environment Provisioning
+
+This section is offered to those that are interested in setting up an environment to support this lab using their own resources.
+
+==== Ansible Roles
+
+The lab environment can be provisioned via the following Ansible roles:
+
+. *ocp-workload-3scale-multitenant*
++
+The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-3scale-multitenant[ocp-workload-3scale-multitenant] Ansible role will provision a multi-tenant 3scale API Manager.
++
+This role needs to be executed only once (to provision only one multi-tenant API Manager) on a pre-existing OCP 3.11 environment.
++
+The role also offers the ability to provision a configurable number of _tenants_ in that multi-tenant API Manager environment.
+If provisioning tenants, the role also provides the ability to automatically provision API gateways for each tenant (co-located in the same OCP cluster as the API Manager but in their own namespaces).
+
+. *ocp-workload-istio-community*
++
+The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-istio-community[ocp-workload-istio-community] Ansible role will layer Istio on a pre-existing OCP 3.11 environment.
++
+This role should be executed on an OCP environment dedicated to a student (that is, using `oc cluster up`).
+This role is applied to the same OCP environment utilized by the _ocp-workload-rhte-mw-api-mesh_ role.
+
+. *ocp-workload-rhte-mw-api-mesh*
++
+The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-rhte-mw-api-mesh[ocp-workload-rhte-mw-api-mesh] Ansible role will provision supporting lab assets (that is, the catalog service).
++
+This role should be executed on an OCP environment dedicated to a student (that is, using `oc cluster up`).
+This role is applied to the same OCP environment utilized by the _ocp-workload-istio-community_ role.
 
 === Alternative approaches
 In regards a MSA service mesh, the following are related community initiatives that are not covered in this lab.
@@ -653,69 +705,6 @@ In fact, in an upcoming release of the 3scale API Gateway, it will have the capa
 It could be injected as a sidecar to an application.
 
 This approach is not covered in this lab.
-
-=== Optional:  Administrative Access
-
-. On your remote lab environment, you can optionally gain access to the `root` operating system user by executing:
-+
-----
-$ `sudo -i`
-----
-
-. As the `root` operating system user, you can gain `cluster admin` access to your OCP environment by executing:
-+
------
-# oc login -u system:admin
------
-
-. You can check the status of the OCP system service by executing:
-+
------
-# systemctl status oc-cluster.service
------
-
-. The OCP environment can be restarted as follows:
-+
------
-# systemctl restart oc-cluster.service
------
-
-. You can optionally install additional networking utilities (that could serve as useful troubleshooting tools ) as follows:
-+
------
-$ yum install telnet bind-utils
------
-
-=== Optional:  Lab Environment Provisioning
-
-This section is offered to those that are interested in setting up an environment to support this lab using their own resources.
-
-==== Ansible Roles
-
-The lab environment can be provisioned via the following Ansible roles:
-
-. *ocp-workload-3scale-multitenant*
-+
-The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-3scale-multitenant[ocp-workload-3scale-multitenant] Ansible role will provision a multi-tenant 3scale API Manager.
-+
-This role needs to be executed only once (to provision only one multi-tenant API Manager) on a pre-existing OCP 3.11 environment.
-+
-The role also offers the ability to provision a configurable number of _tenants_ in that multi-tenant API Manager environment.
-If provisioning tenants, the role also provides the ability to automatically provision API gateways for each tenant (co-located in the same OCP cluster as the API Manager but in their own namespaces).
-
-. *ocp-workload-istio-community*
-+
-The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-istio-community[ocp-workload-istio-community] Ansible role will layer Istio on a pre-existing OCP 3.11 environment.
-+
-This role should be executed on an OCP environment dedicated to a student (that is, using `oc cluster up`).
-This role is applied to the same OCP environment utilized by the _ocp-workload-rhte-mw-api-mesh_ role.
-
-. *ocp-workload-rhte-mw-api-mesh*
-+
-The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-rhte-mw-api-mesh[ocp-workload-rhte-mw-api-mesh] Ansible role will provision supporting lab assets (that is, the catalog service).
-+
-This role should be executed on an OCP environment dedicated to a student (that is, using `oc cluster up`).
-This role is applied to the same OCP environment utilized by the _ocp-workload-istio-community_ role.
 
 [[gw_provisioning]]
 === Optional: API Gateway Provisioning
@@ -821,7 +810,6 @@ $ echo "export API_ADMIN_ACCESS_TOKEN=<column C of spreadsheet>" >> ~/.bashrc
 $ echo "export API_MANAGER_NS=<column D of spreadsheet" >> ~/.bashrc
 -----
 
-ifdef::showscript[]
 
 . Set the following environment variables, using the values you've assigned yourself in: {lab_spreadsheet}:
 +

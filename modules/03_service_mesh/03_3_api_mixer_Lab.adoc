@@ -53,6 +53,14 @@ $ oc delete virtualservice catalog-istio-gateway-vs -n $GW_PROJECT --as=system:a
 $ oc delete gateway catalog-istio-gateway -n $GW_PROJECT --as=system:admin
 -----
 
+== Ensure Policy Checks are not disabled
+
+-----
+$ oc describe cm istio -n istio-system | grep disablePolicyChecks
+
+disablePolicyChecks: false
+-----
+
 == New Virtual Service to Catalog Service
 
 You will create a routing rule to invoke the backend catalog service directly via the Istio _ingress_ gateway.

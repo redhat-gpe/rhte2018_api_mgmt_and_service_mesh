@@ -87,7 +87,7 @@ Istio can then enforce the policies defined in the api management system by way 
 
 == Problems
 
-. user1 does not have view access to istio-system
+. oc edit configmap istio -n istio-system   ;   disablePolicyChecks: false
 
 . Error: failed to start patch cert loop mutatingwebhookconfigurations.admissionregistration.k8s.io "istio-sidecar-injector" not found
 oc describe mutatingwebhookconfigurations.admissionregistration.k8s.io

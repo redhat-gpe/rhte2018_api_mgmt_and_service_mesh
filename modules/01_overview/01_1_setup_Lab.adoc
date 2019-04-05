@@ -122,8 +122,6 @@ NOTE: [blue]#This section is applicable if you are an existing student of either
 . Authenticate using your _OPENTLC_ credentials, for example: `johndoe-redhat.com`.
 . Navigate to the following catalog:  `Services -> Catalog -> Catalog Items -> OPENTLC Middleware Solutions Labs`.
 . Select the following catalog item: `3scale API Mgmt & Service Mesh`.
-+
-image::images/catalog_item.png[]
 . Click `Order` on the next page.
 
 . In the subsequent order form, select the following:
@@ -195,13 +193,13 @@ Once you receive this second email, you can then ssh into the `workstation` VM o
 
 SSH access to the remote lab environment provides you with the OpenShift `oc` utility.
 
-. ssh access to the Ravello application is provided using the following convention:
+. ssh access to your lab environment by specifying your _opentlc userId_ and lab environment $GUID in the following command:
 +
 -----
-$ ssh <opentlc-userId>@<workstation URL as listed in 1st confirmation email>
+$ ssh <opentlc-userId>@workstation-$GUID.rhpds.opentlc.com
 -----
 
-. Authenticate into OpenShift using `oc` utility
+. Authenticate into OpenShift as a non cluster admin user (user1) using the `oc` utility
 + 
 -----
 $ oc login https://master00.example.com -u user1 -p r3dh4t1!
@@ -223,10 +221,10 @@ $ sudo -i
 
 === OCP Web Console
 
-. Point your browser to the following URL:
+. Point your browser to the URL created by executing the following :
 +
 -----
-$ https://<master node URL as listed in 1st confirmation email>
+$ echo -en "\nhttps://master-$GUID.generic.opentlc.com\n\n"
 -----
 
 . Authenticate using the following user credentials
@@ -545,6 +543,51 @@ Throughout this lab, you will invoke this RESTful API using both HTTP _GET_ and 
 
 == API Manager
 
+=== Refresh API Manager state
+
+. Gain OCP cluster access via the shell of the root operating system user:
++
+-----
+$ sudo -i
+-----
+
+. Execute the following:
++
+-----
+# wget https://bit.ly/2G2GQWr -O $HOME/api_manager_state_update.sh \
+       && chmod 755 api_manager_state_update.sh \
+       && $HOME/api_manager_state_update.sh afd3
+-----
+
+. You should see a response similar to the following:
++
+-----
+will update the following stale guid in the API Manager: afd3
+
+stale URLs in system-mysql .... 
+id      domain  self_domain
+1       3scale-mt-api0-master.apps-afd3.generic.opentlc.com     3scale-mt-api0-master.apps-afd3.generic.opentlc.com
+2       t1-3scale-mt-api0.apps-afd3.generic.opentlc.com t1-3scale-mt-api0-admin.apps-afd3.generic.opentlc.com
+4       user1-3scale-mt-api0.apps-afd3.generic.opentlc.com      user1-3scale-mt-api0-admin.apps-afd3.generic.opentlc.com
+
+
+updated URLs in system-mysql .... 
+id      domain  self_domain
+1       3scale-mt-api0-master.apps-53ff.generic.opentlc.com     3scale-mt-api0-master.apps-53ff.generic.opentlc.com
+2       t1-3scale-mt-api0.apps-53ff.generic.opentlc.com t1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com
+4       user1-3scale-mt-api0.apps-53ff.generic.opentlc.com      user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com
+
+
+configmap/system-environment not patched
+deploymentconfig.apps.openshift.io/system-app rolled out
+-----
+
+. Exit out of the root operating system user shell
+-----
+# exit
+-----
+
+=== Access API Manager Tenant Admin Portal
 Your lab environment includes access to a multi-tenant API Manager installation.
 
 For the purpose of this lab, you will serve as the administrator of your own 3scale _tenant_, also known as a _domain_.
@@ -620,20 +663,6 @@ Your lab environment is now ready to use.  Please proceed to the next lab:  link
 
 == Appendix
 
-
-=== Optional:  Administrative Access
-
-. On your remote lab environment, you can optionally gain access to the `root` operating system user by executing:
-+
-----
-$ `sudo -i`
-----
-
-. As the `root` operating system user, you can gain `cluster admin` access to your OCP environment by executing:
-+
------
-# oc login -u system:admin
------
 
 
 ifdef::showscript[]

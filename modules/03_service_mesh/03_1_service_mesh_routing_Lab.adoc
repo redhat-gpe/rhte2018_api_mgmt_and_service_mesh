@@ -45,11 +45,11 @@ In this lab, you work through various scenarios with the goal of gaining appreci
 == Lock down Red Hat Service Mesh
 This first section of the lab involves you impersonating the role of a cluster admin to lock down the pre-installed Red Hat Service Mesh.
 
-. Service Mesh has an installation option that configures the Red Hat Service Mesh proxy to pass through, instead of block, calls to external services on any ports. 
-This option is enabled by default so that one can start evaluating Red Hat Service Mesh quickly, without controlling access to external services.
-For the purpose of this lab, modify this default behavior such that apps can not make requests to external services by default
+Red Hat Service Mesh has an installation option that configures the Istio proxy sidecar to pass through, instead of block, calls to URLs that are external to the cluster . 
+This option is enabled by default so that one can start evaluating Red Hat Service Mesh quickly.
+For the purpose of this lab, modify this default behavior such that apps can not make requests to external URLs by default.
 +
-Do so by executing one of the following:
+Do so by executing the following:
 +
 -----
 $ oc get configmap istio -n istio-system --export -o yaml \
@@ -474,21 +474,34 @@ $ oc get all -l app=istio-ingressgateway -n istio-system
 The response back should list the _istio-ingressgateway_ pod, service, deployment, replicaset and route.
 
 
-. As an OCP cluster-admin, verify the existence of the new route configurations in the _istio-ingressgateweay_ pod.
+. The _istio-ingressgateway_ exposes a very handy service (called _config_dump_) to view its existing configurations.
++
+As an OCP cluster-admin, verify the existence of the new route configurations in the _istio-ingressgateweay_ pod.
+
+.. Switch to the root operating system user so as to leverage OCP cluster admin capabilities
 +
 -----
-# sudo -i
+$ sudo -i
+-----
 
 
-# Execute the following and review the response:
+.. Execute the following and review the response:
++
+-----
 # oc project istio-system && \
          oc rsh `oc get pod | grep "istio-ingressgateway" | awk '{print $1}'` \
          curl http://localhost:15000/config_dump \
          > /tmp/config_dump \
          && less /tmp/config_dump \
          | /usr/local/bin/jq ".configs | last | .dynamic_route_configs"
+-----
++
+The json response should include all the details of your new route configuration from the Service Mesh ingress to your API gateway.
 
 
+. Return back to the non-root operating system user (user1):
++
+-----
 # exit
 -----
 

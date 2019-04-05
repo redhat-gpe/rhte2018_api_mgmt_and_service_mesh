@@ -271,7 +271,7 @@ Prometheus is an analytics tool that comes by default with Istio and is being cl
 The analytics and observability provided by Prometheus are conceptually similar to the analytics provided by the Red Hat 3scale API Management.
 It is possible that a future version of Red Hat 3scale API Management will provide support for Prometheus for API data analytics.
 
-Please continue on to the next lab:  link:../03_service_mesh/03_1_service_mesh_routing_Lab.html[Service Mesh Routing]
+Please continue on to the next lab:  link:03_1_service_mesh_routing_Lab.html[Service Mesh Routing]
 
 == Appendix
 

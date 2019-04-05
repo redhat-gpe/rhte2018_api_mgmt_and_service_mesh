@@ -273,19 +273,44 @@ The new catalog service is enabled with OpenTracing and Jaeger libraries so that
 The _catalog service_ is link:https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht[written in Java] using the _reactive_ programming framework link:https://vertx.io/[vert.x].
 
 The new catalog service used in the remainder of this course is embedded with the OpenTracing and Jaeger Java client libraries.
-
-Recall that when configuring the NGinx and C++ OpenTracing/Jaeger client libraries in the API gateway, a configuration file (via a config map) was loaded.
-The OpenTracing and Jaeger client libraries for Java are easier to work with.
-The Java client libraries allow for configuration via environment variables.
-
-The Dockerfile with environment variables (and their default values) utilized in building the new OpenTracing catalog image is as follows:
+And, its business functions are laced with OpenTracing code that allow it to add a span to an existing trace.
 
 -----
-FROM redhat-openjdk-18/openjdk18-openshift:1.5-14
-ENV JAVA_APP_DIR=/deployments
-ENV AB_OFF=true
-EXPOSE 8080 8778 9779
-COPY target/catalog-service-tracing-1.0.17.jar /deployments/
+import io.opentracing.Span;
+import io.opentracing.Tracer;
+import io.opentracing.contrib.vertx.ext.web.TracingHandler;
+import io.opentracing.tag.Tags;
+import io.opentracing.util.GlobalTracer;
+
+...
+
+
+    private void getProducts(RoutingContext rc) {
+
+
+        Span span = tracer.buildSpan("getProducts")
+                .asChildOf(TracingHandler.serverSpanContext(rc))
+                .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
+                .startManual();
+
+        log.info("getProducts() started span ...");
+
+        catalogService.getProducts(ar -> {
+            span.finish();
+            if (ar.succeeded()) {
+                List<Product> products = ar.result();
+                JsonArray json = new JsonArray();
+                products.stream()
+                        .map(p -> p.toJson())
+                        .forEach(p -> json.add(p));
+                rc.response()
+                        .putHeader("Content-type", "application/json")
+                        .end(json.encodePrettily());
+            } else {
+                rc.fail(ar.cause());
+            }
+        });
+}
 -----
 
 The source code of the OpenTracing-enabled catalog service is available in the link:https://github.com/gpe-mw-training/catalog-service/tree/jaeger-rht[jaeger-rht branch].
@@ -306,8 +331,6 @@ metadata:
     application: $OCP_USERNAME-cat-service-istio
   name: $OCP_USERNAME-cat-service-istio
 spec:
-  progressDeadlineSeconds: 600
-  revisionHistoryLimit: 10
   selector:
     matchLabels:
       application: $OCP_USERNAME-cat-service-istio
@@ -323,7 +346,7 @@ spec:
         application: $OCP_USERNAME-cat-service-istio
         deployment: $OCP_USERNAME-cat-service-istio
 
-      # Automatic Istio sidecar injection
+      # Enable Red Hat Service Mesh's automatic istio sidecar injection
       annotations:
         sidecar.istio.io/inject: "true"
 
@@ -346,7 +369,6 @@ spec:
         # Use OpenTracing enabled image
         image: docker.io/rhtgptetraining/catalog-service-tracing:1.0.17
 
-        imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 2
           httpGet:
@@ -382,11 +404,6 @@ spec:
         volumeMounts:
         - mountPath: /app/config
           name: config
-      dnsPolicy: ClusterFirst
-      restartPolicy: Always
-      schedulerName: default-scheduler
-      securityContext: {}
-      terminationGracePeriodSeconds: 30
       volumes:
       - configMap:
           defaultMode: 420
@@ -396,7 +413,7 @@ spec:
 EOF
 -----
 
-. Re-create the application configmap with parameters that configure the OpenTracing-enabled catalog service:
+. Re-create the configmap used by the catalog service to include parameters that configure the OpenTracing-enabled catalog service:
 +
 -----
 # Delete existing application configmap

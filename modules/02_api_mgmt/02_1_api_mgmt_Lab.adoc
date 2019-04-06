@@ -20,7 +20,7 @@ This lab provides instructions for the management of your _catalog_ RESTful API 
 Instructions are provided for both experienced and inexperienced 3scale users.
 [red]#Follow only one set of instructions.#
 
-If you are an experienced user of Red Hat 3scale API Management, complete the instructions in section <<configuretestapi>>, then continue with section <<test>>.
+If you are an experienced user of Red Hat 3scale API Management, complete the instructions in section <<configuretestapi>>.
 
 If you are not an experienced user of Red Hat 3scale API Management, complete the instructions in section <<configuretestapi_stepbystep>>, then continue with section <<test>>.
 
@@ -219,7 +219,8 @@ $ echo $CATALOG_USER_KEY
 . From the terminal, execute the following:
 +
 -----
-$ curl -v -k `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
+$ curl -v -k \
+       `echo "https://"$(oc get route/catalog-prod-apicast-$OCP_USERNAME -n $GW_PROJECT -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 +
 .Sample Output
@@ -278,7 +279,8 @@ Please continue on to the next lab:  link:03_1_service_mesh_routing_Lab.html[Ser
 [[configuretestapi]]
 === Configure and Test API Management: Experienced
 
-If you are already proficient with Red Hat 3scale API Management, then configure and test the management of your _catalog_ RESTful API as per the following instructions:
+If you are already proficient with Red Hat 3scale API Management, then it is likely that you do not need all the details provide in the section <<configuretestapi_stepbystep>> .
+Instead, the following are some general guidelines:
 
 . Ensure your API gateways started correctly and the value of the _THREESCALE_ENDPOINT_ makes sense.
 . Create an API proxy service called _catalog_service_ and configure it to use the API gateway and an API key for security.
@@ -301,8 +303,7 @@ $ curl -v -k \
 +
 WARNING: [red]#Do not proceed beyond this section until this smoke test of your non-Istio-enabled environment passes this test, and the response from your production API gateway is a listing of catalog data.#
 
-Once you have smoke tested your API managed environment, proceed to the section: <<test>>
-
+Please continue on to the next lab:  link:03_1_service_mesh_routing_Lab.html[Service Mesh Routing]
 
 ifdef::showscript[]
 endif::showscript[]

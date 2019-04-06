@@ -87,7 +87,54 @@ Istio can then enforce the policies defined in the api management system by way 
 
 == Problems
 
-. oc edit configmap istio -n istio-system   ;   disablePolicyChecks: false
+. Creating service:
++
+-----
+[e1d36207-3fd2-4c64-9f93-f10dab26bbe3] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] Started GET "/p/admin/dashboard/service/4/integration_errors" for 172.56.20.250 at 2019-04-06 13:55:27 +0000
+[e1d36207-3fd2-4c64-9f93-f10dab26bbe3] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] Processing by Provider::Admin::Dashboard::Service::IntegrationErrorsController#show as JS
+[e1d36207-3fd2-4c64-9f93-f10dab26bbe3] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250]   Parameters: {"service_id"=>"4"}
+[e1d36207-3fd2-4c64-9f93-f10dab26bbe3] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] Completed 500 Internal Server Error in 104ms (ActiveRecord: 6.8ms)
+Exception -- [e1d36207-3fd2-4c64-9f93-f10dab26bbe3] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] ThreeScale::Core::APIClient::APIError: 404 GET /internal/services/4/errors/, attributes: {:status=>"not_found", :error=>"service not found"}, response.body: {"status":"not_found","error":"service not found"}
+[e1d36207-3fd2-4c64-9f93-f10dab26bbe3] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] 
+ThreeScale::Core::APIClient::APIError (ThreeScale::Core::APIClient::APIError: 404 GET /internal/services/4/errors/, attributes: {:status=>"not_found", :error=>"service not found"}, response.body: {"status":"not_found","error":"service not found"}):
+  app/services/integration_errors_service.rb:4:in `list'
+  app/controllers/provider/admin/dashboard/service/integration_errors_controller.rb:11:in `had_errors?'
+  app/controllers/provider/admin/dashboard/service/integration_errors_controller.rb:7:in `widget_data'
+  app/controllers/provider/admin/dashboard/widget_controller.rb:39:in `load_widget'
+  lib/three_scale/middleware/multitenant.rb:116:in `_call'
+  lib/three_scale/middleware/multitenant.rb:111:in `call'
+  lib/action_dispatch/rails5_ssl.rb:86:in `call'
+
+
+172.56.20.250 - - [06/Apr/2019:13:55:27 +0000] "GET /500 HTTP/1.1" 500 - 0.1121
+-----
+
+. Creating app:
++
+-----
+[user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] [Messenger] delivering to [#<Account id: 4, org_name: "user1-3scale-mt-api0", org_legaladdress: "", created_at: "2019-03-21 22:52:21", updated_at: "2019-03-21 22:52:58", provider: true, buyer: false, country_id: nil, provider_account_id: 1, domain: "user1-3scale-mt-api0.apps-53ff.generic.opentlc.com", telephone_number: nil, site_access_code: "fa93e5d79f", credit_card_partial_number: nil, credit_card_expires_on: nil, credit_card_auth_code: nil, master: nil, billing_address_name: nil, billing_address_address1: nil, billing_address_address2: nil, billing_address_city: nil, billing_address_state: nil, billing_address_country: nil, billing_address_zip: nil, billing_address_phone: nil, org_legaladdress_cont: nil, city: nil, state_region: nil, state: "approved", paid: false, paid_at: nil, signs_legal_terms: true, timezone: nil, delta: true, from_email: nil, primary_business: nil, business_category: nil, zip: nil, extra_fields: {}, vat_code: nil, fiscal_code: nil, vat_rate: nil, invoice_footnote: nil, vat_zero_text: nil, default_account_plan_id: 10, default_service_id: nil, credit_card_authorize_net_payment_profile_token: nil, tenant_id: 4, self_domain: "user1-3scale-mt-api0-admin.apps-53ff.generic.opent...", service_preffix: nil, s3_prefix: "user1-3scale-mt-api0", prepared_assets_version: nil, sample_data: false, proxy_configs_file_size: nil, proxy_configs_updated_at: nil, proxy_configs_content_type: nil, proxy_configs_file_name: nil, support_email: nil, finance_support_email: nil, billing_address_first_name: nil, billing_address_last_name: nil, email_all_users: true, partner_id: nil, proxy_configs_conf_file_name: nil, proxy_configs_conf_content_type: nil, proxy_configs_conf_file_size: nil, proxy_configs_conf_updated_at: nil, hosted_proxy_deployed_at: nil, po_number: nil, deleted_at: nil>]
+[12588dab-74c0-4f69-a75c-e9c6dd5a900d] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] [Messenger] rendering cinstance_messenger_new_application
+[12588dab-74c0-4f69-a75c-e9c6dd5a900d] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] Scoped order and limit are ignored, it's forced to be batch order and batch size
+[12588dab-74c0-4f69-a75c-e9c6dd5a900d] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] Overriding dispatch rule for Account 4 (user1-3scale-mt-api0) true => false for operation new_app
+[12588dab-74c0-4f69-a75c-e9c6dd5a900d] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] Enqueued AuditedWorker#ba3c1c80d1a073792f8c30d1 with args: [{"id"=>nil, "auditable_id"=>13, "auditable_type"=>"Contract", "user_id"=>5, "user_type"=>"User", "username"=>nil, "action"=>"create", "version"=>0, "created_at"=>nil, "tenant_id"=>nil, "provider_id"=>1, "kind"=>"Cinstance", "audited_changes"=>{"plan_id"=>14, "user_account_id"=>5, "user_key"=>"1521259c3895e98d660f34602b6be6a4", "provider_public_key"=>"a9bef4ba9e6886d3dbf9ec3c4ec8c07a", "created_at"=>2019-04-06 14:11:16 UTC, "state"=>"live", "description"=>"", "paid_until"=>nil, "application_id"=>"b786bc95", "name"=>"catalog_app", "trial_period_expires_at"=>2019-04-06 14:11:16 UTC, "setup_fee"=>#<BigDecimal:fda84a0,'0.0',9(18)>, "redirect_url"=>nil, "variable_cost_paid_until"=>nil, "extra_fields"=>{}, "end_user_required"=>false, "tenant_id"=>nil, "create_origin"=>nil, "first_traffic_at"=>nil, "first_daily_traffic_at"=>nil, "service_id"=>4, "accepted_at"=>nil}, "comment"=>nil, "associated_id"=>nil, "associated_type"=>nil, "remote_address"=>"172.56.20.250", "request_uuid"=>"12588dab-74c0-4f69-a75c-e9c6dd5a900d"}]
+[12588dab-74c0-4f69-a75c-e9c6dd5a900d] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] Enqueued ProcessNotificationEventWorker#07ffd17889630320bc55f7fa with args: ["2b5cbb50-8323-4ff3-9300-1f0bb27e48a2"]
+[12588dab-74c0-4f69-a75c-e9c6dd5a900d] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] Enqueued ZyncWorker#ad0d39f0a68ab724108ba463 with args: ["93a0e564-33d2-4200-a154-a720a298820e", {:type=>"Application", :id=>13, :parent_event_id=>"6dda7502-0bcc-465a-96e2-3d424e2cc198", :parent_event_type=>"Applications::ApplicationCreatedEvent", :tenant_id=>4, :service_id=>4}]
+[12588dab-74c0-4f69-a75c-e9c6dd5a900d] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] Enqueued ZyncWorker#e015f8778e8c9193c089bd39 with args: ["9213fb37-38e3-4dc4-add2-51feb1225403", {:type=>"Application", :id=>13, :parent_event_id=>"9ef0bf20-dab0-455b-89fb-c668d96646dc", :parent_event_type=>"Applications::ApplicationUpdatedEvent", :tenant_id=>4, :service_id=>4}]
+[12588dab-74c0-4f69-a75c-e9c6dd5a900d] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] Completed 500 Internal Server Error in 5604ms (ActiveRecord: 53.1ms)
+Exception -- [12588dab-74c0-4f69-a75c-e9c6dd5a900d] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] ThreeScale::Core::APIClient::ConnectionError: execution expired
+[12588dab-74c0-4f69-a75c-e9c6dd5a900d] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [172.56.20.250] 
+ThreeScale::Core::APIClient::ConnectionError (ThreeScale::Core::APIClient::ConnectionError: execution expired):
+  app/lib/backend/model_extensions/cinstance.rb:37:in `update_backend_application'
+  app/controllers/buyers/applications_controller.rb:78:in `create'
+  lib/three_scale/middleware/multitenant.rb:116:in `_call'
+  lib/three_scale/middleware/multitenant.rb:111:in `call'
+  lib/action_dispatch/rails5_ssl.rb:86:in `call'
+
+
+172.56.20.250 - - [06/Apr/2019:14:11:21 +0000] "POST /500 HTTP/1.1" 500 - 5.6164
+[ff67e392-d4f4-422f-a481-2c2043d7b950] [user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com] [10.128.0.1] Started GET "/admin/api/applications/find.json?application_id=13" for 10.128.0.1 at 2019-04-06 14:11:22 +0000
+-----
+
 
 . Error: failed to start patch cert loop mutatingwebhookconfigurations.admissionregistration.k8s.io "istio-sidecar-injector" not found
 oc describe mutatingwebhookconfigurations.admissionregistration.k8s.io

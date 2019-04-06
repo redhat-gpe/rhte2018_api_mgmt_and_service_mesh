@@ -8,9 +8,10 @@
 = Service Mesh Routing Lab
 
 .Goals
+* Modify Red Hat Service Mesh default pertaining to Egress 
 * Inject Red Hat Service Mesh Envoy proxy configurations into an API gateway
-* Configure an Red Hat Service Mesh Egress Route for an API gateway
-* Invocation of your backend service via the Red Hat Service Mesh Ingress gateway and Red Hat 3scale API Management gateway
+* Configure a Red Hat Service Mesh Egress Route for an API gateway
+* Invoke your backend service via the Red Hat Service Mesh Ingress gateway and Red Hat 3scale API Management gateway
 
 :numbered:
 
@@ -48,8 +49,22 @@ This first section of the lab involves you impersonating the role of a cluster a
 Red Hat Service Mesh has an installation option that configures the Istio proxy sidecar to pass through, instead of block, calls to URLs that are external to the cluster . 
 This option is enabled by default so that one can start evaluating Red Hat Service Mesh quickly.
 For the purpose of this lab, modify this default behavior such that apps can not make requests to external URLs by default.
-+
+
 Do so by executing the following:
+
+. Study the configmap called _istio_ in the _istio-system_ namespace and notice the the value of variable _outboundTrafficPolicy_ is currently set to _ALLOW_ANY_.
++
+-----
+$ oc get configmap istio -n istio-system --export -o yaml | grep -E 'outboundTrafficPolicy|mode:'
+
+
+...
+
+    registry as well\n#   as those defined through ServiceEntries  \noutboundTrafficPolicy:\n
+    \ mode: ALLOW_ANY
+-----
+
+. Change the value of the _outboundTrafficPolicy_ variable from _ALLOW_ANY_ to _REGISTRY_ONLY_:
 +
 -----
 $ oc get configmap istio -n istio-system --export -o yaml \
@@ -99,7 +114,9 @@ You will use the definition of your existing API gateway as a template to create
 -----
 $ sed -i "s/prod-apicast/$OCP_USERNAME-prod-apicast-istio/" $HOME/lab/prod-apicast.yml
 -----
+
 .. The reason you have included $OCP_USERNAME in the name of your  service mesh enabled API gateway is because you will need to differentiate it from other service mesh enabled API gateways that may be managed in the same service mesh.
+
 .. Also, the _observability_ user interfaces included in Red Hat Service Mesh such as Jaeger are not currently multi-tenant.
 +
 By providing a unique identifer as a prefix to your API gateway name, you will be more easily able to identify logs and traces amongst others on the system.
@@ -136,7 +153,7 @@ $ istioctl kube-inject \
 -----
 +
 NOTE:  For the purpose of this lab, you have now manually injected Red Hat Service Mesh related configs into a _deployment_ definition.
-An alternative approach which involves adding a special annotation to your deployment definition will be introduced later in this lab.
+An alternative approach which involves adding a special annotation to your deployment definition will be introduced later lab of this course.
 
 . View the Red Hat Service Mesh injected API gateway deployment descriptor:
 +
@@ -169,12 +186,7 @@ $ oc patch deploy/$OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT \
 -----
 /////
 
-. Allow pods in the $GW_PROJECT to run using any user, including root:
-+
------
-$ oc adm policy add-scc-to-user anyuid -z default -n $GW_PROJECT --as=system:admin
------
-
+. *anyuid* scc:
 .. For your new Red Hat Service Mesh enabled API gateway pod to start, it needs the _anyuid_ sidecar container (SCC).
 +
 The reason for this is that the _envoy_ sidecar containers from Red Hat Service Mesh currently run as a specific user ID.
@@ -188,7 +200,15 @@ Error creating: pods "user50-prod-apicast-istio-6456c879c8" is forbidden: unable
 .. For the purpose of this lab, the cluster administrator of your OCP environment has provided you with the ability to _impersonate_ the cluster administrator.
 Doing so provides you with the ability to apply the _anyuid_ SCC to your project.
 
-. Allow pods in the $GW_PROJECT to run in a privledged manner:
+.. Allow pods in the $GW_PROJECT to run using any user, including root:
++
+-----
+$ oc adm policy add-scc-to-user anyuid -z default -n $GW_PROJECT --as=system:admin
+-----
+
+
+. *privileged* scc
+.. Allow pods in the $GW_PROJECT to run in a privledged manner:
 +
 -----
 $ oc adm policy add-scc-to-user privileged -z default -n $GW_PROJECT --as=system:admin
@@ -424,8 +444,8 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - "$CATALOG_API_GW_HOST"" \
- > $HOME/lab/catalog-istio-gateway.yml
+    - '*'" \
+> $HOME/lab/catalog-istio-gateway.yml
 -----
 
 . Create the gateway in OCP:
@@ -444,7 +464,7 @@ metadata:
   name: catalog-istio-gateway-vs
 spec:
   hosts:
-  - "$CATALOG_API_GW_HOST"
+  - '*' 
   gateways:
   - catalog-istio-gateway
   http:
@@ -506,6 +526,9 @@ The json response should include all the details of your new route configuration
 -----
 
 === Direct inbound traffic via OCP Node Port
+Your lab environment allows direct access from external clients to the _istio-ingressgateway_ OpenShift service of Red Hat Service Mesh via a node port of: 31380.
+
+In this section of the lab, you'll invoke your API gateway via the _istio-ingressgateway_ exposed via this node port.
 
 image::images/ingress_gateway_via_node_port.png[]
 
@@ -547,20 +570,20 @@ Notice the value of the HTTP _Host_ header now matches that of the _Production B
 Subsequently, the API Gateway should have authorized the request.
 
 
-=== Direct inbound traffic via OCP Route
+=== Direct inbound traffic via OpenShift Route
 
 image::images/ingress_gateway_via_node_port.png[]
 
-The previous test used an OCP NodePort to route inbound traffic directly to the service mesh via the _istio ingressgateway_.
-This approach by-passed the OCP HA-Proxy.
+The previous test used an OpenShift NodePort to route inbound traffic directly to the service mesh via the _istio ingressgateway_.
+This approach by-passed the OpenShift HA-Proxy.
 
-The `istio-system` namespace also provides a route called: `istio-ingressgateway`.
-Like all Red Hat OpenShift Container Platform routes, it is exposed to external clients.
+The `istio-system` namespace also provides an OpenShift route called: `istio-ingressgateway`.
+Like all Red Hat OpenShift Container Platform routes, it is exposed to external clients via its HA-Proxy.
 
 In this section of the lab, you direct traffic to the mesh via the OCP HA-Proxy.
 This approach introduces an extra hop in the network but could be useful in scenarious where creating a NodePort is not feasible.
 
-. Begin by executing a request to the istio-ingressgateway route such that it gets routed to your API gateway:
+. Begin by executing a request to the _istio-ingressgateway_ OpenShift route:
 +
 -----
 $  curl -v \

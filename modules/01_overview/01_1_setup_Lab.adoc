@@ -526,7 +526,13 @@ Throughout this lab, you will invoke this RESTful API using both HTTP _GET_ and 
 
 == API Manager
 
+Your lab environment includes a 3scale API Manager with one tenant.
+The API Manager functionality operates in the namespace:  _$API_MANAGER_NS_.
+
 === Refresh API Manager state
+
+Your API Manager needs to be refreshed with the actual WILDCARD DNS specific to your lab runtime.
+For this purpose, a script has been provided as follows: 
 
 . Gain OCP cluster access via the shell of the root operating system user:
 +
@@ -561,9 +567,13 @@ id      domain  self_domain
 4       user1-3scale-mt-api0.apps-53ff.generic.opentlc.com      user1-3scale-mt-api0-admin.apps-53ff.generic.opentlc.com
 
 
-configmap/system-environment not patched
+configmap/system-environment patched
 deploymentconfig.apps.openshift.io/system-app rolled out
 -----
++
+In particular, notice that the wildcard DNS of URLs used in the API Manager have changed.
++
+If you are curious as to what exactly is getting modified in the API Manager, you can review link:https://bit.ly/2G2GQWr[the script].
 
 . Wait until all three of the _system-app_ containers have started:
 +
@@ -573,25 +583,23 @@ $ oc get pod -n 3scale-mt-api0 | grep "system-app"
 system-app-8-2d2mj                3/3       Running   0          4m
 -----
 
-. Exit out of the root operating system user shell
+. Exit out of the root operating system user shell:
++
 -----
 # exit
 -----
 
 === Access API Manager Tenant Admin Portal
-Your lab environment includes access to a multi-tenant API Manager installation.
 
-For the purpose of this lab, you will serve as the administrator of your own 3scale _tenant_, also known as a _domain_.
+For the purpose of this lab, you will serve as the administrator of your own 3scale _tenant_.
 
 Log into the administration portal of your API Manager environment as follows:
 
-. Display the URL for your 3scale tenant:
+. Point your browser to the URL of your 3scale tenant as provided in the output of the following command:
 +
 -----
 $ echo -en "\n\nhttps://$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\n\n"
 -----
-
-. Copy and paste the URL into a web browser.
 
 . Authenticate using the values of $API_USERNAME and $API_PASSWD .
 .. `echo $API_USERNAME`
@@ -650,7 +658,12 @@ Your lab environment is now ready to use.  Please proceed to the next lab:  link
 
 == Appendix
 
-=== Optional: Re-Installaing `istio-system`
+=== Optional: Re-Install Red Hat Service Mesh 
+If for whatever reason you may need to re-install the Red Hat Service Mesh of your lab environment, instructions for doing so are provided here in this section.
+The procedure is easy to do because the lifecycle of Red Hat Service Mesh is maintained by an operator in the namespace:  _istio-operator_.
+
+Reinstalling Red Hat Service Mesh generally takes about 15 minutes.
+
 
 . Switch to root operating system user:
 +
@@ -678,7 +691,7 @@ $ sudo -i
 # oc edit cm istio -n istio-system
 -----
 +
-Change the value of _disablePolicyChecks_ to: false.
+Change the value of _disablePolicyChecks_ to: *false*.
 
 . Provide _user1_ with view access to _istio-system_ namespace:
 +

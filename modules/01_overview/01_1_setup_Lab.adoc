@@ -620,9 +620,6 @@ $ oc create route edge catalog-prod-apicast-$OCP_USERNAME --service=prod-apicast
 +
 You will reference these route names in subsequent labs of this course.
 
-/////
-Not needed
-
 . Ensure the value of the THREESCALE_PORTAL_ENDPOINT environment variable in both API stage and production gateways is correct:
 +
 -----
@@ -638,7 +635,6 @@ $ oc patch deploy/prod-apicast --patch \
 -----
 +
 The gateways use the value of $THREESCALE_PORTAL_ENDPOINT to retrieve configuration information about your APIs from the _system-provider_ service of the 3scale API Manager.
-/////
 
 . Resume the paused deploy objects:
 +

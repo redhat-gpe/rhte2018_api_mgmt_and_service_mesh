@@ -207,29 +207,20 @@ $ oc login https://master00.example.com -u user1 -p r3dh4t1!
 
 
 . OCP cluster admin access
-.. Cluster admin access to the your OpenShift environment is provided but is not required for this course.
-.. If you do happen to need OpenShift cluster-admin access, execute the following: 
++
+OCP cluster admin access is provided by switching to the root operating system of your lab environment as follows.
 +
 -----
 $ sudo -i
 
 # oc login -u system:admin      # NOTE: This command is typically not needed
                                 #       /root/.kube/config already contains the _system:admin_ user's token
+
+
+# exit
 -----
 +
 [blue]#Make sure to exit out of the root shell after every use#
-
-=== OCP Web Console
-
-. Point your browser to the URL created by executing the following :
-+
------
-$ echo -en "\nhttps://master-$GUID.generic.opentlc.com\n\n"
------
-
-. Authenticate using the following user credentials
-.. Username:    user1
-.. Password:    r3dh4t1!
 
 [[env_vars]]
 == Environment Variables
@@ -309,7 +300,7 @@ NOTE:  Select this approach only if you've been explicitly instructed to do so b
 ... Return to this section after completion.
 /////
 
-. For all students, copy and paste the following commands in the same terminal:
+. Add more environment variables that you'll utilize throughout the lab by copy and pasting the following inot the same terminal:
 +
 -----
 echo 'export API_PASSWD=admin' >> ~/.bashrc
@@ -323,13 +314,7 @@ echo "export API_WILDCARD_DOMAIN=apps-\$API_DOMAIN" >> ~/.bashrc
 echo "export TENANT_NAME=\$OCP_USERNAME-\$API_MANAGER_NS" >> ~/.bashrc
 echo "export THREESCALE_PORTAL_ENDPOINT=https://\${API_ADMIN_ACCESS_TOKEN}@\$TENANT_NAME-admin.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
 echo "export BACKEND_ENDPOINT_OVERRIDE=https://backend-\$API_MANAGER_NS.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
------
-
-
-. Source the modified `~/.bashrc` file so that the environment variables are set in your current shell session:
-+
------
-$ source ~/.bashrc
+source ~/.bashrc
 -----
 
 . Create a directory to store files related to this lab:
@@ -378,11 +363,6 @@ The namespace _rhte-mw-api-mesh-*_ is where you will be working throughout the d
 +
 This namespace includes an API gateway pre-configured to interact with your API Management tenant.
 
-. Switch to your OpenShift project:
-+
------
-$ oc project $MSA_PROJECT
------
 
 . Validate the ability to _impersonate_ cluster admin:
 +
@@ -420,6 +400,18 @@ secrets                 24      150
 services                4       150
 -----
 
+=== OCP Web Console
+
+. Point your browser to the URL created by executing the following :
++
+-----
+$ echo -en "\nhttps://master-$OCP_REGION.generic.opentlc.com\n\n"
+-----
+
+. Authenticate using the following user credentials
+.. Username:    user1
+.. Password:    r3dh4t1!
+
 
 == Catalog Service
 
@@ -433,11 +425,6 @@ Your lab assets consist of a mix of OpenShift _Deployment_ and _DeploymentConfig
 
 The _Deployment_ construct is a more recent Kubernetes equivalent of what has always been in OpenShift:  _DeploymentConfig_.
 
-/////
-The _istioctl_ utility (introduced later in this lab) of Istio requires the use of the Kubernetes _Deployment_ resource.
-Subsequently, for the purpose of this lab, we'll use the Kubernetes _Deployment_ type (instead of DeploymentConfig) for most of the functionality.
-One exception to this is the MongoDB.
-/////
 
 In your lab environment, the CoolStore catalog service connects to a MongoDB database.
 OpenShift is used to manage the MongoDB database, using an OpenShift DeploymentConfig instead of a Kubernetes Deployment.
@@ -490,16 +477,12 @@ catalog-service-1-dqb28       1/1       Running     0          11m
 . Retrieve the URL of the unsecured _catalog_ route:
 +
 ----
-$ echo "export NAKED_CATALOG_ROUTE=$(oc get route catalog-unsecured -o template --template='{{.spec.host}}' -n $MSA_PROJECT)" >> ~/.bashrc
+echo "export NAKED_CATALOG_ROUTE=$(oc get route catalog-unsecured -o template --template='{{.spec.host}}' -n $MSA_PROJECT)" >> ~/.bashrc
+source ~/.bashrc
 ----
 +
 This environment variable will be used throughout the labs in this course.
 
-. Reload the `.bashrc` file to enable the new environment variable:
-+
-----
-$ source ~/.bashrc
-----
 
 . Retrieve the pre-seeded data in the MongoDB database via the catalog route:
 +
@@ -582,6 +565,14 @@ configmap/system-environment not patched
 deploymentconfig.apps.openshift.io/system-app rolled out
 -----
 
+. Wait until all three of the _system-app_ containers have started:
++
+-----
+$ oc get pod -n 3scale-mt-api0 | grep "system-app"
+
+system-app-8-2d2mj                3/3       Running   0          4m
+-----
+
 . Exit out of the root operating system user shell
 -----
 # exit
@@ -627,7 +618,7 @@ $ oc create route edge catalog-stage-apicast-$OCP_USERNAME --service=stage-apica
 $ oc create route edge catalog-prod-apicast-$OCP_USERNAME --service=prod-apicast  -n $GW_PROJECT
 -----
 +
-You will reference these route names in the next section of the lab.
+You will reference these route names in subsequent labs of this course.
 
 /////
 Not needed
@@ -663,6 +654,47 @@ Your lab environment is now ready to use.  Please proceed to the next lab:  link
 
 == Appendix
 
+=== Optional: Re-Installaing `istio-system`
+
+. Switch to root operating system user:
++
+-----
+$ sudo -i
+-----
+
+. Delete existing Red Hat Service Mesh installation
++
+-----
+# oc delete -n istio-operator Installation istio-installation
+-----
+
+. Re-Install Red Hat Service Mesh installation
++
+-----
+# wget https://bit.ly/2KcUlHf -O $HOME/rht_service_mesh_crd.yaml \
+       oc create -f $HOME/rht_service_mesh_crd.yaml \
+       -n istio-operator
+-----
+
+. Modify _istio_ configmap:
++
+-----
+# oc edit cm istio -n istio-system
+-----
++
+Change the value of _disablePolicyChecks_ to: false.
+
+. Provide _user1_ with view access to _istio-system_ namespace:
++
+-----
+# oc adm policy add-role-to-user view user1 -n istio-system
+-----
+
+. Exit out of root operating system user:
++
+-----
+$ exit
+-----
 
 
 ifdef::showscript[]

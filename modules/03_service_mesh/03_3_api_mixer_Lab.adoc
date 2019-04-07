@@ -201,58 +201,29 @@ Next step is to inject the 3scale Istio Mixer into this request path and subsequ
 
 == 3scale Istio Mixer
 
-In this section of the lab, you provision the community 3scale Istio Mixer in your _istio-system_ namespace.
+Red Hat Service Mesh includes the 3scale Istio Adapter out of the box.
 
-. Clone the source code of the 3scale Istio Mixer to your lab environment:
+In this section of the lab, you review the various components that make of the 3scale Istio Adapter and then configure it so that it applies API Management policies (as per what you have already configured in the API Manager _control plane_) to inbound requests.
 
-.. For the purpose of this lab, the source code utilized is a fork of the upstream community at link:https://github.com/3scale/istio-integration[].
-.. Execute:
-+
------
-$ git clone \
-      --branch rhsm-tp \
-      https://github.com/gpe-mw-training/istio-integration.git \
-      $HOME/lab/istio-integration
------
+=== View 3scale Istio Adapter components
 
-
-/////
-The Istio Mixer that will be utilized will originate from the following community image in Red Hat's _Quay_ container image registry:
-
------
-quay.io/3scale/apicast:3scale-http-plugin
------
-
-. Load the Istio Mixer Adapter deployment (found in the 3scale Istio integration project you just cloned) into the istio-system namespace:
-+
------
-$ oc create -f $HOME/lab/istio-integration/3scaleAdapter/openshift -n istio-system --as=system:admin
------
-/////
-
-. Set the 3scale Adapter to debug log level:
-+
------
-$ oc patch deploy/3scale-istio-adapter -e "THREESCALE_LOG_LEVEL=debug" -n istio-system --as=system:admin
------
-
-. Verify that the 3scale Istio Mixer Adapter pod has started :
-+
------
-$ oc get pods -n istio-system | grep 3scale-istio-adapter
-
-3scale-istio-adapter-1-t9kj2                1/1       Running     0          47s
------
-+
 image::images/mixer_architecture.png[]
-+
-As per the diagram above, the container provides the following two components:
 
-.. *3scale-istio-adapter*
+. Review 3scale Istio Adapter components in _istio-system_ namespace:
++
+-----
+$ oc get all -l app=3scale-istio-adapter -n istio-system
+-----
+
+.. The response should list the deployment, replicaset and pod.
+
+.. As per the diagram above, the _3scale-istio-adapter_ container includes the following two components:
+
+... *3scale-istio-adapter*
 +
 Accepts gRPC invocations from Istio ingress and routes to the other side car in the pod:  _3scale-istio-httpclient_
 
-.. *3scale-istio-httpclient*
+... *3scale-istio-httpclient*
 +
 Accepts invocations from _3scale-istio-adapter_ and invokes the _system-provider_ and _backend-listener_ endpoints of the remote Red Hat 3scale API Management manager.
 
@@ -277,9 +248,10 @@ $ oc get templates.config.istio.io -n istio-system
 threescale-authorization   7d
 -----
 
+
 == Red Hat 3scale Mixer Adapter Configurations
 
-Now that the 3scale Istio mixer adapter is running, various configurations need to be added to the service mesh.
+Now that 3scale Istio Adapter has been verified to exist, various configurations need to be added to the service mesh.
 
 In particular, you will specify the URL of the _system-provider_ endpoint of your 3scale tenant along with the corresponding access token.
 This is needed so that the Istio Mixer can pull API proxy details from the 3scale API Manager (similar to what a API Gateway does).
@@ -294,7 +266,18 @@ image::images/service_id.png[]
 -----
 $ echo "export CATALOG_SERVICE_ID=<your catalog service ID>" >> ~/.bashrc
 
-$ source ~/.bashrc
+source ~/.bashrc
+-----
+
+. Clone the source code of the 3scale Istio Mixer configurations to your lab environment.
++
+Execute:
++
+-----
+$ git clone \
+      --branch v0.5.0 \
+      https://github.com/3scale/istio-integration \
+      $HOME/lab/istio-integration
 -----
 
 . Review the `threescale-adapter-config.yaml` file :
@@ -718,6 +701,32 @@ Development of cloud native applications can be written in a wide variety of dev
 . Red Hat Fuse on OpenShift
 
 Details about these Red Hat development platforms are out of scope for this specific lab.
+
+. The Istio Mixer that will be utilized will originate from the following community image in Red Hat's _Quay_ container image registry:
++
+-----
+quay.io/3scale/apicast:3scale-http-plugin
+-----
+
+. Load the Istio Mixer Adapter deployment (found in the 3scale Istio integration project you just cloned) into the istio-system namespace:
++
+-----
+$ oc create -f $HOME/lab/istio-integration/3scaleAdapter/openshift -n istio-system --as=system:admin
+-----
+
+. Set the 3scale Adapter to debug log level:
++
+-----
+$ oc patch deploy/3scale-istio-adapter -e "THREESCALE_LOG_LEVEL=debug" -n istio-system --as=system:admin
+-----
+
+. Verify that the 3scale Istio Mixer Adapter pod has started :
++
+-----
+$ oc get pods -n istio-system | grep 3scale-istio-adapter
+
+3scale-istio-adapter-1-t9kj2                1/1       Running     0          47s
+-----
 
 
 endif::showscript[]

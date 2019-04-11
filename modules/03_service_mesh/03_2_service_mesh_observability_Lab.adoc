@@ -88,6 +88,8 @@ This _span_ begins with the istio ingressgateway and ends at the service mesh en
 +
 -----
 $ oc get service -l app=jaeger -n istio-system
+
+
 NAME               TYPE           CLUSTER-IP       EXTERNAL-IP                     PORT(S)                        AGE
 jaeger-collector   ClusterIP      172.30.255.137   <none>                          14267/TCP,14268/TCP,9411/TCP   7d
 jaeger-query       LoadBalancer   172.30.6.215     172.29.105.9,172.29.105.9       80:32050/TCP                   7d
@@ -95,13 +97,33 @@ tracing            LoadBalancer   172.30.207.62    172.29.118.171,172.29.118.171
 zipkin             ClusterIP      172.30.110.244   <none>                          9411/TCP                       7d
 -----
 
+. Notice that Red Hat Service Mesh also includes the _jaeger-agent_ a daemon:
++
+-----
+$ oc get DaemonSet jaeger-agent -n istio-system
+-----
+
+. *jaeger-agent*
++
+As a DaemonSet, the _jaeger-agent_ runs a pod on each OpenShift node of the cluster.
+It receives tracing information submitted by apps (embedded with Jaeger client libraries) and forwards in batch to the Jaeger collector.
+The Jaeger client libraries embedded in apps transmit their traces to the jaeger-agent via UDP.
+
 * *jaeger-collector*
++
+This service recieves tracing information in batch from the jaeger-agent over TCP and persists this tracing data to the Jaeger database.
+Note that some Jaeger client libraries have the ability to completely by-pass the _jaeger-agent_ and send traces directly to this _jaeger-collector_ via TCP.
+
 * *jaeger-query*
++
+This service exposes the database of traces and spans and is typically invoked by the Jaeger UI.
+
 * *tracing*
 * *zipkin*
 
 
 == API Gateway using OpenTracing
+In this section of the lab, you configure your API gateway to send OpenTracing spans.
 
 === Current Limitations
 The API Gateway is based on an open-source project called: _Openresty_.
@@ -110,7 +132,7 @@ Currenty, only the OpenTracing information for the “Nginx” is captured.
 There are not yet any OpenTracing libraries for lua.
 
 Red Hat is working on being able to use the OpenTracing C++ libraries so we can create traces directly from LUA, and gain even more visibility into APIcast internals. 
-For example, this could help debug if a custom policy you just installed is making things slower.
+For example, this could help debug if a custom API policy you just installed into the gateway is impeding performance.
 
 === View Nginx related OpenTracing and Jaeger libraries
 
@@ -121,7 +143,8 @@ In this section you verify that your API Gateway is already injected with approp
 -----
 $ oc project $GW_PROJECT
 
-$ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` ls -l /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
+$ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
+     ls -l /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
 
 ...
 
@@ -132,7 +155,8 @@ $ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` l
 . Verify the existence of the Jaeger client library in the API gateway:
 +
 -----
-$ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` ls -l /opt/app-root/lib/libjaegertracing.so.0
+$ oc rsh `oc get pod | grep "apicast-istio" | awk '{print $1}'` \
+     ls -l /opt/app-root/lib/libjaegertracing.so.0
 
 ...
 
@@ -151,8 +175,7 @@ Although your API Gateway comes injected with needed OpenTracing libraries, thos
 $ oc rollout pause deploy $OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT
 -----
 
-
-. Create a JSON configuration file that will instruct the OpenTracing and Jaeger related client libraries in the API gateway to push traces to the `jaeger-agent`:
+. Create a JSON configuration file that will instruct the OpenTracing and link:https://github.com/jaegertracing/jaeger-client-cpp[Jaeger cpp related client libraries] in the API gateway to push traces directly to the `jaeger-collector`:
 +
 -----
 $   cat <<EOF > $HOME/lab/jaeger_config.json
@@ -167,7 +190,7 @@ $   cat <<EOF > $HOME/lab/jaeger_config.json
       "queueSize": 100,
       "bufferFlushInterval": 10,
       "logSpans": false,
-      "localAgentHostPort": "jaeger-agent.istio-system:6831"
+      "localAgentHostPort": "127.0.0.1:6831"
     },
     "headers": {
       "jaegerDebugHeader": "debug-id",
@@ -177,16 +200,16 @@ $   cat <<EOF > $HOME/lab/jaeger_config.json
     },
     "baggage_restrictions": {
         "denyBaggageOnInitializationFailure": false,
-        "hostPort": "jaeger-agent.istio-system:5778",
+        "hostPort": "127.0.0.1:5778",
         "refreshInterval": 60
     }
 }
 EOF
 -----
 
-.. Pay special attention to the value of _localAgentHostPort_.
+.. Pay special attention to the value of _samplingServerURL.
 +
-This is the URL of your API gateway that will push traces (via UDP) to the _jaeger-agent_ service host and port.
+This is the URL that your API gateway will push traces (via TCP) to the _jaeger-collector_.
 
 
 . Create a _configmap_ from the OpenTracing JSON file:
@@ -207,13 +230,28 @@ $ oc set volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ -t
 $ oc set env deploy/$OCP_USERNAME-prod-apicast-istio \
          OPENTRACING_TRACER=jaeger \
          OPENTRACING_CONFIG=/tmp/jaeger/jaeger_config.json \
+         OPENTRACING_HEADER_FORWARD=uber-trace-id \
          -n $GW_PROJECT
+-----
++
+TO_DO:   Should uber-trace-id or x-request-id (from https://istio.io/docs/tasks/telemetry/distributed-tracing/overview/) be used ??
+
+. Inject a _jaeger-agent_ sidecar:
++
+-----
 -----
 
 . Resume your Istio-enabled and OpenTracing-enabled API gateway:
 +
 -----
 $ oc rollout resume deploy $OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT
+-----
+
+. Use the `curl` utility to invoke your catalog service (via Istio ingress gateway -> API gateway) a few times:
++
+-----
+$ curl -v \
+      `echo "http://"$(oc get route istio-ingressgateway -n istio-system -o template --template {{.spec.host}})"/products?user_key=$CATALOG_USER_KEY"`
 -----
 
 

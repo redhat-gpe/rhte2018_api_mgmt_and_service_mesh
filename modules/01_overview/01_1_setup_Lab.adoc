@@ -543,9 +543,9 @@ $ sudo -i
 . Execute the following:
 +
 -----
-# wget https://bit.ly/2G2GQWr -O $HOME/api_manager_state_update.sh \
+# wget https://bit.ly/2G2GQWr -O $HOME/lab/api_manager_state_update.sh \
        && chmod 755 api_manager_state_update.sh \
-       && $HOME/api_manager_state_update.sh afd3
+       && $HOME/lab/api_manager_state_update.sh afd3
 -----
 
 . You should see a response similar to the following:
@@ -677,15 +677,30 @@ $ sudo -i
 # oc delete -n istio-operator Installation istio-installation
 -----
 
-. Re-Install Red Hat Service Mesh installation
+.. Wait until the _istio-system_ namespace is deleted
+.. You can tail the pod containig the ansible responsible for deletion by executing the following:
 +
 -----
-# wget https://bit.ly/2KcUlHf -O $HOME/rht_service_mesh_crd.yaml \
-       oc create -f $HOME/rht_service_mesh_crd.yaml \
+$ oc logs -f `oc get pod -n istio-system | grep "istio-removal" | awk '{print $1}'` -n istio-system
+-----
+
+.. Also, `oc get project -w` will indicate when this namespace deletion occurs
+
+. Re-install Red Hat Service Mesh control plane
++
+-----
+# wget https://bit.ly/2Vt7dKD -O $HOME/lab/rht_service_mesh_crd.yaml && \
+       oc create -f $HOME/lab/rht_service_mesh_crd.yaml \
        -n istio-operator
 -----
 
-. Modify _istio_ configmap:
+. Monitor the pod containing the ansible responsible for provisioning of the _istio-system_ control plane:
++
+-----
+$ oc logs -f `oc get pod -n istio-system | grep "istio-installer" | awk '{print $1}'` -n istio-system
+-----
+
+. Once Red Hat Service Mesh is installed, modify _istio_ configmap:
 +
 -----
 # oc edit cm istio -n istio-system

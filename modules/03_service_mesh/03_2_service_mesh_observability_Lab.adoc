@@ -229,23 +229,57 @@ $ oc set volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ -t
 -----
 $ oc set env deploy/$OCP_USERNAME-prod-apicast-istio \
          OPENTRACING_TRACER=jaeger \
-         OPENTRACING_CONFIG=/tmp/jaeger/jaeger_config.json \
-         OPENTRACING_HEADER_FORWARD=uber-trace-id \
+         OPENTRACING_CONFIG=/tmp/jaeger/jaeger_config.json
          -n $GW_PROJECT
 -----
 +
-TO_DO:   Should uber-trace-id or x-request-id (from https://istio.io/docs/tasks/telemetry/distributed-tracing/overview/) be used ??
+TO_DO:   Switch to use of link:https://istio.io/docs/tasks/telemetry/distributed-tracing/overview/[x-request-id] as soon as link:https://github.com/3scale/APIcast/issues/1015[this apicast issue] is resolved.
 
-. Inject a _jaeger-agent_ sidecar:
+. Inject the following _jaeger-agent_ sidecar into your deployment :
 +
 -----
+      - name: jaeger-agent
+        image: jaegertracing/jaeger-agent:1.6.0
+        ports:
+        - containerPort: 5775
+          protocol: UDP
+        - containerPort: 5778
+          protocol: TCP
+        - containerPort: 6831
+          protocol: UDP
+        - containerPort: 6832
+          protocol: UDP
+        command:
+          - "/go/bin/agent-linux"
+          - "--collector.host-port=jaeger-collector.monitoring:14267"
+        resources:
+          limits:
+            memory: 50M
+            cpu: 100m
+          requests:
+            memory: 50M
+            cpu: 100m
 -----
+.. To do so, execute the following:
++
+-----
+$ oc edit deploy user1-prod-apicast-istio -n $GW_PROJECT
+-----
+
+.. Search for the String _containers:_ and just below it cut-n-paste the _jaeger-agent_ yaml snippet provided above.
+.. The resultant yaml will appear as follows:
++
+image::images/jaeger_sidecar_yaml.png[]
+
+.. Recall that earlier in the lab it was mentioned that Red Hat Service Mesh already provisions a _jaeger-agent_ on each OpenShift node (as a DaemonSet).  Why then is there a need to inject this _jaeger-agent_ as a sidecar to your API gateway ?  The reason is that it currently is not possible to indicate to the jaeger cpp libraries embedded in the API gateway the ip address of the host machine (and subsequently the jaeger-agent daemon) that it is currently running on.  
 
 . Resume your Istio-enabled and OpenTracing-enabled API gateway:
 +
 -----
 $ oc rollout resume deploy $OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT
 -----
++
+You should now see 3 containers having started in your _$GW_PROJECT-prod-apicast-istio_ pod.
 
 . Use the `curl` utility to invoke your catalog service (via Istio ingress gateway -> API gateway) a few times:
 +
@@ -355,7 +389,7 @@ The source code of the OpenTracing-enabled catalog service is available in the l
 
 === Deploy
 
-. Create a new Deployment that includes automatic injection of the istio sidecar proxy and utilizes a OpenTracing enabled catalog service: 
+. Create a new Deployment that includes automatic injection of the istio sidecar proxy and utilizes an OpenTracing enabled catalog service: 
 +
 -----
 $   cat <<EOF > $HOME/lab/catalog-service-istio.yml
@@ -543,4 +577,63 @@ Please continue on to the next lab:  link:03_3_api_mixer_Lab.html[3scale API Mix
 
 
 ifdef::showscript[]
+
+. apicast.pcap
++
+-----
+GET /products?user_key=30824be854db563b669cecccc20dc1f6 HTTP/1.1
+host: istio-ingressgateway-istio-system.apps-53ff.generic.opentlc.com
+user-agent: curl/7.29.0
+accept: */*
+x-forwarded-host: istio-ingressgateway-istio-system.apps-53ff.generic.opentlc.com
+x-forwarded-port: 80
+x-forwarded-proto: http
+forwarded: for=129.146.89.207;host=istio-ingressgateway-istio-system.apps-53ff.generic.opentlc.com;proto=http;proto-version=
+x-forwarded-for: 129.146.89.207,10.129.0.1
+x-envoy-external-address: 10.129.0.1
+x-request-id: 60ba5af2-1aaf-9248-991c-c0c7fe282eb6
+x-envoy-decorator-operation: prod-apicast.user1-gw.svc.cluster.local:8080/products*
+x-istio-attributes: CioKGGRlc3RpbmF0aW9uLnNlcnZpY2UubmFtZRIOEgxwcm9kLWFwaWNhc3QKKwodZGVzdGluYXRpb24uc2VydmljZS5uYW1lc3BhY2USChIIdXNlcjEtZ3cKTwoKc291cmNlLnVpZBJBEj9rdWJlcm5ldGVzOi8vaXN0aW8taW5ncmVzc2dhdGV3YXktNWI1NWQ4NWM3NC1wdjhkdC5pc3Rpby1zeXN0ZW0KQwoXZGVzdGluYXRpb24uc2VydmljZS51aWQSKBImaXN0aW86Ly91c2VyMS1ndy9zZXJ2aWNlcy9wcm9kLWFwaWNhc3QKRQoYZGVzdGluYXRpb24uc2VydmljZS5ob3N0EikSJ3Byb2QtYXBpY2FzdC51c2VyMS1ndy5zdmMuY2x1c3Rlci5sb2NhbA==
+x-b3-traceid: d4c1b59521b452e08b94305eebcbb338
+x-b3-spanid: 8b94305eebcbb338
+x-b3-sampled: 1
+content-length: 0
+
+HTTP/1.1 200 OK
+Server: openresty/1.13.6.2
+Date: Fri, 12 Apr 2019 12:15:53 GMT
+Content-Type: application/json
+Content-Length: 2218
+Connection: keep-alive
+-----
+
+catalog.pcap
++
+-----
+GET /products?user_key=30824be854db563b669cecccc20dc1f6 HTTP/1.1
+X-Real-IP: 127.0.0.1
+Host: catalog-service.rhte-mw-api-mesh-user1.svc.cluster.local:8080
+X-3scale-proxy-secret-token: Shared_secret_sent_from_proxy_to_API_backend_43d33d0ff59a4254
+Content-Length: 0
+user-agent: curl/7.29.0
+accept: */*
+x-forwarded-host: istio-ingressgateway-istio-system.apps-53ff.generic.opentlc.com
+x-forwarded-port: 80
+x-forwarded-proto: http
+forwarded: for=129.146.89.207;host=istio-ingressgateway-istio-system.apps-53ff.generic.opentlc.com;proto=http;proto-version=
+x-forwarded-for: 129.146.89.207,10.129.0.1
+x-envoy-external-address: 10.129.0.1
+x-request-id: f4fd1706-703a-99cf-953e-e90e4a0250f5
+x-envoy-decorator-operation: prod-apicast.user1-gw.svc.cluster.local:8080/products*
+x-istio-attributes: CioKGGRlc3RpbmF0aW9uLnNlcnZpY2UubmFtZRIOEgxwcm9kLWFwaWNhc3QKKwodZGVzdGluYXRpb24uc2VydmljZS5uYW1lc3BhY2USChIIdXNlcjEtZ3cKTwoKc291cmNlLnVpZBJBEj9rdWJlcm5ldGVzOi8vaXN0aW8taW5ncmVzc2dhdGV3YXktNWI1NWQ4NWM3NC1wdjhkdC5pc3Rpby1zeXN0ZW0KQwoXZGVzdGluYXRpb24uc2VydmljZS51aWQSKBImaXN0aW86Ly91c2VyMS1ndy9zZXJ2aWNlcy9wcm9kLWFwaWNhc3QKRQoYZGVzdGluYXRpb24uc2VydmljZS5ob3N0EikSJ3Byb2QtYXBpY2FzdC51c2VyMS1ndy5zdmMuY2x1c3Rlci5sb2NhbA==
+x-b3-traceid: 9f0b90aa7f424d9510f8e34a48bf3736
+x-b3-spanid: 10f8e34a48bf3736
+x-b3-sampled: 1
+uber-trace-id: f7124e688df69e08:6796aa4b85597905:f7124e688df69e08:1
+
+HTTP/1.1 200 OK
+Content-type: application/json
+Content-Length: 2218
+-----
+
 endif::showscript[]

@@ -326,8 +326,16 @@ $ oc create -f $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml
 ...
 
 handler.config.istio.io/threescale created
-instance.config.istio.io "threescaleauthorizationtemplate" created
+instance.config.istio.io "threescale-authorization" created
 rule.config.istio.io "threescale" created
+-----
+
+.. If for whatever reason you want to delete these 3scale Istio mixer adapter configurations, execute the following:
++
+-----
+oc delete rule.config.istio.io threescale -n istio-system
+oc delete instance.config.istio.io threescale-authorization -n istio-system
+oc delete handler.config.istio.io threescale -n istio-system
 -----
 
 . Verify that the Istio Handler configurations were created in the istio-system namespace:
@@ -412,9 +420,9 @@ All requests to the `/product` endpoint will continue to require authentication 
 . Modify the existing `usethreescale` rule:
 +
 -----
-$ oc patch rule/threescale \
+$ oc patch rule.config.istio.io threescale \
        --type=json \
-       --patch '[{"op": "add", "path": "/spec/match", "value":"destination.service == \"catalog-service.'$MSA_PROJECT'.svc.cluster.local\" && source.namespace != \"'$MSA_PROJECT'\" && request.method == \"POST\" && request.path.startsWith(\"/product\")"  }]' \
+       --patch '[{"op": "add", "path": "/spec/match", "value":"destination.service.name == \"catalog-service\" && source.namespace != \"'$MSA_PROJECT'\" && request.method == \"POST\" && request.path.startsWith(\"/product\")"  }]' \
        -n istio-system 
 -----
 +

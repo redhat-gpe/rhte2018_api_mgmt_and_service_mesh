@@ -416,6 +416,29 @@ $ oc create configmap app-config --from-file=$HOME/lab/app-config.yaml -n $MSA_P
 
 . Study this link:https://bit.ly/2Ga2bfr[new Deployment] that includes automatic injection of the istio sidecar proxy and utilizes an OpenTracing enabled catalog service. 
 
+. Your lab environment already set the _anyuid_ scc and _privileged_ scc on the default service account of your $MSA_PROJECT.
+.. Recall in a previous lab that you manually set these SCCs so as to allow for the Istio Envoy sidecar to be used a proxy to your API Gateway.
+.. For the same reason, these SCCs are needed in your $MSA_PROJECT to proxy your catalog service.
+.. Verify that the _anyuid_ scc has been set on the default account:
++
+-----
+$ oc get scc anyuid -o json --as=system:admin | jq .users | grep default 
+
+...
+
+  "system:serviceaccount:rhte-mw-api-mesh-user1:default",
+-----
+
+.. Verify that the _privileged_ scc has been set on the default account:
++
+-----
+$ oc get scc privileged -o json --as=system:admin | jq .users | grep default
+
+...
+
+  "system:serviceaccount:rhte-mw-api-mesh-user1:default",
+-----
+
 . Create a new Deployment that includes automatic injection of the istio sidecar proxy and utilizes an OpenTracing enabled catalog service: 
 +
 -----

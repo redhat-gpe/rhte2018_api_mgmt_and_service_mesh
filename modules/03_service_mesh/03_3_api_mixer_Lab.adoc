@@ -15,8 +15,8 @@
 
 == Overview
 
-The Red Hat 3scale API Management engineering team is actively working on an Istio _mixer_ adapter.
-This Istio mixer adapter will allow Red Hat 3scale API Management policies to be applied directly to the _service mesh_.
+The Red Hat 3scale API Management engineering team, in collaboration with the Red Hat Service Mesh team, has created an Istio _mixer_ adapter for API Management.
+This Istio mixer adapter will allow Red Hat 3scale API Management policies to be applied directly communication that occurs between services in the _service mesh_.
 
 image::images/3scale_mixer_adapter.png[]
 
@@ -53,19 +53,12 @@ $ oc delete virtualservice catalog-istio-gateway-vs -n $GW_PROJECT --as=system:a
 $ oc delete gateway catalog-istio-gateway -n $GW_PROJECT --as=system:admin
 -----
 
-== Ensure Policy Checks are not disabled
-
------
-$ oc describe cm istio -n istio-system | grep disablePolicyChecks
-
-disablePolicyChecks: false
------
-
 == New Virtual Service to Catalog Service
+Up until this section in the lab, the request path to your catalog service has been:  OCP ha-proxy route -> Istio ingress gateway -> API gateway -> catalog service.
 
-You will create a routing rule to invoke the backend catalog service directly via the Istio _ingress_ gateway.
+In this section of the lab, you will create a routing rule to invoke the backend catalog service directly via the Istio _ingress_ gateway (by-passing the API gateway).
 
-Later, more complex routing rules will modify the flow to redirect through the Red Hat 3scale API Management Istio Mixer adapter.
+Later, more complex routing rules will modify the flow to also apply API policies via the Red Hat 3scale API Management Istio Mixer adapter.
 
 . Ensure the $NAKED_CATALOG_ROUTE environment variable still remains in your shell:
 +
@@ -125,41 +118,21 @@ Notice that a match is made for all context paths exposed by the catalog service
 $ oc create -f ~/lab/catalog-direct-gw-vs.yml -n $MSA_PROJECT
 -----
 
-. Bounce the Istio _policy_ pod:
-.. The Istio policy of Red Hat Service Mesh may sometime get into an unstable state.
-Before progressing with management of more sophisticated routing rules to support the Red Hat 3scale API Management Istio Mixer, it is recommended to bounce the _policy_ pod.
-
-.. Execute:
+. Similar to what you did in a previous lab, check the routes from the istio-ingressgateway:
 +
 -----
-$ oc delete pod \
-     `oc get pod -n istio-system | grep "istio-policy" | awk '{print $1}'` \
-     -n istio-system \
-     --as=system:admin
+$ sudo -i
+
+# oc project istio-system && \
+         oc rsh `oc get pod | grep "istio-ingressgateway" | awk '{print $1}'` \
+         curl http://localhost:15000/config_dump \
+         > /tmp/config_dump \
+         && less /tmp/config_dump \
+         | /usr/local/bin/jq ".configs | last | .dynamic_route_configs"
+
+$ exit
 -----
 
-.. View the log file of the refreshed Istio policy pod:
-+
------
-$ oc logs -f `oc get pod -n istio-system | grep "istio-policy" | awk '{print $1}'` -c mixer -n istio-system
-
-....
-
-IntrospectionOptions: ctrlz.Options{Port:0x2694, Address:"127.0.0.1"}
-warn    Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
-info    Built new config.Snapshot: id='0'
-info    Cleaning up handler table, with config ID:-1
-info    Built new config.Snapshot: id='1'
-info    adapters        getting kubeconfig from: ""     {"adapter": "handler.kubernetesenv.istio-system"}
-warn    Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
-info    adapters        Waiting for kubernetes cache sync...    {"adapter": "handler.kubernetesenv.istio-system"}
-info    adapters        Cache sync successful.  {"adapter": "handler.kubernetesenv.istio-system"}
-info    Cleaning up handler table, with config ID:0
-info    adapters        serving prometheus metrics on 42422     {"adapter": "handler.prometheus.istio-system"}
- Mixer: root@71a9470ea93c-docker.io/istio-1.0.0-3a136c90ec5e308f236e0d7ebb5c4c5e405217f4-Clean
-Starting gRPC server on port 9091
-info    ControlZ available at 172.17.0.10:9876
------
 
 . From the terminal, conduct a smoke test to validate traffic to the catalog service directly from the Istio ingress gateway.
 .. For the next few smoke tests, notice that the API _user_key_ is not being specified.
@@ -183,7 +156,6 @@ $ curl -v -X POST -H "Content-Type: application/json" `echo "http://"$(oc get ro
 +
 The reponse status back should be an HTTP 201 .
 
-
 .. View details of the recently posted catalog item:
 +
 -----
@@ -205,6 +177,25 @@ Red Hat Service Mesh includes the 3scale Istio Adapter out of the box.
 
 In this section of the lab, you review the various components that make of the 3scale Istio Adapter and then configure it so that it applies API Management policies (as per what you have already configured in the API Manager _control plane_) to inbound requests.
 
+. General information about Istio's plug-in architecture to apply policies and capture telemetry can be found link:https://istio.io/docs/concepts/policies-and-telemetry/[here].
+
+=== Ensure Policy Checks are not disabled
+By default, Red Hat Service Mesh disables evaluation of all policies.
+
+In order for API Management policies to be applied to service mesh traffic, this default behavior needs to be reversed.
+The setting for this behavior is in the _istio_ configmap in the istio namespace.
+This configmap is read by the Envoy proxy upon start-up of an istio enabled pod.
+
+Your lab environment already comes provisioned with service mesh policies (to include API Management policies that will be introduced in this lab) enabled.
+
+You can view state of this setting that disables service mesh policies as follows: 
+ 
+-----
+$ oc describe cm istio -n istio-system | grep disablePolicyChecks
+
+disablePolicyChecks: false
+-----
+
 === View 3scale Istio Adapter components
 
 image::images/mixer_architecture.png[]
@@ -217,7 +208,7 @@ $ oc get all -l app=3scale-istio-adapter -n istio-system
 
 .. The response should list the deployment, replicaset and pod.
 
-.. As per the diagram above, the _3scale-istio-adapter_ container includes the following two components:
+.. As per the diagram above, the _3scale-istio-adapter_ Linux container includes the following two components:
 
 ... *3scale-istio-adapter*
 +
@@ -254,12 +245,11 @@ threescale-authorization   7d
 Now that 3scale Istio Adapter has been verified to exist, various configurations need to be added to the service mesh.
 
 In particular, you will specify the URL of the _system-provider_ endpoint of your 3scale tenant along with the corresponding access token.
-This is needed so that the Istio Mixer can pull API proxy details from the 3scale API Manager (similar to what a API Gateway does).
+This is needed so that the Istio Mixer can pull API proxy details from the 3scale API Manager (similar to what the 3scale API Gateway does).
 
 . In the details of your _catalog_ service in the Red Hat 3scale API Manager administration console, locate the `ID for API calls ... `:
 +
 image::images/service_id.png[]
-
 
 . Set an environment variable that captures this catalog service ID:
 +
@@ -307,21 +297,43 @@ $ sed -i "s/access_token: .*/access_token: \"$API_ADMIN_ACCESS_TOKEN\"/" \
       $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml
 -----
 
+. The _rule_ in _threescale-adapter-config.yaml_ defines the conditions that API Management policies should be applied to a request.
++
+The existing default rule is as follows:
++
+-----
+match: destination.labels["service-mesh.3scale.net"] == "true"
+----- 
++
+This rule specifies that API Management policies should be applied to the request when the target Deployment includes a label of:  `service-mesh.3scale.net`.
+In this version of the lab, this rule does not apply API Management policies as expected.
+Further research into the issue is needed. 
+
+.. As a work-around for the current problem, modify the `threescale-adapter-config.yaml` file with a modified rule that specifies that API Management policies should be applied when the target is the catalog-service:
++
+-----
+$ sed -i "s/match: .*/match: destination.service.name == \"catalog-service\"/" \
+      $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml
+-----
+
+.. More information about Istio's Policy Attribute Vocabulary (used in the creation of rules) can be found link:https://istio.io/docs/reference/config/policy-and-telemetry/attribute-vocabulary/[here].
+
 . Load the Red Hat 3scale API Management Istio Handler configurations:
 +
 -----
-$ oc create -f $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml --as=system:admin
+$ oc create -f $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml
 
 ...
 
+handler.config.istio.io/threescale created
 instance.config.istio.io "threescaleauthorizationtemplate" created
-rule.config.istio.io "usethreescale" created
+rule.config.istio.io "threescale" created
 -----
 
 . Verify that the Istio Handler configurations were created in the istio-system namespace:
 +
 -----
-$ oc get handler threescale -n istio-system --as=system:admin -o yaml
+$ oc get handler threescale -n istio-system -o yaml
 
 apiVersion: v1
 items:
@@ -354,14 +366,11 @@ $ curl -v \
 ...
 
 < HTTP/1.1 403 Forbidden
-< content-length: 57
-< content-type: text/plain
-< date: Tue, 18 Sep 2018 01:24:41 GMT
-< server: envoy
-< Set-Cookie: cd10b69e39387eb7ec9ac241201ab1ab=7a5ade075364285d1aba87dfec588d36; path=/; HttpOnly
-<
+...
+
 * Connection #0 to host istio-ingressgateway-istio-system.apps.clientvm.b902.rhte.opentlc.com left intact
-PERMISSION_DENIED:threescalehandler.handler.istio-system:
+
+PERMISSION_DENIED:threescalehandler.handler.istio-system:no auth credentials provided or provided in invalid location
 -----
 
 .. Notice a 403 error response of `PERMISSION_DENIED:threescalehandler.handler.istio-system:`. This is to be expected.
@@ -377,8 +386,9 @@ $ oc logs -f `oc get pod -n istio-system | grep "3scale-istio-adapter" | awk '{p
           -c 3scale-istio-adapter
 
 
-debug   Got adapter config: &Params{ServiceId:103,SystemUrl:https://user100-3scale-mt-adm1-admin.apps.4a64.openshift.opentlc.com,AccessToken:xxxxxxxxxx,}
-debug   Returning result: {Status:{Code:7 Message: Details:[] XXX_NoUnkeyedLiteral:{} XXX_unrecognized:[] XXX_sizecache:0} ValidDuration:1ms ValidUseCount:0}
+"Got instance &InstanceMsg{Subject:&SubjectMsg{User:,Groups:,Properties:map[string]*istio_policy_v1beta11.Value{app_id: &Value{Value:&Value_StringValue{StringValue:,},},app_key: &Value{Value:&Value_StringValue{StringValue:,},},},},Action:&ActionMsg{Namespace:,Service:,Method:GET,Path:/products,Properties:map[string]*istio_policy_v1beta11.Value{},},Name:threescale-authorization.instance.istio-system,}"
+
+"proxy config for service id 4 is being fetching from 3scale"
 -----
 
 . Try again to invoke your catalog service using the catalog service _user_key_:
@@ -402,11 +412,10 @@ All requests to the `/product` endpoint will continue to require authentication 
 . Modify the existing `usethreescale` rule:
 +
 -----
-$ oc patch rule/usethreescale \
+$ oc patch rule/threescale \
        --type=json \
        --patch '[{"op": "add", "path": "/spec/match", "value":"destination.service == \"catalog-service.'$MSA_PROJECT'.svc.cluster.local\" && source.namespace != \"'$MSA_PROJECT'\" && request.method == \"POST\" && request.path.startsWith(\"/product\")"  }]' \
-       -n istio-system \
-       --as=system:admin
+       -n istio-system 
 -----
 +
 This modification introduces a fine grained _match_ rule with several conditions. Only when all of the conditions are met, will the inbound traffic be routed to the 3scale mixer adapter.
@@ -726,6 +735,42 @@ $ oc patch deploy/3scale-istio-adapter -e "THREESCALE_LOG_LEVEL=debug" -n istio-
 $ oc get pods -n istio-system | grep 3scale-istio-adapter
 
 3scale-istio-adapter-1-t9kj2                1/1       Running     0          47s
+-----
+
+. Bounce the Istio _policy_ pod:
+.. The Istio policy of Red Hat Service Mesh may sometime get into an unstable state.
+Before progressing with management of more sophisticated routing rules to support the Red Hat 3scale API Management Istio Mixer, it is recommended to bounce the _policy_ pod.
+
+.. Execute:
++
+-----
+$ oc delete pod \
+     `oc get pod -n istio-system | grep "istio-policy" | awk '{print $1}'` \
+     -n istio-system \
+     --as=system:admin
+-----
+
+.. View the log file of the refreshed Istio policy pod:
++
+-----
+$ oc logs -f `oc get pod -n istio-system | grep "istio-policy" | awk '{print $1}'` -c mixer -n istio-system
+
+....
+
+IntrospectionOptions: ctrlz.Options{Port:0x2694, Address:"127.0.0.1"}
+warn    Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
+info    Built new config.Snapshot: id='0'
+info    Cleaning up handler table, with config ID:-1
+info    Built new config.Snapshot: id='1'
+info    adapters        getting kubeconfig from: ""     {"adapter": "handler.kubernetesenv.istio-system"}
+warn    Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
+info    adapters        Waiting for kubernetes cache sync...    {"adapter": "handler.kubernetesenv.istio-system"}
+info    adapters        Cache sync successful.  {"adapter": "handler.kubernetesenv.istio-system"}
+info    Cleaning up handler table, with config ID:0
+info    adapters        serving prometheus metrics on 42422     {"adapter": "handler.prometheus.istio-system"}
+ Mixer: root@71a9470ea93c-docker.io/istio-1.0.0-3a136c90ec5e308f236e0d7ebb5c4c5e405217f4-Clean
+Starting gRPC server on port 9091
+info    ControlZ available at 172.17.0.10:9876
 -----
 
 

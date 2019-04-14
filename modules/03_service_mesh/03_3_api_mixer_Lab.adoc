@@ -434,6 +434,32 @@ The conditions of the rule are as follows:
 .. The inbound request needs to originate from outside the $MSA_PROJECT (that is, from the istio-ingress of the istio-system).
 .. The target is the `/product/` endpoint (which allows for POST, DELETE and GET methods).
 
+.. View the log file of the _istio-policy_ pod:
++
+-----
+$ oc logs -f `oc get pod -n istio-system | grep "istio-policy" | awk '{print $1}'` -c mixer -n istio-system
+
+....
+
+IntrospectionOptions: ctrlz.Options{Port:0x2694, Address:"127.0.0.1"}
+warn    Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
+info    Built new config.Snapshot: id='0'
+info    Cleaning up handler table, with config ID:-1
+info    Built new config.Snapshot: id='1'
+info    adapters        getting kubeconfig from: ""     {"adapter": "handler.kubernetesenv.istio-system"}
+warn    Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
+info    adapters        Waiting for kubernetes cache sync...    {"adapter": "handler.kubernetesenv.istio-system"}
+info    adapters        Cache sync successful.  {"adapter": "handler.kubernetesenv.istio-system"}
+info    Cleaning up handler table, with config ID:0
+info    adapters        serving prometheus metrics on 42422     {"adapter": "handler.prometheus.istio-system"}
+ Mixer: root@71a9470ea93c-docker.io/istio-1.0.0-3a136c90ec5e308f236e0d7ebb5c4c5e405217f4-Clean
+Starting gRPC server on port 9091
+info    ControlZ available at 172.17.0.10:9876
+-----
++
+In particular, notice that the new policies were put into effect with no error messages logged.
+
+
 . Try again to invoke your catalog service *without* the catalog service _user_key_:
 +
 -----
@@ -756,29 +782,6 @@ $ oc delete pod \
      `oc get pod -n istio-system | grep "istio-policy" | awk '{print $1}'` \
      -n istio-system \
      --as=system:admin
------
-
-.. View the log file of the refreshed Istio policy pod:
-+
------
-$ oc logs -f `oc get pod -n istio-system | grep "istio-policy" | awk '{print $1}'` -c mixer -n istio-system
-
-....
-
-IntrospectionOptions: ctrlz.Options{Port:0x2694, Address:"127.0.0.1"}
-warn    Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
-info    Built new config.Snapshot: id='0'
-info    Cleaning up handler table, with config ID:-1
-info    Built new config.Snapshot: id='1'
-info    adapters        getting kubeconfig from: ""     {"adapter": "handler.kubernetesenv.istio-system"}
-warn    Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
-info    adapters        Waiting for kubernetes cache sync...    {"adapter": "handler.kubernetesenv.istio-system"}
-info    adapters        Cache sync successful.  {"adapter": "handler.kubernetesenv.istio-system"}
-info    Cleaning up handler table, with config ID:0
-info    adapters        serving prometheus metrics on 42422     {"adapter": "handler.prometheus.istio-system"}
- Mixer: root@71a9470ea93c-docker.io/istio-1.0.0-3a136c90ec5e308f236e0d7ebb5c4c5e405217f4-Clean
-Starting gRPC server on port 9091
-info    ControlZ available at 172.17.0.10:9876
 -----
 
 

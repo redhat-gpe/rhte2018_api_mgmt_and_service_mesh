@@ -546,7 +546,7 @@ $ sudo -i
 . Execute the following:
 +
 -----
-# wget https://bit.ly/2G2GQWr -O $HOME/lab/api_manager_state_update.sh \
+# wget https://bit.ly/2XlQXvf -O $HOME/lab/api_manager_state_update.sh \
        && chmod 755 api_manager_state_update.sh \
        && $HOME/lab/api_manager_state_update.sh afd3
 -----

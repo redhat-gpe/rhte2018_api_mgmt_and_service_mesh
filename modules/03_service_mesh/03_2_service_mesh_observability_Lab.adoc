@@ -103,7 +103,7 @@ zipkin             ClusterIP      172.30.110.244   <none>                       
 $ oc get DaemonSet jaeger-agent -n istio-system
 -----
 
-. *jaeger-agent*
+* *jaeger-agent*
 +
 As a DaemonSet, the _jaeger-agent_ runs a pod on each OpenShift node of the cluster.
 It receives tracing information submitted by apps (embedded with Jaeger client libraries) and forwards in batch to the Jaeger collector.

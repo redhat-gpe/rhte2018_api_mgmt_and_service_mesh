@@ -127,10 +127,8 @@ NOTE: [blue]#This section is applicable if you are an existing student of either
 . Select the following catalog item: `3scale API Mgmt & Service Mesh`.
 . Click `Order` on the next page.
 
-. In the subsequent order form, select the following:
-.. *OpenShift Container Platform version*: `3.11.43`
-.. *Region*: Select the region you currently reside in
-.. Click `Submit`.
+. In the subsequent order form, select the check box confirming you understand the runtime and expiration dates. :
+. At the bottom of the same page, click `Submit`.
 
 /////
 ==== Access VM via GUID Grabber
@@ -408,7 +406,7 @@ services                4       150
 . Point your browser to the URL created by executing the following :
 +
 -----
-$ echo -en "\nhttps://master-$OCP_REGION.generic.opentlc.com\n\n"
+$ echo -en "\nhttps://master00-$OCP_REGION.generic.opentlc.com\n\n"
 -----
 
 . Authenticate using the following user credentials
@@ -546,7 +544,9 @@ $ sudo -i
 . Execute the following:
 +
 -----
-# wget https://bit.ly/2XlQXvf -O $HOME/lab/api_manager_state_update.sh \
+
+# mkdir -p $HOME/lab && \
+       wget https://bit.ly/2XlQXvf -O $HOME/lab/api_manager_state_update.sh \
        && chmod 755 api_manager_state_update.sh \
        && $HOME/lab/api_manager_state_update.sh afd3
 -----

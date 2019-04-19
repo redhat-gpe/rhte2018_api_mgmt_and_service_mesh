@@ -91,8 +91,8 @@ Your API gateway will continue to pull _service proxy_ configurations from the p
 === Allow injection of Envoy sidecar 
 
 The Envoy sidecar container that will be injected into your API Gateway pod currently needs special permissions not commonly granted to containers.
-In particular, both the _anyuid_ and _privileged_ security context contstraints (SCC).
-Please enable both SCCs in the project where the API Gateway runs as follows: 
+In particular, both the _anyuid_ and _privileged_ security context contstraints (SCC) are needed.
+Please enable both SCCs in the project where the API Gateways run as follows: 
 
 . *anyuid* scc:
 .. For your new Red Hat Service Mesh enabled API gateway pod to start, it needs the _anyuid_ SCC.

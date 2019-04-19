@@ -331,39 +331,6 @@ Your lab environment is built on Red Hat's OpenShift Container Platform (OCP).
 
 Access to your OCP resources can be gained via both the `oc` CLI utility and the OCP web console.
 
-. View existing projects:
-+
------
-$ oc get projects
-
-...
-
-3scale-mt-api0            3scale-mt-api0          Active
-istio-system                                      Active
-rhte-mw-api-mesh-user1   rhte-mw-api-mesh-13e6    Active
-user1-gw                                          Active
------
-
-.. *3scale-mt-api0*
-+
-If you ordered your lab environment from RHPDS or OPENTLC, then it will include 3scale API Manager.
-If not, then your instructor will provide details.
-
-.. *istio-system*
-+
-Your OCP user has been provided with _view_ and _edit_ access to the central _istio-system_ namespace with all _control plane_ Service Mesh functionality.
-+
-Later in this lab, you will use a utility called _istioctl_ .
-This utility will need both view and edit privileges to the _istio-system_ namespace.
-
-.. *rhte-mw-api-mesh-**
-+
-The namespace _rhte-mw-api-mesh-*_ is where you will be working throughout the duration of this lab.
-
-.. *user1-gw*
-+
-This namespace includes an API gateway pre-configured to interact with your API Management tenant.
-
 
 . Validate the ability to _impersonate_ cluster admin:
 +
@@ -400,6 +367,46 @@ requests.storage        1Gi     50Gi
 secrets                 24      150
 services                4       150
 -----
+
+. Provide _user1_ with view access to _istio-system_ namespace:
++
+-----
+$ oc adm policy add-role-to-user view user1 -n istio-system --as=system:admin
+-----
+
+. View existing projects:
++
+-----
+$ oc get projects
+
+...
+
+3scale-mt-api0            3scale-mt-api0          Active
+istio-system                                      Active
+rhte-mw-api-mesh-user1   rhte-mw-api-mesh-13e6    Active
+user1-gw                                          Active
+-----
+
+.. *3scale-mt-api0*
++
+If you ordered your lab environment from RHPDS or OPENTLC, then it will include 3scale API Manager.
+If not, then your instructor will provide details.
+
+.. *istio-system*
++
+Your OCP user has been provided with _view_ and _edit_ access to the central _istio-system_ namespace with all _control plane_ Service Mesh functionality.
++
+Later in this lab, you will use a utility called _istioctl_ .
+This utility will need both view and edit privileges to the _istio-system_ namespace.
+
+.. *rhte-mw-api-mesh-**
++
+The namespace _rhte-mw-api-mesh-*_ is where you will be working throughout the duration of this lab.
+
+.. *user1-gw*
++
+This namespace includes an API gateway pre-configured to interact with your API Management tenant.
+
 
 === OCP Web Console
 

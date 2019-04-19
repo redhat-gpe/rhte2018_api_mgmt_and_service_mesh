@@ -916,7 +916,6 @@ $ echo "export LAB_CODE=<column I of spreadsheet>" >> ~/.bashrc
 -----
 endif::showscript[]
 
-. Return to section: {{env_vars}}
 
 ifdef::showscript[]
 endif::showscript[]

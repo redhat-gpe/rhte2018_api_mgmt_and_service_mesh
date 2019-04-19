@@ -668,6 +668,7 @@ Your lab environment is now ready to use.  Please proceed to the next lab:  link
 
 == Appendix
 
+[[reinstall_service_mesh]]
 === Optional: Re-Install Red Hat Service Mesh 
 If for whatever reason you may need to re-install the Red Hat Service Mesh of your lab environment, instructions for doing so are provided here in this section.
 The procedure is easy to do because the lifecycle of Red Hat Service Mesh is maintained by an operator in the namespace:  _istio-operator_.
@@ -731,38 +732,33 @@ $ exit
 -----
 
 
-ifdef::showscript[]
 === Optional:  Lab Environment Provisioning
+This section provides an overview of the ansible used to provision your own lab environment.
 
-This section is offered to those that are interested in setting up an environment to support this lab using their own resources.
+It is offered to those that are interested in provisioning an environment to support this lab using their own resources.
 
-==== Ansible Roles
+The lab environment assumes an existing OCP 3.11 installation with cluster admin access and about 20GB of RAM.
 
 The lab environment can be provisioned via the following Ansible roles:
 
 . *ocp-workload-3scale-multitenant*
 +
-The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-3scale-multitenant[ocp-workload-3scale-multitenant] Ansible role will provision a multi-tenant 3scale API Manager.
+The link:https://github.com/gpe-mw-ansible-org/3scale_multitenant/blob/master/README.adoc[3scale-multitenant] Ansible role will provision a multi-tenant 3scale API Manager.
 +
 This role needs to be executed only once (to provision only one multi-tenant API Manager) on a pre-existing OCP 3.11 environment.
 +
 The role also offers the ability to provision a configurable number of _tenants_ in that multi-tenant API Manager environment.
 If provisioning tenants, the role also provides the ability to automatically provision API gateways for each tenant (co-located in the same OCP cluster as the API Manager but in their own namespaces).
 
-. *ocp-workload-istio-community*
+. *Red Hat Service Mesh*
 +
-The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-istio-community[ocp-workload-istio-community] Ansible role will layer Istio on a pre-existing OCP 3.11 environment.
-+
-This role should be executed on an OCP environment dedicated to a student (that is, using `oc cluster up`).
-This role is applied to the same OCP environment utilized by the _ocp-workload-rhte-mw-api-mesh_ role.
+Red Hat Service Mesh should be installed similar to the instructions in the section:  <<reinstall_service_mesh>>.
 
 . *ocp-workload-rhte-mw-api-mesh*
 +
-The link:https://github.com/sborenst/ansible_agnostic_deployer/tree/development/ansible/roles/ocp-workload-rhte-mw-api-mesh[ocp-workload-rhte-mw-api-mesh] Ansible role will provision supporting lab assets (that is, the catalog service).
-+
-This role should be executed on an OCP environment dedicated to a student (that is, using `oc cluster up`).
-This role is applied to the same OCP environment utilized by the _ocp-workload-istio-community_ role.
+The link:https://github.com/redhat-cop/agnosticd/tree/development/ansible/roles/ocp-workload-rhte-mw-api-mesh[ocp-workload-rhte-mw-api-mesh] Ansible role will provision supporting lab assets (ie, the catalog service).
 
+ifdef::showscript[]
 === Alternative approaches
 In regards a MSA service mesh, the following are related community initiatives that are not covered in this lab.
 

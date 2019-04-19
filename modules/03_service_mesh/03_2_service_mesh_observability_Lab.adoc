@@ -141,9 +141,8 @@ In this section you verify that your API Gateway is already injected with approp
 . Verify the existence of the OpenTracing library for NGinx in the API gateway.
 +
 -----
-$ oc project $GW_PROJECT
-
-$ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
+$ oc project $GW_PROJECT && \
+     oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
      ls -l /usr/local/openresty/nginx/modules/ngx_http_opentracing_module.so
 
 ...

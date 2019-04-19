@@ -279,8 +279,9 @@ In the next section, you will define an _egress route_ to allow your API gateway
 .. Execute the following to test the call:
 +
 -----
-$ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
-          curl -v -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json
+$ oc project $GW_PROJECT && \
+     oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
+     curl -v -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json
 
 
 ...
@@ -346,7 +347,8 @@ $ oc describe serviceentry $OCP_USERNAME-catalog-apicast-egress-rule -n $GW_PROJ
 Use a command like the following to verify that your service mesh enabled API gateway can now poll the API Manager for proxy service configuration information:
 +
 -----
-$ oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
+$ oc project $GW_PROJECT && \
+     oc rsh `oc get pod -n $GW_PROJECT | grep "apicast-istio" | awk '{print $1}'` \
      curl -k ${THREESCALE_PORTAL_ENDPOINT}/admin/api/services.json \
      | python -m json.tool | more
 

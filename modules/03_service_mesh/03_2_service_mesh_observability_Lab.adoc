@@ -206,9 +206,9 @@ $   cat <<EOF > $HOME/lab/jaeger_config.json
 EOF
 -----
 
-.. Pay special attention to the value of _samplingServerURL.
+.. Pay special attention to the value of _localAgentHostPort_.
 +
-This is the URL that your API gateway will push traces (via TCP) to the _jaeger-collector_.
+This is the URL that the OpenTracing cpp libraries embedded in your API gateway will push spans to.
 
 
 . Create a _configmap_ from the OpenTracing JSON file:

@@ -218,6 +218,14 @@ Accepts gRPC invocations from Istio ingress and routes to the other side car in 
 +
 Accepts invocations from _3scale-istio-adapter_ and invokes the _system-provider_ and _backend-listener_ endpoints of the remote Red Hat 3scale API Management manager.
 
+.. Its possible that the pod corresponding to the 3scale-istio-adapter is in an _ImagePullBackOff_ error state.
++
+If so, edit the _3scale-istio-adapter_ Deployment such that the URL to the image explicitly includes _registry.redhat.io_ as follows:
++
+-----
+image: registry.redhat.io/openshift-istio-tech-preview/3scale-istio-adapter:0.4.1
+-----
+
 . View listing of configs that support the 3scale Mixer Adapter:
 +
 Embedded in the following YAML files is the 3scale handler that is injected into the Istio Mixer.

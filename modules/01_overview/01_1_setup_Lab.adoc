@@ -258,24 +258,6 @@ The user of your API Management tenant is associated with an _access token_.
 You'll reference this access token later in this lab when configuring your API Gateways to communicate with the API Manager.
 
 
-/////
-.... View the access token
-+
------
-$ sudo less /home/opentlc-mgr/provisioning_output/clientvm.$API_REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '/API admin access token/d' | cut -f5 -d$'\t'
-
-eb7de2cc123e9061c787ebaed3856d91f12e7d6227cf0e9ce479e10e5bf4d028
------
-+
-Later in this lab, you will make use of this access token to interact with the admin API of the 3scale API Manager tenant.
-
-.... Set the access token as an environment variable
-+
------
-$ echo "export API_ADMIN_ACCESS_TOKEN=`sudo more /home/opentlc-mgr/provisioning_output/clientvm.$API_REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '/API admin access token/d' | cut -f5 -d$'\t'`" >> ~/.bashrc
------
-/////
-
 .. View the access token
 +
 -----
@@ -291,15 +273,6 @@ Later in this lab, you will make use of this access token to interact with the a
 -----
 $ echo "export API_ADMIN_ACCESS_TOKEN=`oc get deploy prod-apicast -n $GW_PROJECT -o json | grep system-master | cut -d'@' -f1 | cut -d'/' -f3`" >> ~/.bashrc
 -----
-
-/////
-.. *Shared Multi-tenant API Management environment*
-+
-NOTE:  Select this approach only if you've been explicitly instructed to do so by an instructor.
-
-... Execute the steps discussed in the section <<api_spreadsheet>>.
-... Return to this section after completion.
-/////
 
 . Add more environment variables that you'll utilize throughout the lab by copy and pasting the following inot the same terminal:
 +
@@ -918,4 +891,21 @@ endif::showscript[]
 
 
 ifdef::showscript[]
+
+.... View the access token
++
+-----
+$ sudo less /home/opentlc-mgr/provisioning_output/clientvm.$API_REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '/API admin access token/d' | cut -f5 -d$'\t'
+
+eb7de2cc123e9061c787ebaed3856d91f12e7d6227cf0e9ce479e10e5bf4d028
+-----
++
+Later in this lab, you will make use of this access token to interact with the admin API of the 3scale API Manager tenant.
+
+.... Set the access token as an environment variable
++
+-----
+$ echo "export API_ADMIN_ACCESS_TOKEN=`sudo more /home/opentlc-mgr/provisioning_output/clientvm.$API_REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '/API admin access token/d' | cut -f5 -d$'\t'`" >> ~/.bashrc
+-----
+
 endif::showscript[]

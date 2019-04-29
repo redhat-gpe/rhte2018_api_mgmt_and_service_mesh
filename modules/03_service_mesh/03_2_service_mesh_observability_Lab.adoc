@@ -119,7 +119,14 @@ Note that some Jaeger client libraries have the ability to completely by-pass th
 This service exposes the database of traces and spans and is typically invoked by the Jaeger UI.
 
 * *tracing*
++
+This service also exposes the database of traces and spans.
+It does so by exposing this functionality as a Kubernetes link:https://kubernetes.io/docs/concepts/services-networking/#loadbalancer[Load Balancer]
+
 * *zipkin*
++
+This service receives tracing information in batch and persists this tracing data to the Jaeger database.
+It is similar to the _jaeger-collector_ service however the payload of the trace information can only be in the _zipkin_ format.
 
 
 == API Gateway using OpenTracing
@@ -250,7 +257,7 @@ TO_DO:   Switch to use of link:https://istio.io/docs/tasks/telemetry/distributed
           protocol: UDP
         command:
           - "/go/bin/agent-linux"
-          - "--collector.host-port=jaeger-collector.monitoring:14267"
+          - "--collector.host-port=jaeger-collector.istio-system:14267"
         resources:
           limits:
             memory: 50M

@@ -1,5 +1,8 @@
 = Reference
 
+. https://developers.redhat.com/blog/2019/03/12/distributed-microservices-architecture-enterprise-integration-istio-and-managed-api-gateways/
+. https://developers.redhat.com/blog/2019/04/30/manage-your-apis-deployed-with-istio-service-mesh/
+
 -----
 Nov, 2018
     For those of you who have asked or didn't know about this yet, I'd like to share our plans to release a 3scale Istio Mixer Adapter in H1 2019. More details below.

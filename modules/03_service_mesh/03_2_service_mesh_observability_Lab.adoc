@@ -235,7 +235,7 @@ $ oc set volume deploy/$OCP_USERNAME-prod-apicast-istio --add -m /tmp/jaeger/ -t
 -----
 $ oc set env deploy/$OCP_USERNAME-prod-apicast-istio \
          OPENTRACING_TRACER=jaeger \
-         OPENTRACING_CONFIG=/tmp/jaeger/jaeger_config.json
+         OPENTRACING_CONFIG=/tmp/jaeger/jaeger_config.json \
          -n $GW_PROJECT
 -----
 +

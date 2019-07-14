@@ -193,11 +193,13 @@ $ istioctl kube-inject \
 NOTE:  For the purpose of this lab, you have now manually injected Red Hat Service Mesh related configs into a _deployment_ definition.
 An alternative approach which involves adding a special annotation to your deployment definition will be introduced later lab of this course.
 
-. View the Red Hat Service Mesh injected API gateway deployment descriptor:
+. Compare the original API gateway deployment with the new API gateway deployment now injected with _Envoy_ proxy configs:
 +
 -----
-$ less $HOME/lab/prod-apicast-istio.yml | more
+$ diff -urN $HOME/lab/prod-apicast.yml $HOME/lab/prod-apicast-istio.yml | more
 -----
+
+
 
 . Deploy a new Red Hat Service Mesh enabled API gateway production gateway:
 +

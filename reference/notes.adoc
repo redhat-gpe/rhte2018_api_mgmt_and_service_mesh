@@ -1,5 +1,9 @@
 = Reference
 
+. link:https://itnext.io/api-management-and-service-mesh-e7f0e686090e[API Mgmt & Service Mesh by Joaquim, Sept 14, 2018]
++
+With discussion about difference between API Mgmt and Service Mesh rate limits
+
 . https://developers.redhat.com/blog/2019/03/12/distributed-microservices-architecture-enterprise-integration-istio-and-managed-api-gateways/
 . https://developers.redhat.com/blog/2019/04/30/manage-your-apis-deployed-with-istio-service-mesh/
 

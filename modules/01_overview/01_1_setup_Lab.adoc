@@ -220,7 +220,7 @@ echo "export API_WILDCARD_DOMAIN=apps-\$API_DOMAIN" >> ~/.bashrc
 echo "export TENANT_NAME=\$OCP_USERNAME-\$API_MANAGER_NS" >> ~/.bashrc
 echo "export THREESCALE_PORTAL_ENDPOINT=https://\${API_ADMIN_ACCESS_TOKEN}@\$TENANT_NAME-admin.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
 echo "export BACKEND_ENDPOINT_OVERRIDE=https://backend-\$API_MANAGER_NS.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
-echo "export API_RESPONSE_DIR=$API_RESPONSE_DIR/api_responses" >> ~/.bashrc 
+echo "export API_RESPONSE_DIR=\$HOME/api_responses" >> ~/.bashrc 
 source ~/.bashrc
 -----
 

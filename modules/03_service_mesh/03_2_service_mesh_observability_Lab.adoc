@@ -184,7 +184,7 @@ $ oc rollout pause deploy $OCP_USERNAME-prod-apicast-istio -n $GW_PROJECT
 . Create a JSON configuration file that will instruct the OpenTracing and link:https://github.com/jaegertracing/jaeger-client-cpp[Jaeger cpp related client libraries] in the API gateway to push traces directly to the `jaeger-collector`:
 +
 -----
-$   cat <<EOF > $HOME/lab/jaeger_config.json
+$   cat <<EOF > $API_RESPONSE_DIR/jaeger_config.json
 {
     "service_name": "$OCP_USERNAME-prod-apicast-istio",
     "disabled": false,
@@ -221,7 +221,7 @@ This is the URL that the OpenTracing cpp libraries embedded in your API gateway 
 . Create a _configmap_ from the OpenTracing JSON file:
 +
 -----
-$ oc create configmap jaeger-config --from-file=$HOME/lab/jaeger_config.json -n $GW_PROJECT
+$ oc create configmap jaeger-config --from-file=$API_RESPONSE_DIR/jaeger_config.json -n $GW_PROJECT
 -----
 
 . Mount the configmap to your OpenTracing-enabled API Gateway:
@@ -413,11 +413,11 @@ sampler-type: const
 sampler-param: 1
 reporter-log-spans: True
 collector-endpoint: \"http://jaeger-collector.istio-system.svc:14268/api/traces\"
-" > $HOME/lab/app-config.yaml
+" > $API_RESPONSE_DIR/app-config.yaml
 
 
 # Recreate configmap using additional OpenTracing related params
-$ oc create configmap app-config --from-file=$HOME/lab/app-config.yaml -n $MSA_PROJECT
+$ oc create configmap app-config --from-file=$API_RESPONSE_DIR/app-config.yaml -n $MSA_PROJECT
 -----
 
 . Study this link:https://bit.ly/2Ga2bfr[new Deployment] that includes automatic injection of the istio sidecar proxy and utilizes an OpenTracing enabled catalog service. 
@@ -450,9 +450,9 @@ $ oc get scc privileged -o json -n $MSA_PROJECT --as=system:admin | jq .users | 
 +
 -----
 $ wget https://bit.ly/2Ga2bfr \
-       -O $HOME/lab/catalog-service-istio.yaml \
-       && sed -i "s/\$OCP_USERNAME/$OCP_USERNAME/g" $HOME/lab/catalog-service-istio.yaml \
-       && oc apply -f $HOME/lab/catalog-service-istio.yaml -n $MSA_PROJECT
+       -O $API_RESPONSE_DIR/catalog-service-istio.yaml \
+       && sed -i "s/\$OCP_USERNAME/$OCP_USERNAME/g" $API_RESPONSE_DIR/catalog-service-istio.yaml \
+       && oc apply -f $API_RESPONSE_DIR/catalog-service-istio.yaml -n $MSA_PROJECT
 
 -----
 

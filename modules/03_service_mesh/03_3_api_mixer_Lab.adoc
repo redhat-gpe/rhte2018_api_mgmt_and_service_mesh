@@ -107,7 +107,7 @@ spec:
         host: catalog-service
         port:
           number: 8080" \
- > $HOME/lab/catalog-direct-gw-vs.yml
+ > $API_RESPONSE_DIR/catalog-direct-gw-vs.yml
 -----
 +
 Notice that a match is made for all context paths exposed by the catalog service:  `/products` and `/product`.
@@ -275,34 +275,34 @@ Execute:
 $ git clone \
       --branch v0.5.0 \
       https://github.com/3scale/istio-integration \
-      $HOME/lab/istio-integration
+      $API_RESPONSE_DIR/istio-integration
 -----
 
 . Review the `threescale-adapter-config.yaml` file :
 +
 -----
-$ less $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml | more
+$ less $API_RESPONSE_DIR/istio-integration/istio/threescale-adapter-config.yaml | more
 -----
 
 . Modify the `threescale-adapter-config.yaml` file with the ID of your catalog service:
 +
 -----
 $ sed -i "s/service_id: .*/service_id: \"$CATALOG_SERVICE_ID\"/" \
-      $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml
+      $API_RESPONSE_DIR/istio-integration/istio/threescale-adapter-config.yaml
 -----
 
 . Modify the `threescale-adapter-config.yaml` file with the URL to your Red Hat 3scale API Management manager tenant:
 +
 -----
 $ sed -i "s/system_url: .*/system_url: \"https:\/\/$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\"/" \
-      $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml
+      $API_RESPONSE_DIR/istio-integration/istio/threescale-adapter-config.yaml
 -----
 
 . Modify the `threescale-adapter-config.yaml` file with the administrative access token of your Red Hat 3scale API Management manager administration account:
 +
 -----
 $ sed -i "s/access_token: .*/access_token: \"$API_ADMIN_ACCESS_TOKEN\"/" \
-      $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml
+      $API_RESPONSE_DIR/istio-integration/istio/threescale-adapter-config.yaml
 -----
 
 . The _rule_ in _threescale-adapter-config.yaml_ defines the conditions that API Management policies should be applied to a request.
@@ -321,7 +321,7 @@ Further research into the issue is needed.
 +
 -----
 $ sed -i "s/match: .*/match: destination.service.name == \"catalog-service\"/" \
-      $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml
+      $API_RESPONSE_DIR/istio-integration/istio/threescale-adapter-config.yaml
 -----
 
 .. More information about Istio's Policy Attribute Vocabulary (used in the creation of rules) can be found link:https://istio.io/docs/reference/config/policy-and-telemetry/attribute-vocabulary/[here].
@@ -329,7 +329,7 @@ $ sed -i "s/match: .*/match: destination.service.name == \"catalog-service\"/" \
 . Load the Red Hat 3scale API Management Istio Handler configurations:
 +
 -----
-$ oc create -f $HOME/lab/istio-integration/istio/threescale-adapter-config.yaml
+$ oc create -f $API_RESPONSE_DIR/istio-integration/istio/threescale-adapter-config.yaml
 
 ...
 
@@ -624,13 +624,13 @@ oc delete instance threescaleauthorizationtemplate -n istio-system --as=system:a
 oc delete rule usethreescale -n istio-system --as=system:admin
 oc delete adapter threescale -n istio-system --as=system:admin
 oc delete template authorization -n istio-system" --as=system:admin \
-> $HOME/lab/delete_mixer.sh
+> $API_RESPONSE_DIR/delete_mixer.sh
 
 
-$ chmod 755 $HOME/lab/delete_mixer.sh
+$ chmod 755 $API_RESPONSE_DIR/delete_mixer.sh
 
 
-$ $HOME/lab/delete_mixer.sh
+$ $API_RESPONSE_DIR/delete_mixer.sh
 -----
 
 
@@ -762,7 +762,7 @@ quay.io/3scale/apicast:3scale-http-plugin
 . Load the Istio Mixer Adapter deployment (found in the 3scale Istio integration project you just cloned) into the istio-system namespace:
 +
 -----
-$ oc create -f $HOME/lab/istio-integration/3scaleAdapter/openshift -n istio-system --as=system:admin
+$ oc create -f $API_RESPONSE_DIR/istio-integration/3scaleAdapter/openshift -n istio-system --as=system:admin
 -----
 
 . Set the 3scale Adapter to debug log level:

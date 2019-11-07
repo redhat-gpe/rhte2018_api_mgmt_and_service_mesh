@@ -115,7 +115,7 @@ Notice that a match is made for all context paths exposed by the catalog service
 . Create the gateway and virtual service in your $MSA_PROJECT :
 +
 -----
-$ oc create -f $API_RESPONSES_DIR/catalog-direct-gw-vs.yml -n $MSA_PROJECT
+$ oc create -f $API_RESPONSE_DIR/catalog-direct-gw-vs.yml -n $MSA_PROJECT
 -----
 
 . Similar to what you did in a previous lab, check the routes from the istio-ingressgateway:

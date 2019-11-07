@@ -216,10 +216,9 @@ echo "export OCP_REGION=`echo $HOSTNAME | cut -d'.' -f1 | cut -d'-' -f2`" >> ~/.
 echo "export OCP_DOMAIN=\$REGION.generic.opentlc.com" >> ~/.bashrc
 echo "export OCP_WILDCARD_DOMAIN=apps-\REGION.\$SUBDOMAIN_BASE" >> ~/.bashrc
 echo "export MSA_PROJECT=rhte-mw-api-mesh-\$OCP_USERNAME" >> ~/.bashrc
-echo "export API_WILDCARD_DOMAIN=apps-\$API_DOMAIN" >> ~/.bashrc
 echo "export TENANT_NAME=\$OCP_USERNAME-\$API_MANAGER_NS" >> ~/.bashrc
-echo "export THREESCALE_PORTAL_ENDPOINT=https://\${API_ADMIN_ACCESS_TOKEN}@\$TENANT_NAME-admin.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
-echo "export BACKEND_ENDPOINT_OVERRIDE=https://backend-\$API_MANAGER_NS.\$API_WILDCARD_DOMAIN" >> ~/.bashrc
+echo "export THREESCALE_PORTAL_ENDPOINT=https://\${API_ADMIN_ACCESS_TOKEN}@\$TENANT_NAME-admin.\$OCP_WILDCARD_DOMAIN" >> ~/.bashrc
+echo "export BACKEND_ENDPOINT_OVERRIDE=https://backend-\$API_MANAGER_NS.\$OCP_WILDCARD_DOMAIN" >> ~/.bashrc
 echo "export API_RESPONSE_DIR=\$HOME/api_responses" >> ~/.bashrc 
 source ~/.bashrc
 -----
@@ -514,7 +513,7 @@ Log into the administration portal of your API Manager environment as follows:
 . Point your browser to the URL of your 3scale tenant as provided in the output of the following command:
 +
 -----
-$ echo -en "\n\nhttps://$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\n\n"
+$ echo -en "\n\nhttps://$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN\n\n"
 -----
 
 . Authenticate using the values of $API_TENANT_USERNAME and $API_TENANT_PASSWORD .

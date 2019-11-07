@@ -318,7 +318,7 @@ metadata:
   name: $OCP_USERNAME-catalog-apicast-egress-rule
 spec:
   hosts:
-  - $TENANT_NAME-admin.$API_WILDCARD_DOMAIN
+  - $TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN
   location: MESH_EXTERNAL
   ports:
   - name: https-443

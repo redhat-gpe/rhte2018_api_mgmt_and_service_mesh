@@ -294,7 +294,7 @@ $ sed -i "s/service_id: .*/service_id: \"$CATALOG_SERVICE_ID\"/" \
 . Modify the `threescale-adapter-config.yaml` file with the URL to your Red Hat 3scale API Management manager tenant:
 +
 -----
-$ sed -i "s/system_url: .*/system_url: \"https:\/\/$TENANT_NAME-admin.$API_WILDCARD_DOMAIN\"/" \
+$ sed -i "s/system_url: .*/system_url: \"https:\/\/$TENANT_NAME-admin.$OCP_WILDCARD_DOMAIN\"/" \
       $API_RESPONSE_DIR/istio-integration/istio/threescale-adapter-config.yaml
 -----
 

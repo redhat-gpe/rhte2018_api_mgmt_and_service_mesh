@@ -779,22 +779,4 @@ $ oc rollout resume deploy stage-apicast prod-apicast -n $GW_PROJECT
 -----
 
 
-ifdef::showscript[]
-
-.... View the access token
-+
------
-$ sudo less /home/opentlc-mgr/provisioning_output/clientvm.$REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '/API admin access token/d' | cut -f5 -d$'\t'
-
-eb7de2cc123e9061c787ebaed3856d91f12e7d6227cf0e9ce479e10e5bf4d028
------
-+
-Later in this lab, you will make use of this access token to interact with the admin API of the 3scale API Manager tenant.
-
-.... Set the access token as an environment variable
-+
------
-$ echo "export API_ADMIN_ACCESS_TOKEN=`sudo more /home/opentlc-mgr/provisioning_output/clientvm.$REGION.openshift.opentlc.com/3scale_tenants_api0/api0_tenant_info_file_1_1.txt | sed '/API admin access token/d' | cut -f5 -d$'\t'`" >> ~/.bashrc
------
-
 endif::showscript[]

@@ -214,7 +214,7 @@ echo 'export OCP_PASSWD=r3dh4t1!' >> ~/.bashrc
 
 echo "export OCP_REGION=`echo $HOSTNAME | cut -d'.' -f1 | cut -d'-' -f2`" >> ~/.bashrc
 echo "export OCP_DOMAIN=\$REGION.generic.opentlc.com" >> ~/.bashrc
-echo "export OCP_WILDCARD_DOMAIN=apps-\REGION.\$SUBDOMAIN_BASE" >> ~/.bashrc
+echo "export OCP_WILDCARD_DOMAIN=apps-\$REGION.\$SUBDOMAIN_BASE" >> ~/.bashrc
 echo "export MSA_PROJECT=rhte-mw-api-mesh-\$OCP_USERNAME" >> ~/.bashrc
 echo "export TENANT_NAME=\$OCP_USERNAME-\$API_MANAGER_NS" >> ~/.bashrc
 echo "export THREESCALE_PORTAL_ENDPOINT=https://\${API_ADMIN_ACCESS_TOKEN}@\$TENANT_NAME-admin.\$OCP_WILDCARD_DOMAIN" >> ~/.bashrc
